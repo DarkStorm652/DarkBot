@@ -10,15 +10,18 @@ public class Packet100OpenWindow extends AbstractPacket implements
 	public int inventoryType;
 	public String windowTitle;
 	public int slotsCount;
+	public boolean flag;
 
 	public Packet100OpenWindow() {
 	}
 
+	@Override
 	public void readData(DataInputStream in) throws IOException {
-		windowId = in.readByte() & 0xff;
-		inventoryType = in.readByte() & 0xff;
+		windowId = in.readByte() & 255;
+		inventoryType = in.readByte() & 255;
 		windowTitle = readString(in, 32);
-		slotsCount = in.readByte() & 0xff;
+		slotsCount = in.readByte() & 255;
+		flag = in.readBoolean();
 	}
 
 	@Override

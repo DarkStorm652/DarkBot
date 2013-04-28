@@ -1,12 +1,11 @@
 package org.darkstorm.darkbot.minecraftbot;
 
-import java.util.Random;
-import java.util.concurrent.*;
-
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
 import java.security.PublicKey;
+import java.util.Random;
+import java.util.concurrent.*;
 
 import javax.crypto.SecretKey;
 import javax.naming.AuthenticationException;
@@ -31,7 +30,7 @@ import org.darkstorm.darkbot.minecraftbot.world.item.*;
 @BotManifest(name = "MinecraftBot", botDataClass = MinecraftBotData.class)
 public class MinecraftBot extends Bot implements EventListener, GameListener {
 	public static final int DEFAULT_PORT = 25565;
-	public static final int PROTOCOL_VERSION = 51;
+	public static final int PROTOCOL_VERSION = 60;
 
 	private final ExecutorService service;
 	private final EventManager eventManager;
@@ -240,6 +239,7 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		return URLEncoder.encode(par0Str, "UTF-8");
 	}
 
+	@Override
 	public synchronized void onTick() {
 		connectionHandler.update();
 		taskManager.update();
