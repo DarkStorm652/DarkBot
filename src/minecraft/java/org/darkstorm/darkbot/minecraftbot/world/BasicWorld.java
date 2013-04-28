@@ -1,9 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.world;
 
-import java.util.*;
-
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
@@ -270,15 +269,12 @@ public final class BasicWorld implements World, EventListener {
 		for(int i = 0; i < 16; i++)
 			if((bitmask & (1 << i)) != 0)
 				chunksChanged++;
-		int lastDataIndex = 0;
 		synchronized(chunks) {
 			int i = 0;
 			for(int y = 0; y < 16; y++) {
 				if((bitmask & (1 << y)) == 0)
 					continue;
 				int dataIndex = i * 4096;
-				System.out.println("change (" + i + "): " + lastDataIndex
-						+ " -> " + dataIndex);
 				byte[] blocks = Arrays.copyOfRange(data, dataIndex,
 						dataIndex + 4096);
 				dataIndex += ((chunksChanged - i) * 4096) + (i * 2048);
@@ -315,11 +311,8 @@ public final class BasicWorld implements World, EventListener {
 				bot.getEventManager()
 						.sendEvent(new ChunkLoadEvent(this, chunk));
 				i++;
-				lastDataIndex = dataIndex;
 			}
 		}
-		System.out.println("Loaded chunk (" + lastDataIndex + "/" + data.length
-				+ ")");
 	}
 
 	@Override
