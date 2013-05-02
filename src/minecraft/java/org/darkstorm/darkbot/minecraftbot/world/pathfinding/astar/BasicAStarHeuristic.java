@@ -1,6 +1,6 @@
 package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
 
-import java.util.*;
+import java.util.List;
 
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
@@ -32,22 +32,9 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 			new WorldLocation(0, 1, 0), new WorldLocation(1, 1, 0),
 			new WorldLocation(-1, 1, -1), new WorldLocation(0, 1, -1),
 			new WorldLocation(1, 1, -1), };
-	private static final Comparator<PathNode> comparator;
 	private static final boolean[] emptyBlocks;
 
 	static {
-		comparator = new Comparator<PathNode>() {
-			@Override
-			public int compare(PathNode o1, PathNode o2) {
-				if(o1.equals(o2))
-					return 0;
-				if(o1.getFScore() > o2.getFScore())
-					return 1;
-				if(o1.getFScore() < o2.getFScore())
-					return -1;
-				return -1;
-			}
-		};
 
 		emptyBlocks = new boolean[256];
 		for(BlockType type : BlockType.values())
@@ -175,8 +162,17 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 	}
 
 	@Override
-	public void prioritize(List<PathNode> openSet) {
-		Collections.sort(openSet, comparator);
+	public PathNode findNext(List<PathNode> openSet) {
+		PathNode best = null;
+		double bestF = 0;
+		for(PathNode node : openSet) {
+			double f = node.getFScore() + node.getGScore();
+			if(best == null || f < bestF) {
+				best = node;
+				bestF = f;
+			}
+		}
+		return best;
 	}
 
 	@Override

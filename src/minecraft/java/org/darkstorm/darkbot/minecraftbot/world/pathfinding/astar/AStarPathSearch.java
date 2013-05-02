@@ -48,8 +48,8 @@ public class AStarPathSearch implements PathSearch {
 		if(isDone())
 			return;
 
-		heuristic.prioritize(openSet);
-		PathNode current = openSet.remove(0);
+		PathNode current = heuristic.findNext(openSet);
+		openSet.remove(current);
 
 		if(complete == null && current.getLocation().equals(end)) {
 			complete = reconstructPath(current);
@@ -57,8 +57,11 @@ public class AStarPathSearch implements PathSearch {
 		}
 		calculate(current, false);
 
-		heuristic.prioritize(openSetReverse);
-		PathNode currentReverse = openSetReverse.remove(0);
+		if(completeReverse != null)
+			return;
+
+		PathNode currentReverse = heuristic.findNext(openSetReverse);
+		openSetReverse.remove(current);
 
 		if(completeReverse == null
 				&& currentReverse.getLocation().equals(start))

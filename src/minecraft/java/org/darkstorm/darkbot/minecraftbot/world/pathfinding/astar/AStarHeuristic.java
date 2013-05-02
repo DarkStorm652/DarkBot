@@ -15,5 +15,5 @@ public interface AStarHeuristic extends Heuristic {
 	public double calculateFScore(AStarPathSearch search, PathNode node,
 			boolean reverse);
 
-	public void prioritize(List<PathNode> openSet);
+	public PathNode findNext(List<PathNode> openSet);
 }
