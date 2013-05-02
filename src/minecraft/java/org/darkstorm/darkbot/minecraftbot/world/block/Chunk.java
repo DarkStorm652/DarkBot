@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.events.EventManager;
 import org.darkstorm.darkbot.minecraftbot.events.world.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.darkbot.minecraftbot.world.World;
 
 public final class Chunk {
 	private final World world;
@@ -49,7 +49,7 @@ public final class Chunk {
 		int index = y << 8 | z << 4 | x;
 		if(index < 0 || index > blocks.length)
 			return 0;
-		return blocks[index];
+		return blocks[index] & 0xFF;
 	}
 
 	public void setBlockIdAt(int id, BlockLocation location) {
@@ -82,7 +82,7 @@ public final class Chunk {
 		int index = (x << 8) + (y << 4) + z;
 		if(index < 0 || index > metadata.length)
 			return 0;
-		return metadata[index];
+		return metadata[index] & 0xFF;
 	}
 
 	public void setBlockMetadataAt(int metadata, BlockLocation location) {
@@ -116,7 +116,7 @@ public final class Chunk {
 		int index = (x << 8) + (y << 4) + z;
 		if(index < 0 || index > light.length)
 			return 0;
-		return light[index];
+		return light[index] & 0xFF;
 	}
 
 	public int getBlockSkylightAt(BlockLocation location) {
@@ -128,6 +128,6 @@ public final class Chunk {
 		int index = (x << 8) + (y << 4) + z;
 		if(index < 0 || index > skylight.length)
 			return 0;
-		return skylight[index];
+		return skylight[index] & 0xFF;
 	}
 }
