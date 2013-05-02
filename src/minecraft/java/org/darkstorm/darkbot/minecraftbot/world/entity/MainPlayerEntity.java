@@ -153,6 +153,19 @@ public class MainPlayerEntity extends PlayerEntity {
 								(int) (z - 0.5))).isSolid();
 	}
 
+	public boolean isInLiquid() {
+		BlockType below = BlockType.getById(world.getBlockIdAt((int) (x - 0.5),
+				(int) (y), (int) (z - 0.5)));
+		BlockType above = BlockType.getById(world.getBlockIdAt((int) (x - 0.5),
+				(int) (y + 1), (int) (z - 0.5)));
+		return below == BlockType.WATER || below == BlockType.LAVA
+				|| below == BlockType.STATIONARY_WATER
+				|| below == BlockType.STATIONARY_LAVA
+				|| above == BlockType.WATER || above == BlockType.LAVA
+				|| above == BlockType.STATIONARY_WATER
+				|| above == BlockType.STATIONARY_LAVA;
+	}
+
 	public void swingArm() {
 		ConnectionHandler handler = world.getBot().getConnectionHandler();
 		handler.sendPacket(new Packet18Animation(getId(), Animation.SWING_ARM));

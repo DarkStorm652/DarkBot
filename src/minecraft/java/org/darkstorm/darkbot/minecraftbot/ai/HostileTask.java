@@ -5,6 +5,7 @@ import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet7UseEntity;
+import org.darkstorm.darkbot.minecraftbot.util.Util;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -52,8 +53,10 @@ public class HostileTask implements Task {
 		int closestDistance = Integer.MAX_VALUE;
 		for(Entity e : world.getEntities()) {
 			if(!(e instanceof LivingEntity)
-					|| (e instanceof PlayerEntity && ((PlayerEntity) e)
-							.getName().equalsIgnoreCase(bot.getOwner()))
+					|| (e instanceof PlayerEntity && bot.getOwner()
+							.equalsIgnoreCase(
+									Util.stripColors(((PlayerEntity) e)
+											.getName())))
 					|| e.equals(bot.getPlayer()))
 				continue;
 			int distance = player.getDistanceToSquared(e);

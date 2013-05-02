@@ -75,8 +75,6 @@ public class FollowTask implements Task {
 					return;
 			}
 			WalkTask walkTask = bot.getTaskManager().getTaskFor(WalkTask.class);
-			if(walkTask.isActive())
-				walkTask.stop();
 			walkTask.setTarget(location);
 		}
 	}

@@ -66,7 +66,9 @@ public class FallTask implements Task {
 
 	@Override
 	public boolean ignoresExclusive() {
-		return false;
+		if(bot.getTaskManager().getTaskFor(WalkTask.class).isActive())
+			return false;
+		return true;
 	}
 
 	@Override
