@@ -1,9 +1,8 @@
 package org.darkstorm.darkbot.mcspambot;
 
+import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-
-import java.io.*;
 
 import javax.naming.AuthenticationException;
 
@@ -473,7 +472,7 @@ public class DarkBotMC implements EventListener, GameListener {
 					try {
 						int x = Integer.parseInt(substring.split(" ")[0]);
 						int y = Integer.parseInt(substring.split(" ")[1]);
-						int z = Integer.parseInt(substring.split(" ")[1]);
+						int z = Integer.parseInt(substring.split(" ")[2]);
 
 						player.face(x, y, z);
 						ConnectionHandler connectionHandler = bot
@@ -604,6 +603,7 @@ public class DarkBotMC implements EventListener, GameListener {
 	BlockLocation spawnLocation = new BlockLocation(231, 71, -39);
 	BlockLocation targetLocation = new BlockLocation(230, 72, -30);
 
+	@Override
 	public void onTick() {
 		if(!bot.hasSpawned() || !bot.isConnected())
 			return;
