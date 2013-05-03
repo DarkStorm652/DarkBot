@@ -1,9 +1,8 @@
 package org.darkstorm.darkbot.darkbotmc.regular;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.*;
-
-import java.lang.reflect.Constructor;
 
 import javax.naming.AuthenticationException;
 
@@ -47,10 +46,9 @@ public class RegularBot implements EventListener {
 		service.execute(new Runnable() {
 			@Override
 			public void run() {
-				MinecraftBotData botData = new MinecraftBotData();
-				botData.nickname = data.username;
-				botData.password = data.password == null ? "" : data.password;
-				botData.authenticate = data.password != null;
+				MinecraftBotData.Builder builder = MinecraftBotData.builder();
+				builder.withUsername(data.username);
+				builder.withPassword(data.password);
 
 				String server = data.server;
 				int port = 25565;
@@ -59,8 +57,8 @@ public class RegularBot implements EventListener {
 					server = parts[0];
 					port = Integer.parseInt(parts[1]);
 				}
-				botData.server = server;
-				botData.port = port;
+				builder.withServer(server);
+				builder.withPort(port);
 
 				if(data.proxy != null) {
 					String proxy = data.proxy;
@@ -82,9 +80,9 @@ public class RegularBot implements EventListener {
 						throw new IllegalArgumentException("Invalid proxy");
 					ProxyData data = new ProxyData(proxy, proxyPort,
 							type == null ? ProxyType.SOCKS : type);
-					botData.proxy = data;
+					builder.withSocksProxy(data);
 				}
-				botData.owner = "asdf";
+				MinecraftBotData botData = builder.build();
 
 				clearLog();
 				log("[BOT] Connecting...");

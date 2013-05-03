@@ -12,7 +12,6 @@ import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.readable.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
 
@@ -39,10 +38,9 @@ public class SpamBot implements EventListener {
 	}
 
 	public void connect() {
-		MinecraftBotData botData = new MinecraftBotData();
-		botData.nickname = data.username;
-		botData.password = data.password == null ? "" : data.password;
-		botData.authenticate = data.password != null;
+		MinecraftBotData.Builder builder = MinecraftBotData.builder();
+		builder.withUsername(data.username);
+		builder.withPassword(data.password);
 
 		String server = data.server;
 		int port = 25565;
@@ -51,8 +49,8 @@ public class SpamBot implements EventListener {
 			server = parts[0];
 			port = Integer.parseInt(parts[1]);
 		}
-		botData.server = server;
-		botData.port = port;
+		builder.withServer(server);
+		builder.withPort(port);
 
 		// if(data.proxy != null) {
 		// String proxy = data.proxy;
@@ -66,7 +64,7 @@ public class SpamBot implements EventListener {
 		// botData.proxy = proxy;
 		// botData.proxyPort = proxyPort;
 		// }
-		botData.owner = "asdf";
+		MinecraftBotData botData = builder.build();
 
 		status("Connecting...");
 		progress(true);

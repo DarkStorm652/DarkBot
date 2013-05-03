@@ -80,6 +80,8 @@ public final class DarkBot {
 				Class<? extends Bot> botClass = info.getBotClass();
 				Constructor<? extends Bot> botConstructor = botClass
 						.getConstructor(DarkBot.class, botDataClass);
+				if(!botConstructor.isAccessible())
+					botConstructor.setAccessible(true);
 				bot = botConstructor.newInstance(this, data);
 			} catch(Throwable exception) {
 				reason = exception;

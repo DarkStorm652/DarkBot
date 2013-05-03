@@ -5,7 +5,7 @@ import org.darkstorm.darkbot.DarkBot;
 public abstract class Bot implements Nameable {
 	protected final DarkBot darkBot;
 
-	public Bot(DarkBot darkBot, BotData botData) {
+	public Bot(DarkBot darkBot) {
 		if(darkBot == null)
 			throw new IllegalArgumentException(
 					"param 0 (type DarkBot) is invalid");

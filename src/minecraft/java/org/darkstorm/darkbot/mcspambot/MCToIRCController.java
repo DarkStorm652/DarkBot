@@ -27,10 +27,10 @@ public class MCToIRCController implements EventListener {
 		IRCBotData botData = new IRCBotData();
 		botData.nickname = "DarkBot[" + bot.getSession().getUsername() + "]";
 		botData.password = "";
-		botData.server = "evocraft.net";
+		botData.server = "IRC server goes here";
 		botData.port = 6667;
-		botData.owner = bot.getOwner();
-		botData.channels = new String[] { "#darkstorm" };
+		botData.owner = "IRC nick of owner here";
+		botData.channels = new String[] { "#channel here" };
 		ircBot = (IRCBot) DarkBotMC.DARK_BOT.createBot(botData);
 		ircBot.getCommandHandler().addCommand(
 				new MCBotCommand(ircBot.getCommandHandler()));
@@ -139,7 +139,7 @@ public class MCToIRCController implements EventListener {
 					Tools.getCorrectTarget(userMessage),
 					"Command executed: " + userMessage.getMessage());
 			mcBot.onPacketProcess(new PacketProcessEvent(new Packet3Chat(
-					"->[IRC] " + mcBot.getBot().getOwner() + " "
+					"->[IRC] " + mcBot.getOwner() + " "
 							+ userMessage.getMessage())));
 		}
 

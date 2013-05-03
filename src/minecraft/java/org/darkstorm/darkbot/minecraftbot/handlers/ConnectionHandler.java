@@ -1,11 +1,10 @@
 package org.darkstorm.darkbot.minecraftbot.handlers;
 
-import java.util.*;
-import java.util.concurrent.*;
-
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import javax.crypto.SecretKey;
 import javax.naming.AuthenticationException;
@@ -50,18 +49,19 @@ public class ConnectionHandler extends MinecraftHandler implements
 			if(c != null)
 				readablePackets.put(i, c);
 		}
-		username = botData.nickname;
-		password = botData.password;
-		if(botData.loginProxy != null)
+		username = botData.getUsername();
+		password = botData.getPassword();
+		if(botData.getHttpProxy() != null)
 			loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					botData.loginProxy, botData.loginProxyPort));
+					botData.getHttpProxy().getHostName(), botData
+							.getHttpProxy().getPort()));
 		else
 			loginProxy = null;
-		if(botData.proxy != null)
-			connection = new Connection(botData.server, botData.port,
-					botData.proxy);
+		if(botData.getSocksProxy() != null)
+			connection = new Connection(botData.getServer(), botData.getPort(),
+					botData.getSocksProxy());
 		else
-			connection = new Connection(botData.server, botData.port);
+			connection = new Connection(botData.getServer(), botData.getPort());
 		bot.getEventManager().registerListener(this);
 	}
 

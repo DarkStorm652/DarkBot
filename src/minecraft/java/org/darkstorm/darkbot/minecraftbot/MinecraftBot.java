@@ -27,7 +27,8 @@ import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
-@BotManifest(name = "MinecraftBot", botDataClass = MinecraftBotData.class)
+@BotManifest(name = "MinecraftBot",
+		botDataClass = MinecraftBotData.Builder.class)
 public class MinecraftBot extends Bot implements EventListener, GameListener {
 	public static final int DEFAULT_PORT = 25565;
 	public static final int PROTOCOL_VERSION = 60;
@@ -40,8 +41,6 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	private final Session session;
 	private final Proxy loginProxy;
 
-	private String owner;
-
 	private MainPlayerEntity player;
 	private Inventory currentWindow;
 
@@ -52,11 +51,12 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	private Random random = new Random();
 	private int keepAliveTimer = 0;
 
+	public MinecraftBot(DarkBot darkBot, MinecraftBotData.Builder botData) {
+		this(darkBot, botData.build());
+	}
+
 	public MinecraftBot(DarkBot darkBot, MinecraftBotData botData) {
-		super(darkBot, botData);
-		if(!botData.isValid())
-			throw new IllegalArgumentException("Invalid bot data");
-		owner = botData.owner;
+		super(darkBot);
 		service = Executors.newCachedThreadPool();
 		eventManager = new EventManager();
 		eventManager.registerListener(this);
@@ -64,20 +64,21 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		connectionHandler = new ConnectionHandler(this, botData);
 		gameHandler = new GameHandler(this);
 		gameHandler.registerListener(this);
-		if(botData.loginProxy != null)
+		if(botData.getHttpProxy() != null)
 			loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					botData.loginProxy, botData.loginProxyPort));
+					botData.getHttpProxy().getHostName(), botData
+							.getHttpProxy().getPort()));
 		else
 			loginProxy = null;
-		if(botData.authenticate) {
+		if(botData.getPassword() != null && !botData.getPassword().isEmpty()) {
 			try {
 				session = connectionHandler.retrieveSession();
 			} catch(AuthenticationException exception) {
 				throw new RuntimeException("Invalid login info", exception);
 			}
 		} else
-			session = new Session(botData.nickname, botData.password,
-					botData.sessionId);
+			session = new Session(botData.getUsername(), botData.getPassword(),
+					botData.getSessionId());
 		try {
 			connectionHandler.connect();
 		} catch(IOException exception) {
@@ -172,32 +173,31 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		}
 	}
 
-	public void handleServerAuthData(
-			Packet253EncryptionKeyRequest par1Packet253EncryptionKeyRequest) {
-		String var2 = par1Packet253EncryptionKeyRequest.serverId.trim();
-		PublicKey var3 = par1Packet253EncryptionKeyRequest.publicKey;
-		SecretKey var4 = CryptManager.generateSecretKey();
+	public void handleServerAuthData(Packet253EncryptionKeyRequest keyRequest) {
+		String serverId = keyRequest.serverId.trim();
+		PublicKey publicKey = keyRequest.publicKey;
+		SecretKey secretKey = CryptManager.generateSecretKey();
 
-		if(!"-".equals(var2)) {
-			String var5 = (new BigInteger(
-					CryptManager.encrypt(var2, var3, var4))).toString(16);
+		if(!serverId.equals("-")) {
+			String hash = new BigInteger(CryptManager.encrypt(serverId,
+					publicKey, secretKey)).toString(16);
 			if(session.getPassword() != null
 					&& session.getPassword().length() != 0) {
 				String response = authenticate(session.getUsername(),
-						session.getSessionId(), var5);
+						session.getSessionId(), hash);
 
 				if(response == null)
 					return;
 
-				if(!"ok".equalsIgnoreCase(response)) {
+				if(!response.equalsIgnoreCase("ok")) {
 					connectionHandler.disconnect("Failed login: " + response);
 					return;
 				}
 			}
 		}
 
-		connectionHandler.sendPacket(new Packet252SharedKey(var4, var3,
-				par1Packet253EncryptionKeyRequest.verifyToken));
+		connectionHandler.sendPacket(new Packet252SharedKey(secretKey,
+				publicKey, keyRequest.verifyToken));
 	}
 
 	private String authenticate(String username, String sessionId,
@@ -357,14 +357,6 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		return gameHandler;
 	}
 
-	public synchronized String getOwner() {
-		return owner;
-	}
-
-	public synchronized void setOwner(String owner) {
-		this.owner = owner;
-	}
-
 	@Override
 	public boolean isConnected() {
 		return connectionHandler.isConnected();
@@ -378,11 +370,11 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		this.movementDisabled = movementDisabled;
 	}
 
-	public synchronized MainPlayerEntity getPlayer() {
+	public MainPlayerEntity getPlayer() {
 		return player;
 	}
 
-	public synchronized Inventory getCurrentWindow() {
+	public Inventory getCurrentWindow() {
 		return currentWindow;
 	}
 }

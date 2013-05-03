@@ -25,7 +25,7 @@ public class IRCBot extends Bot {
 	private IRCLogger logger;
 
 	public IRCBot(DarkBot darkBot, IRCBotData botData) {
-		super(darkBot, botData);
+		super(darkBot);
 		if(!botData.isValid())
 			throw new IllegalArgumentException("Invalid bot data");
 		loopManager = new LoopManager(new ThreadGroup("IRCBot Loop Threads"));

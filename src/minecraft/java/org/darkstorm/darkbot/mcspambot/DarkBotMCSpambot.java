@@ -1,16 +1,15 @@
 package org.darkstorm.darkbot.mcspambot;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.*;
 
 import javax.naming.AuthenticationException;
 import javax.script.*;
@@ -93,6 +92,8 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 	private static String spamMessage = null;
 	private static boolean die = false;
 
+	private String owner;
+
 	private DarkBotMCSpambot(DarkBot darkBot, String server, String username,
 			String password, String sessionId, String loginProxy, String proxy,
 			String owner) {
@@ -103,7 +104,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				slotsTaken.notifyAll();
 			}
 		}
-		MinecraftBotData botData = new MinecraftBotData();
+		MinecraftBotData.Builder builder = MinecraftBotData.builder();
 		// botData.nickname = "";
 		// for(int i = 0; i < 10; i++)
 		// botData.nickname += alphas[random.nextInt(alphas.length)];
@@ -117,7 +118,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				if(parts.length > 2)
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
-			botData.proxy = new ProxyData(proxy, port, type);
+			builder.withSocksProxy(new ProxyData(proxy, port, type));
 			this.proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(
 					proxy, port));
 		}
@@ -128,18 +129,16 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			botData.loginProxy = loginProxy;
-			botData.loginProxyPort = port;
+			builder.withHttpProxy(new ProxyData(loginProxy, port,
+					ProxyType.HTTP));
 			this.loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
 					loginProxy, port));
 		}
-		botData.nickname = username;
-		botData.password = password;
-		if(sessionId != null) {
-			botData.sessionId = sessionId;
-			botData.authenticate = false;
-		} else
-			botData.authenticate = true;
+		builder.withUsername(username);
+		if(sessionId != null)
+			builder.withSessionId(sessionId);
+		else
+			builder.withPassword(password);
 		if(server != null && !server.isEmpty()) {
 			int port = 25565;
 			if(server.contains(":")) {
@@ -147,12 +146,12 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				server = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			botData.server = server;
-			botData.port = port;
+			builder.withServer(server).withPort(port);
 		} else
 			throw new IllegalArgumentException("Unknown server!");
 
-		botData.owner = owner;
+		this.owner = owner;
+		MinecraftBotData botData = builder.build();
 		System.setProperty("socksProxyHost", "");
 		System.setProperty("socksProxyPort", "");
 		System.out.println("[" + username + "] Connecting...");
@@ -301,10 +300,10 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					.contains("do the time"))
 					|| message.contains("You have been muted")) {
 				connectionHandler.sendPacket(new Packet3Chat("\247Leaving!"));
-			} else if(message.contains(bot.getOwner()
+			} else if(message.contains(owner
 					+ " has requested to teleport to you.")) {
 				connectionHandler.sendPacket(new Packet3Chat("/tpaccept"));
-			} else if(message.contains(bot.getOwner())) {
+			} else if(message.contains(owner)) {
 				if(message.contains("Go ")) {
 					spamMessage = message.substring(message.indexOf("Go ")
 							+ "Go ".length());
@@ -461,7 +460,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					String name = message.substring(
 							message.indexOf("Owner ") + "Owner ".length())
 							.split(" ")[0];
-					bot.setOwner(name);
+					owner = name;
 					bot.say("Set owner to " + name);
 				}
 			} else if(message.contains("You are not member of any faction.")
@@ -543,6 +542,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 
 	// BlockLocation spawn = new BlockLocation(373, 73, 583);
 
+	@Override
 	public void onTick() {
 		if(!bot.hasSpawned() || !bot.isConnected())
 			return;

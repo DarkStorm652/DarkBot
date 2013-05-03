@@ -45,10 +45,12 @@ public class DarkBotMC implements EventListener, GameListener {
 	private MinecraftBot bot;
 	private ConnectionHandler connectionHandler;
 
+	private String owner;
+
 	private DarkBotMC(DarkBot darkBot, String server, String username,
 			String password, String sessionId, String loginProxy, String proxy,
 			String owner) {
-		MinecraftBotData botData = new MinecraftBotData();
+		MinecraftBotData.Builder builder = MinecraftBotData.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
 			ProxyType type = ProxyType.SOCKS;
@@ -59,7 +61,7 @@ public class DarkBotMC implements EventListener, GameListener {
 				if(parts.length > 2)
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
-			botData.proxy = new ProxyData(proxy, port, type);
+			builder.withSocksProxy(new ProxyData(proxy, port, type));
 			// this.proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(
 			// proxy, port));
 		}
@@ -70,19 +72,17 @@ public class DarkBotMC implements EventListener, GameListener {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			botData.loginProxy = loginProxy;
-			botData.loginProxyPort = port;
+			builder.withHttpProxy(new ProxyData(loginProxy, port,
+					ProxyType.HTTP));
 			// this.loginProxy = new Proxy(Proxy.Type.HTTP, new
 			// InetSocketAddress(
 			// loginProxy, port));
 		}
-		botData.nickname = username;
-		botData.password = password;
-		if(sessionId != null) {
-			botData.sessionId = sessionId;
-			botData.authenticate = false;
-		} else
-			botData.authenticate = true;
+		builder.withUsername(username);
+		if(sessionId != null)
+			builder.withSessionId(sessionId);
+		else
+			builder.withPassword(password);
 		if(server != null && !server.isEmpty()) {
 			int port = 25565;
 			if(server.contains(":")) {
@@ -90,12 +90,12 @@ public class DarkBotMC implements EventListener, GameListener {
 				server = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			botData.server = server;
-			botData.port = port;
+			builder.withServer(server).withPort(port);
 		} else
 			throw new IllegalArgumentException("Unknown server!");
 
-		botData.owner = owner;
+		this.owner = owner;
+		MinecraftBotData botData = builder.build();
 		System.out.println("[" + username + "] Connecting...");
 		bot = new MinecraftBot(darkBot, botData);
 		connectionHandler = bot.getConnectionHandler();
@@ -150,7 +150,7 @@ public class DarkBotMC implements EventListener, GameListener {
 				}
 			} else if(message.startsWith("/uc ")) {
 				connectionHandler.sendPacket(new Packet3Chat(message));
-			} else if(message.contains(bot.getOwner())) {
+			} else if(message.contains(owner)) {
 				if(message.contains("Stop")) {
 					bot.getTaskManager().stopAll();
 					bot.say("Stopped all tasks.");
@@ -251,10 +251,9 @@ public class DarkBotMC implements EventListener, GameListener {
 				} else if(message.contains("Follow")) {
 					String substring = message.substring(message
 							.indexOf("Follow") + "Follow".length());
-					String name = bot.getOwner();
-					if(substring.contains(" ")) {
+					String name = owner;
+					if(substring.contains(" "))
 						name = substring.split(" ")[1];
-					}
 					FollowTask followTask = bot.getTaskManager().getTaskFor(
 							FollowTask.class);
 					if(followTask.isActive())
@@ -443,7 +442,7 @@ public class DarkBotMC implements EventListener, GameListener {
 							.substring(
 									message.indexOf("SetOwner ")
 											+ "SetOwner ".length()).split(" ")[0];
-					bot.setOwner(name);
+					owner = name;
 					bot.say("Set owner to " + name);
 				} else if(message.contains("Hit ")) {
 					MainPlayerEntity player = bot.getPlayer();
@@ -636,6 +635,10 @@ public class DarkBotMC implements EventListener, GameListener {
 			connectionHandler.sendPacket(new Packet3Chat("\247disconnect"));
 		} else
 			canSpam = true;
+	}
+
+	public String getOwner() {
+		return owner;
 	}
 
 	public static void main(String[] args) {
