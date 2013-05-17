@@ -6,7 +6,7 @@ import org.darkstorm.darkbot.minecraftbot.protocol.*;
 
 public class Packet3Chat extends AbstractPacket implements ReadablePacket,
 		WriteablePacket {
-	public static int MAX_CHAT_LENGTH = 119;
+	public static int MAX_CHAT_LENGTH = 100;
 
 	public String message;
 
@@ -14,21 +14,23 @@ public class Packet3Chat extends AbstractPacket implements ReadablePacket,
 	}
 
 	public Packet3Chat(String par1Str) {
-		if(par1Str.length() > 119) {
-			par1Str = par1Str.substring(0, 119);
-		}
+		if(par1Str.length() > MAX_CHAT_LENGTH)
+			par1Str = par1Str.substring(0, MAX_CHAT_LENGTH);
 
 		message = par1Str;
 	}
 
+	@Override
 	public void readData(DataInputStream in) throws IOException {
 		message = readString(in, Integer.MAX_VALUE);
 	}
 
+	@Override
 	public void writeData(DataOutputStream out) throws IOException {
 		writeString(message, out);
 	}
 
+	@Override
 	public int getId() {
 		return 3;
 	}

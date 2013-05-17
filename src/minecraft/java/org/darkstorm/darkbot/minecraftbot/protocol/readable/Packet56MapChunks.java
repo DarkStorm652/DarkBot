@@ -1,8 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.protocol.readable;
 
-import java.util.zip.*;
-
 import java.io.*;
+import java.util.zip.*;
 
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 
@@ -13,16 +12,17 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 	public int[] secondaryBitmap;
 	public byte[][] chunkData;
 	public int chunkDataLength;
-	public boolean optionalSpace;
+	public boolean skylight;
 	private static byte[] chunkDataCache = new byte[0];
 
 	public Packet56MapChunks() {
 	}
 
+	@Override
 	public void readData(DataInputStream in) throws IOException {
 		short chunkLength = in.readShort();
 		chunkDataLength = in.readInt();
-		optionalSpace = in.readBoolean();
+		skylight = in.readBoolean();
 		chunkX = new int[chunkLength];
 		chunkZ = new int[chunkLength];
 		primaryBitmap = new int[chunkLength];
@@ -67,7 +67,7 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 			int dataLength = 2048 * 4 * primarySize + 256;
 			dataLength += 2048 * secondarySize;
 
-			if(optionalSpace)
+			if(skylight)
 				dataLength += 2048 * primarySize;
 
 			this.chunkData[var6] = new byte[dataLength];
@@ -77,6 +77,7 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 		}
 	}
 
+	@Override
 	public int getId() {
 		return 56;
 	}

@@ -14,6 +14,7 @@ public final class EntityList {
 		livingIds.put(54, ZombieEntity.class);
 		livingIds.put(58, EndermanEntity.class);
 		livingIds.put(59, CaveSpiderEntity.class);
+		livingIds.put(61, BlazeEntity.class);
 		livingIds.put(90, PigEntity.class);
 		livingIds.put(91, SheepEntity.class);
 		livingIds.put(92, CowEntity.class);

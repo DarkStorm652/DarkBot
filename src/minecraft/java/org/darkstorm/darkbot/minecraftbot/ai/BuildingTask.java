@@ -2,16 +2,12 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet15Place;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public class BuildingTask implements Task, EventListener {
 	private static final boolean[] UNPLACEABLE = new boolean[256];
-
 	static {
 		UNPLACEABLE[0] = true;
 		UNPLACEABLE[8] = true;
@@ -34,7 +30,6 @@ public class BuildingTask implements Task, EventListener {
 	}
 
 	private final MinecraftBot bot;
-	private WalkTask walkTask;
 	private EatTask eatTask;
 	private boolean running = false;
 
@@ -55,7 +50,6 @@ public class BuildingTask implements Task, EventListener {
 	@Override
 	public synchronized boolean start(String... options) {
 		TaskManager taskManager = bot.getTaskManager();
-		walkTask = taskManager.getTaskFor(WalkTask.class);
 		eatTask = taskManager.getTaskFor(EatTask.class);
 		blockId = Integer.parseInt(options[0]);
 		point1 = new BlockLocation(Integer.parseInt(options[1]),
@@ -78,7 +72,7 @@ public class BuildingTask implements Task, EventListener {
 
 	@Override
 	public synchronized void run() {
-		if(walkTask.isActive() || eatTask.isActive())
+		if(eatTask.isActive())
 			return;
 		if(ticksWait > 0) {
 			ticksWait--;
@@ -109,8 +103,8 @@ public class BuildingTask implements Task, EventListener {
 						continue;
 					int id = world.getBlockIdAt(x, y, z);
 					if(!BlockType.getById(id).isSolid()) {
+						BlockLocation location = new BlockLocation(x, y, z);
 						if(startCounterLocation != null) {
-							BlockLocation location = new BlockLocation(x, y, z);
 							System.out.println(ourLocation + " -> " + location);
 							BlockLocation original = location;
 							BlockLocation below = location.offset(0, -1, 0);
@@ -123,19 +117,27 @@ public class BuildingTask implements Task, EventListener {
 								if(original.getY() - location.getY() >= 5)
 									return;
 							}
-							if(ourLocation.getX() != location.getX()
-									|| ourLocation.getY() != location.getY()
-									|| ourLocation.getZ() != location.getZ()) {
-								walkTask.setTarget(location);
+							if(!location.equals(ourLocation)) {
+								System.out.println("walking...");
+								bot.setActivity(new WalkActivity(bot, location));
 								ticksWait = 4;
 								return;
 							}
-							placeBlockAt(startCounterLocation, blockId);
+							int index = player.getInventory().getFirstSlot(
+									blockId);
+							if(index == -1) {
+								System.out.println("Stopping! No blocks left");
+								stop();
+								return;
+							}
+							System.out.println("Placing block.");
+							player.switchHeldItems(index);
+							player.placeBlock(startCounterLocation);
 
 							startCounterLocation = null;
 						}
 
-						startCounterLocation = new BlockLocation(x, y, z);
+						startCounterLocation = location;
 					}
 				}
 				flip = !flip;
@@ -146,116 +148,6 @@ public class BuildingTask implements Task, EventListener {
 	@Override
 	public synchronized boolean isActive() {
 		return running;
-	}
-
-	private boolean placeBlockAt(BlockLocation location, int id) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return false;
-		PlayerInventory inventory = player.getInventory();
-		int slot = -1;
-		for(int i = 0; i < 36; i++) {
-			ItemStack item = inventory.getItemAt(i);
-			if(item != null && item.getId() == id) {
-				slot = i;
-				break;
-			}
-		}
-		if(slot == -1)
-			return false;
-		if(inventory.getCurrentHeldSlot() != slot) {
-			if(slot > 8) {
-				int hotbarSpace = 9;
-				for(int hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-					if(inventory.getItemAt(hotbarIndex) == null) {
-						hotbarSpace = hotbarIndex;
-						break;
-					}
-				}
-				if(hotbarSpace == 9)
-					return false;
-				inventory.selectItemAt(slot);
-				inventory.selectItemAt(hotbarSpace);
-				if(inventory.getSelectedItem() != null)
-					inventory.selectItemAt(slot);
-				inventory.close();
-				slot = hotbarSpace;
-			}
-			inventory.setCurrentHeldSlot(slot);
-		}
-		return placeAt(location);
-	}
-
-	private boolean placeAt(BlockLocation location) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return false;
-		PlayerInventory inventory = player.getInventory();
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location
-				.getZ();
-		int face = getPlacementBlockFaceAt(location);
-		location = getOffsetBlock(location, face);
-		if(location == null)
-			return false;
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D),
-				z + ((originalZ - z) / 2.0D));
-		bot.updateMovement();
-		player.swingArm();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = x;
-		placePacket.yPosition = y;
-		placePacket.zPosition = z;
-		placePacket.direction = face;
-		placePacket.itemStack = inventory.getCurrentHeldItem();
-		connectionHandler.sendPacket(placePacket);
-		ticksWait = 4;
-		return true;
-	}
-
-	private int getPlacementBlockFaceAt(BlockLocation location) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		World world = bot.getWorld();
-		if(!UNPLACEABLE[world.getBlockIdAt(x + 1, y, z)]) {
-			return 4;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z - 1)]) {
-			return 3;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z + 1)]) {
-			return 2;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y - 1, z)]) {
-			return 1;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x - 1, y, z)]) {
-			return 5;
-		} else
-			return -1;
-	}
-
-	private BlockLocation getOffsetBlock(BlockLocation location, int face) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		switch(face) {
-		case 0:
-			y++;
-			break;
-		case 1:
-			y--;
-			break;
-		case 2:
-			z++;
-			break;
-		case 3:
-			z--;
-			break;
-		case 4:
-			x++;
-			break;
-		case 5:
-			x--;
-			break;
-		default:
-			return null;
-		}
-		return new BlockLocation(x, y, z);
 	}
 
 	@Override

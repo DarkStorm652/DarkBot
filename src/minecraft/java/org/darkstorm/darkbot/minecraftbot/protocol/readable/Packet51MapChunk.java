@@ -1,8 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.protocol.readable;
 
-import java.util.zip.*;
-
 import java.io.*;
+import java.util.zip.*;
 
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 
@@ -11,18 +10,19 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 	public int z;
 	public int bitmask;
 	public int additionalBitmask;
+	public boolean biomes;
 	public byte[] chunkData;
 
-	public boolean includeInitialize;
 	private static byte[] compressedCache = new byte[0];
 
 	public Packet51MapChunk() {
 	}
 
+	@Override
 	public void readData(DataInputStream in) throws IOException {
 		x = in.readInt();
 		z = in.readInt();
-		includeInitialize = in.readBoolean();
+		biomes = in.readBoolean();
 		bitmask = in.readShort();
 		additionalBitmask = in.readShort();
 		int tempLength = in.readInt();
@@ -38,7 +38,7 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 
 		int k = 12288 * i;
 
-		if(includeInitialize)
+		if(biomes)
 			k += 256;
 
 		chunkData = new byte[k];
@@ -68,6 +68,7 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 		}
 	}
 
+	@Override
 	public int getId() {
 		return 51;
 	}

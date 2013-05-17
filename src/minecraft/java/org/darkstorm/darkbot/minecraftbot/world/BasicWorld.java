@@ -217,7 +217,8 @@ public final class BasicWorld implements World, EventListener {
 			Packet51MapChunk mapChunkPacket = (Packet51MapChunk) packet;
 			processChunk(mapChunkPacket.x, mapChunkPacket.z,
 					mapChunkPacket.chunkData, mapChunkPacket.bitmask,
-					mapChunkPacket.additionalBitmask);
+					mapChunkPacket.additionalBitmask, true,
+					mapChunkPacket.biomes);
 		} else if(packet instanceof Packet52MultiBlockChange) {
 			Packet52MultiBlockChange multiBlockChangePacket = (Packet52MultiBlockChange) packet;
 			if(multiBlockChangePacket.metadataArray == null)
@@ -257,18 +258,22 @@ public final class BasicWorld implements World, EventListener {
 			for(int i = 0; i < chunkPacket.primaryBitmap.length; i++)
 				processChunk(chunkPacket.chunkX[i], chunkPacket.chunkZ[i],
 						chunkPacket.chunkData[i], chunkPacket.primaryBitmap[i],
-						chunkPacket.secondaryBitmap[i]);
+						chunkPacket.secondaryBitmap[i], chunkPacket.skylight,
+						true);
 		}
 	}
 
 	private void processChunk(int x, int z, byte[] data, int bitmask,
-			int additionalBitmask) {
+			int additionalBitmask, boolean addSkylight, boolean addBiomes) {
 		if(data == null)
 			return;
 		int chunksChanged = 0;
 		for(int i = 0; i < 16; i++)
 			if((bitmask & (1 << i)) != 0)
 				chunksChanged++;
+		if(chunksChanged == 0)
+			return;
+		byte[] biomes = new byte[256];
 		synchronized(chunks) {
 			int i = 0;
 			for(int y = 0; y < 16; y++) {
@@ -284,10 +289,10 @@ public final class BasicWorld implements World, EventListener {
 				byte[] light = Arrays.copyOfRange(data, dataIndex,
 						dataIndex + 2048);
 				dataIndex += chunksChanged * 2048;
-				byte[] skylight = Arrays.copyOfRange(data, dataIndex,
-						dataIndex + 2048);
-				dataIndex += 2048;
-				// dataIndex += chunksChanged * 2048;
+				byte[] skylight = null;
+				if(addSkylight)
+					skylight = Arrays.copyOfRange(data, dataIndex,
+							dataIndex + 2048);
 
 				byte[] perBlockMetadata = new byte[4096];
 				byte[] perBlockLight = new byte[4096];
@@ -297,21 +302,25 @@ public final class BasicWorld implements World, EventListener {
 					int k = j * 2;
 					perBlockMetadata[k] = (byte) (metadata[j] & 0x0F);
 					perBlockLight[k] = (byte) (light[j] & 0x0F);
-					perBlockSkylight[k] = (byte) (skylight[j] & 0x0F);
+					if(addSkylight)
+						perBlockSkylight[k] = (byte) (skylight[j] & 0x0F);
 					k++;
 					perBlockMetadata[k] = (byte) (metadata[j] >> 4);
 					perBlockLight[k] = (byte) (light[j] >> 4);
-					perBlockSkylight[k] = (byte) (skylight[j] >> 4);
+					if(addSkylight)
+						perBlockSkylight[k] = (byte) (skylight[j] >> 4);
 				}
 
 				ChunkLocation newLocation = new ChunkLocation(x, y, z);
 				Chunk chunk = new Chunk(this, newLocation, blocks,
-						perBlockMetadata, perBlockLight, perBlockSkylight);
+						perBlockMetadata, perBlockLight, perBlockSkylight,
+						biomes);
 				chunks.put(newLocation, chunk);
 				bot.getEventManager()
 						.sendEvent(new ChunkLoadEvent(this, chunk));
 				i++;
 			}
+			System.arraycopy(data, data.length - 256, biomes, 0, 256);
 		}
 	}
 

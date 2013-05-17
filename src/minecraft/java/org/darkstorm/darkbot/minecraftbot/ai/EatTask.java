@@ -21,7 +21,7 @@ public class EatTask implements Task {
 
 	private boolean active;
 
-	private int lastHealth, lastHunger, eatingTicks, lastSlot;
+	private int lastHealth = -1, lastHunger = -1, eatingTicks, lastSlot;
 
 	public EatTask(MinecraftBot bot) {
 		this.bot = bot;
@@ -73,40 +73,26 @@ public class EatTask implements Task {
 			}
 			return;
 		}
+		int foodIndex = -1;
 		for(int i = 0; i < 36; i++) {
 			ItemStack item = inventory.getItemAt(i);
 			if(item == null || !isFood(item.getId()))
 				continue;
-			if(i > 8) {
-				int hotbarSpace = -1;
-				for(int hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-					if(inventory.getItemAt(hotbarIndex) == null) {
-						hotbarSpace = hotbarIndex;
-						break;
-					}
-				}
-				if(hotbarSpace == -1) {
-					stop();
-					break;
-				}
-				inventory.selectItemAt(i);
-				inventory.selectItemAt(hotbarSpace);
-				inventory.close();
-				i = hotbarSpace;
-			}
-			int lastHeldSlot = inventory.getCurrentHeldSlot();
-			if(i != lastHeldSlot)
-				inventory.setCurrentHeldSlot(i);
-			Packet15Place placePacket = new Packet15Place();
-			placePacket.xPosition = -1;
-			placePacket.yPosition = -1;
-			placePacket.zPosition = -1;
-			placePacket.direction = -1;
-			placePacket.itemStack = item;
-			connectionHandler.sendPacket(placePacket);
-			eatingTicks = 32;
+			foodIndex = i;
 			break;
 		}
+		if(foodIndex == -1 || !player.switchHeldItems(foodIndex)) {
+			stop();
+			return;
+		}
+		Packet15Place placePacket = new Packet15Place();
+		placePacket.xPosition = -1;
+		placePacket.yPosition = -1;
+		placePacket.zPosition = -1;
+		placePacket.direction = -1;
+		placePacket.itemStack = inventory.getItemAt(foodIndex);
+		connectionHandler.sendPacket(placePacket);
+		eatingTicks = 32;
 		lastHealth = player.getHealth();
 		lastHunger = player.getHunger();
 	}

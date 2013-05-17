@@ -102,7 +102,6 @@ public class DarkBotMC implements EventListener, GameListener {
 		System.gc();
 		System.out.println("[" + username + "] Joined!");
 		TaskManager taskManager = bot.getTaskManager();
-		taskManager.registerTask(new WalkTask(bot));
 		taskManager.registerTask(new FallTask(bot));
 		taskManager.registerTask(new ChopTreesTask(bot));
 		taskManager.registerTask(new FollowTask(bot));
@@ -114,6 +113,8 @@ public class DarkBotMC implements EventListener, GameListener {
 		taskManager.registerTask(new FishingTask(bot));
 		taskManager.registerTask(new FarmingTask(bot));
 		taskManager.registerTask(new BuildingTask(bot));
+		taskManager.registerTask(new AvoidDeathTask(bot));
+		taskManager.registerTask(new DestroyingTask(bot));
 		bot.getEventManager().registerListener(this);
 		bot.getGameHandler().registerListener(this);
 		// new MCToIRCController(this);
@@ -153,7 +154,10 @@ public class DarkBotMC implements EventListener, GameListener {
 			} else if(message.contains(owner)) {
 				if(message.contains("Stop")) {
 					bot.getTaskManager().stopAll();
+					bot.setActivity(null);
 					bot.say("Stopped all tasks.");
+				} else if(message.contains("has requested to teleport to you.")) {
+					bot.say("/tpaccept");
 				} else if(message.contains("Die")) {
 					bot.say("Leaving!");
 					connectionHandler.sendPacket(new Packet255KickDisconnect(
@@ -161,6 +165,10 @@ public class DarkBotMC implements EventListener, GameListener {
 				} else if(message.contains("Say ")) {
 					bot.say(message.substring(message.indexOf("Say ")
 							+ "Say ".length()));
+				} else if(message.contains("Calc ")) {
+					String text = message.substring(message.indexOf("Calc ")
+							+ "Calc ".length());
+					bot.say(Util.eval(text).toString());
 				} else if(message.contains("Leave")) {
 					bot.say("Leaving!");
 					connectionHandler.sendPacket(new Packet255KickDisconnect(
@@ -170,15 +178,11 @@ public class DarkBotMC implements EventListener, GameListener {
 					String[] parts = message.substring(
 							message.indexOf("Goto ") + "Goto ".length()).split(
 							" ");
-					WalkTask task = bot.getTaskManager().getTaskFor(
-							WalkTask.class);
 					BlockLocation target = new BlockLocation(
 							Integer.parseInt(parts[0]),
 							Integer.parseInt(parts[1]),
 							Integer.parseInt(parts[2]));
-					if(task.isActive())
-						task.stop();
-					task.setTarget(target);
+					bot.setActivity(new WalkActivity(bot, target));
 				} else if(message.contains("Chop")) {
 					bot.getTaskManager().getTaskFor(ChopTreesTask.class)
 							.start();
@@ -430,8 +434,6 @@ public class DarkBotMC implements EventListener, GameListener {
 						if(!activeTasks.isEmpty())
 							activeTasks = activeTasks.substring(0,
 									activeTasks.length() - 2);
-						System.out.println("Tasks: [" + tasks + "] Active: ["
-								+ activeTasks + "]");
 						bot.say("Tasks: [" + tasks + "] Active: ["
 								+ activeTasks + "]");
 					} catch(Exception exception) {
@@ -513,6 +515,52 @@ public class DarkBotMC implements EventListener, GameListener {
 						placePacket.itemStack = inventory.getCurrentHeldItem();
 						connectionHandler.sendPacket(placePacket);
 					} catch(NumberFormatException e) {}
+				} else if(message.contains("SetWalk ")) {
+					String substring = message.substring(message
+							.indexOf("SetWalk ") + "SetWalk ".length());
+					bot.say("Set walk settings: " + substring);
+					String[] parts = substring.split(" ");
+					if(parts.length == 0)
+						return;
+					WalkActivity.setDefaultSpeed(Double.parseDouble(parts[0]));
+					if(parts.length == 1)
+						return;
+					WalkActivity.setDefaultJumpFactor(Double
+							.parseDouble(parts[1]));
+					if(parts.length == 2)
+						return;
+					WalkActivity.setDefaultFallFactor(Double
+							.parseDouble(parts[2]));
+					if(parts.length == 3)
+						return;
+					WalkActivity.setDefaultLiquidFactor(Double
+							.parseDouble(parts[3]));
+				} else if(message.contains("AvoidDeath")) {
+					AvoidDeathTask avoidDeath = bot.getTaskManager()
+							.getTaskFor(AvoidDeathTask.class);
+					if(!avoidDeath.isActive()) {
+						avoidDeath.start();
+						bot.say("Avoiding death!");
+					} else {
+						avoidDeath.stop();
+						bot.say("No longer avoiding death.");
+					}
+				} else if(message.contains("Destroy ")) {
+					String substring = message.substring(message
+							.indexOf("Destroy ") + "Destroy ".length());
+					String[] parts = substring.split(" ");
+					for(int i = 0; i < parts.length; i++)
+						parts[i] = parts[i].split("=")[1];
+					bot.getTaskManager().getTaskFor(DestroyingTask.class)
+							.start(parts);
+				} else if(message.contains("Build ")) {
+					String substring = message.substring(message
+							.indexOf("Build ") + "Build ".length());
+					String[] parts = substring.split(" ");
+					for(int i = 0; i < parts.length; i++)
+						parts[i] = parts[i].split("=")[1];
+					bot.getTaskManager().getTaskFor(BuildingTask.class)
+							.start(parts);
 				} else if(message.contains("Players"))
 					requestPlayers();
 			}
@@ -615,10 +663,10 @@ public class DarkBotMC implements EventListener, GameListener {
 		if(player == null)
 			return;
 		if("1".equals("")) {
-			WalkTask task = bot.getTaskManager().getTaskFor(WalkTask.class);
 			if(player.getDistanceTo(spawnLocation) < 5) {
-				if(!task.isMoving())
-					task.setTarget(targetLocation);
+				if(!bot.hasActivity()
+						|| !(bot.getActivity() instanceof WalkActivity))
+					bot.setActivity(new WalkActivity(bot, spawnLocation));
 				canSpam = false;
 			} else
 				canSpam = true;

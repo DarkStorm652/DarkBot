@@ -1,12 +1,11 @@
 package org.darkstorm.darkbot.darkbotmc.regular;
 
-import java.util.*;
-import java.util.List;
-import java.util.regex.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.regex.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,7 +13,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.darkstorm.darkbot.darkbotmc.BotControlsUI;
+import org.darkstorm.darkbot.darkbotmc.*;
 import org.darkstorm.darkbot.darkbotmc.regular.RegularBot.RegularBotData;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -34,7 +33,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 	private JProgressBar progressBar;
 	// JFormDesigner - End of variables declaration //GEN-END:variables
 
-	private static final int MAX_LOG_SIZE = 300;
+	private static final int MAX_LOG_SIZE = 150;
 
 	private final List<String> log;
 
@@ -216,10 +215,12 @@ public class RegularBotControlsUI extends BotControlsUI {
 	public synchronized void setStatus(final String status) {
 		this.status = status;
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				progressBar.setString(status);
 			}
 		});
+		DarkBotMC.getInstance().getUI().updateStatus(this);
 	}
 
 	public synchronized void setProgress(int percentage) {
@@ -233,6 +234,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 	public synchronized void setProgress(final int percentage,
 			final boolean indeterminate) {
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				if(percentage != progressBar.getValue())
 					progressBar.setValue(percentage);
@@ -281,9 +283,11 @@ public class RegularBotControlsUI extends BotControlsUI {
 		Matcher matcher = pattern.matcher(message);
 		boolean first = true;
 		while(matcher.find()) {
+			String color = convertMCColor(matcher.group());
+			if(color.isEmpty())
+				continue;
 			message = message.replace(matcher.group(), (first ? "" : "</font>")
-					+ "<font color=\"#" + convertMCColor(matcher.group())
-					+ "\">");
+					+ "<font color=\"#" + color + "\">");
 			first = false;
 		}
 		if(!first)
@@ -295,37 +299,37 @@ public class RegularBotControlsUI extends BotControlsUI {
 		char value = color.charAt(1);
 		switch(value) {
 		case '0':
-			return "ffffff";
+			return "FFFFFF";
 		case '1':
-			return "0000be";
+			return "0000BE";
 		case '2':
-			return "00be00";
+			return "00BE00";
 		case '3':
-			return "00bebe";
+			return "00BEBE";
 		case '4':
-			return "be0000";
+			return "BE0000";
 		case '5':
-			return "be00be";
+			return "BE00BE";
 		case '6':
 			return "D9A334";
 		case '7':
-			return "bebebe";
+			return "BEBEBE";
 		case '8':
-			return "3f3f3f";
+			return "3F3F3F";
 		case '9':
-			return "3f3ffe";
+			return "3F3FFE";
 		case 'a':
-			return "3ffe3f";
+			return "3FFE3F";
 		case 'b':
-			return "3ffefe";
+			return "3FFEFE";
 		case 'c':
-			return "fe3f3f";
+			return "FE3F3F";
 		case 'd':
-			return "fe3ffe";
+			return "FE3FFE";
 		case 'e':
-			return "fefe3f";
+			return "FEFE3F";
 		case 'f':
-			return "ffffff";
+			return "FFFFFF";
 		case 'k':
 			return "▒";
 		case 'l':
@@ -337,7 +341,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 		case 'o':
 			return "";
 		case 'r':
-			return "ffffff";
+			return "FFFFFF";
 		default:
 			return "";
 		}
@@ -464,6 +468,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 			sendButton.setText(bundle
 					.getString("regularbotcontrols.sendButton.text"));
 			sendButton.addActionListener(new ActionListener() {
+				@Override
 				public void actionPerformed(ActionEvent e) {
 					sendButtonActionPerformed(e);
 				}
@@ -485,14 +490,17 @@ public class RegularBotControlsUI extends BotControlsUI {
 	}
 
 	class ScrollingDocumentListener implements DocumentListener {
+		@Override
 		public void changedUpdate(DocumentEvent e) {
 			maybeScrollToBottom();
 		}
 
+		@Override
 		public void insertUpdate(DocumentEvent e) {
 			maybeScrollToBottom();
 		}
 
+		@Override
 		public void removeUpdate(DocumentEvent e) {
 			maybeScrollToBottom();
 		}
@@ -502,8 +510,10 @@ public class RegularBotControlsUI extends BotControlsUI {
 			boolean scrollBarAtBottom = isScrollBarFullyExtended(scrollBar);
 			if(scrollBarAtBottom) {
 				EventQueue.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						EventQueue.invokeLater(new Runnable() {
+							@Override
 							public void run() {
 								scrollToBottom(logTextArea);
 							}

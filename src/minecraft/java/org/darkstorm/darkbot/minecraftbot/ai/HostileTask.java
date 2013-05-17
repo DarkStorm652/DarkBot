@@ -43,9 +43,6 @@ public class HostileTask implements Task {
 		World world = bot.getWorld();
 		if(world == null || player == null)
 			return;
-		WalkTask walkTask = bot.getTaskManager().getTaskFor(WalkTask.class);
-		if(walkTask.isActive())
-			walkTask.run();
 		if(attackCooldown > 0)
 			attackCooldown--;
 		Entity entity = null;
@@ -75,15 +72,17 @@ public class HostileTask implements Task {
 				if(original.getY() - location.getY() >= 5)
 					return;
 			}
-			if(walkTask.getTarget() == null
-					|| location.getDistanceTo(walkTask.getTarget()) > 3) {
-				walkTask.stop();
-				walkTask.setTarget(location);
+			if(bot.hasActivity() && bot.getActivity() instanceof WalkActivity) {
+				WalkActivity activity = (WalkActivity) bot.getActivity();
+				if(location.getDistanceTo(activity.getTarget()) <= 3)
+					return;
 			}
+			bot.setActivity(new WalkActivity(bot, location, true));
 			return;
 		} else {
-			if(closestDistance < 9 && walkTask.isActive())
-				walkTask.stop();
+			if(closestDistance < 9 && bot.hasActivity()
+					&& bot.getActivity() instanceof WalkActivity)
+				bot.setActivity(null);
 			if(attackCooldown > 0)
 				return;
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
@@ -102,17 +101,17 @@ public class HostileTask implements Task {
 
 	@Override
 	public TaskPriority getPriority() {
-		return TaskPriority.HIGH;
+		return TaskPriority.NORMAL;
 	}
 
 	@Override
 	public boolean isExclusive() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean ignoresExclusive() {
-		return false;
+		return true;
 	}
 
 	@Override

@@ -23,7 +23,6 @@ public class ChopTreesTask implements Task, EventListener {
 
 	private final MinecraftBot bot;
 	private final List<BlockLocation> logPositions = new ArrayList<BlockLocation>();
-	private final WalkTask walkTask;
 	private boolean running = false;
 	private final Comparator<BlockLocation> logComparator;
 
@@ -43,7 +42,6 @@ public class ChopTreesTask implements Task, EventListener {
 				return Double.compare(distance1, distance2);
 			}
 		};
-		walkTask = bot.getTaskManager().getTaskFor(WalkTask.class);
 		bot.getEventManager().registerListener(this);
 	}
 
@@ -75,8 +73,6 @@ public class ChopTreesTask implements Task, EventListener {
 			return;
 		}
 		ticksSinceChop = 0;
-		if(walkTask.isActive())
-			return;
 		if(logPositions.size() == 0)
 			return;
 		Collections.sort(logPositions, logComparator);
@@ -136,7 +132,7 @@ public class ChopTreesTask implements Task, EventListener {
 											newLocation.getY() + 1,
 											newLocation.getZ())).isSolid())
 						continue;
-					walkTask.setTarget(newLocation);
+					bot.setActivity(new WalkActivity(bot, newLocation));
 					return;
 				}
 			}

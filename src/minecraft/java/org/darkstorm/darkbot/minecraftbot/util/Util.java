@@ -1,20 +1,36 @@
 package org.darkstorm.darkbot.minecraftbot.util;
 
-import java.util.*;
-import java.util.jar.*;
-
 import java.io.*;
 import java.net.*;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.util.*;
+import java.util.jar.*;
 
 import javax.naming.AuthenticationException;
 import javax.net.ssl.HttpsURLConnection;
+import javax.script.*;
 
 import org.darkstorm.darkbot.minecraftbot.Session;
 
 public final class Util {
+	private static final ScriptEngine engine;
+
+	static {
+		ScriptEngineManager mgr = new ScriptEngineManager();
+		engine = mgr.getEngineByName("JavaScript");
+	}
+
 	private Util() {
+		throw new UnsupportedOperationException();
+	}
+
+	public static Object eval(String javascript) {
+		try {
+			return engine.eval(javascript);
+		} catch(ScriptException exception) {
+			return null;
+		}
 	}
 
 	public static Session retrieveSession(String username, String password,
@@ -130,6 +146,7 @@ public final class Util {
 		return null;
 	}
 
+	@SuppressWarnings("resource")
 	public static List<Class<?>> getClassesInPackage(String packageName)
 			throws IOException {
 		ClassLoader classLoader = Thread.currentThread()

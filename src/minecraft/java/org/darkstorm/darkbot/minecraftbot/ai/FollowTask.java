@@ -9,7 +9,7 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 public class FollowTask implements Task {
 	private final MinecraftBot bot;
 	private Entity following = null;
-	private int lastX, lastY, lastZ;
+	private BlockLocation lastLocation;
 
 	public FollowTask(MinecraftBot bot) {
 		this.bot = bot;
@@ -54,13 +54,9 @@ public class FollowTask implements Task {
 		MainPlayerEntity player = bot.getPlayer();
 		if(following == null || player == null)
 			return;
-		if(lastX != (int) (following.getX() - 0.5)
-				|| lastY != (int) (following.getY() + 0.5)
-				|| lastZ != (int) (following.getZ() - 0.5)) {
-			lastX = (int) (following.getX() - 0.5);
-			lastY = (int) (following.getY() + 0.5);
-			lastZ = (int) (following.getZ() - 0.5);
-			BlockLocation location = new BlockLocation(lastX, lastY, lastZ);
+		BlockLocation location = new BlockLocation(following.getLocation());
+		if(lastLocation == null || !lastLocation.equals(location)) {
+			lastLocation = location;
 			System.out.println("Checking location " + location);
 			World world = bot.getWorld();
 			System.out.println(world.getChunkAt(new ChunkLocation(location)));
@@ -74,8 +70,7 @@ public class FollowTask implements Task {
 				if(original.getY() - location.getY() >= 5)
 					return;
 			}
-			WalkTask walkTask = bot.getTaskManager().getTaskFor(WalkTask.class);
-			walkTask.setTarget(location);
+			bot.setActivity(new WalkActivity(bot, location, true));
 		}
 	}
 
@@ -88,12 +83,17 @@ public class FollowTask implements Task {
 				return true;
 			player.face(following.getX(), following.getY() + 1,
 					following.getZ());
-			WalkTask walkTask = bot.getTaskManager().getTaskFor(WalkTask.class);
-			if(walkTask.isActive()
-					&& (player.getDistanceTo(following) < 2 || following
-							.getDistanceTo(walkTask.getTarget()) > 3)
+			Activity activity = bot.getActivity();
+			if(activity == null || !(activity instanceof WalkActivity))
+				return active;
+			FallTask fallTask = bot.getTaskManager().getTaskFor(FallTask.class);
+			WalkActivity walkActivity = (WalkActivity) activity;
+			if(walkActivity.isActive()
+					&& ((player.getDistanceTo(following) < 2 && (fallTask == null || !fallTask
+							.isPreconditionMet())) || following
+							.getDistanceTo(walkActivity.getTarget()) > 3)
 					&& player.isOnGround())
-				walkTask.stop();
+				bot.setActivity(null);
 		}
 		return active;
 	}

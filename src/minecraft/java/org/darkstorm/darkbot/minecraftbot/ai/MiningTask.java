@@ -13,63 +13,10 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public class MiningTask implements Task, EventListener {
-	private static final boolean[] MINEABLE = new boolean[256],
-			DIGGABLE = new boolean[256], UNPLACEABLE = new boolean[256],
-			ORES = new boolean[256];
-	@SuppressWarnings("unused")
-	private static final int[] PICKAXES = new int[3200],
-			SHOVELS = new int[3200], DROPPABLE = new int[3200];
+	private static final boolean[] ORES = new boolean[256];
 	private static final int TUNNEL_LENGTH = 35;
 
 	static {
-		MINEABLE[1] = true;
-		MINEABLE[14] = true;
-		MINEABLE[15] = true;
-		MINEABLE[16] = true;
-		MINEABLE[21] = true;
-		MINEABLE[24] = true;
-		MINEABLE[43] = true;
-		MINEABLE[44] = true;
-		MINEABLE[45] = true;
-		MINEABLE[48] = true;
-		MINEABLE[52] = true;
-		MINEABLE[56] = true;
-		MINEABLE[57] = true;
-		MINEABLE[61] = true;
-		MINEABLE[62] = true;
-		MINEABLE[67] = true;
-		MINEABLE[73] = true;
-		MINEABLE[74] = true;
-		MINEABLE[87] = true;
-		MINEABLE[89] = true;
-
-		DIGGABLE[2] = true;
-		DIGGABLE[3] = true;
-		DIGGABLE[12] = true;
-		DIGGABLE[13] = true;
-		DIGGABLE[60] = true;
-		DIGGABLE[88] = true;
-		DIGGABLE[110] = true;
-
-		UNPLACEABLE[0] = true;
-		UNPLACEABLE[8] = true;
-		UNPLACEABLE[9] = true;
-		UNPLACEABLE[10] = true;
-		UNPLACEABLE[11] = true;
-		UNPLACEABLE[26] = true;
-		UNPLACEABLE[31] = true;
-		UNPLACEABLE[51] = true;
-		UNPLACEABLE[54] = true;
-		UNPLACEABLE[61] = true;
-		UNPLACEABLE[62] = true;
-		UNPLACEABLE[64] = true;
-		UNPLACEABLE[69] = true;
-		UNPLACEABLE[71] = true;
-		UNPLACEABLE[77] = true;
-		UNPLACEABLE[78] = true;
-		UNPLACEABLE[96] = true;
-		UNPLACEABLE[107] = true;
-
 		ORES[14] = true;
 		ORES[15] = true;
 		ORES[16] = true;
@@ -77,30 +24,17 @@ public class MiningTask implements Task, EventListener {
 		ORES[56] = true;
 		ORES[73] = true;
 		ORES[74] = true;
-
-		PICKAXES[257] = 4;
-		PICKAXES[270] = 1;
-		PICKAXES[274] = 2;
-		PICKAXES[278] = 5;
-		PICKAXES[285] = 3;
-
-		SHOVELS[256] = 4;
-		SHOVELS[269] = 1;
-		SHOVELS[273] = 2;
-		SHOVELS[277] = 5;
-		SHOVELS[284] = 3;
 	}
 
 	private final MinecraftBot bot;
 
-	private WalkTask walkTask;
 	private EatTask eatTask;
 	private boolean running = false;
 
 	private BlockLocation currentlyBreaking, previous, nextTarget;
 	private int ticksSinceBreak, xStart = Integer.MAX_VALUE,
-			zStart = Integer.MAX_VALUE, zDirection, ticksWait;
-	private BlockLocation lastLocation;
+			zStart = Integer.MAX_VALUE, zDirection, ticksWait, skipForward;
+	private BlockLocation lastLocation, lastPlacement;
 
 	public MiningTask(final MinecraftBot bot) {
 		this.bot = bot;
@@ -115,7 +49,6 @@ public class MiningTask implements Task, EventListener {
 	@Override
 	public synchronized boolean start(String... options) {
 		TaskManager taskManager = bot.getTaskManager();
-		walkTask = taskManager.getTaskFor(WalkTask.class);
 		eatTask = taskManager.getTaskFor(EatTask.class);
 		running = true;
 		return true;
@@ -148,7 +81,7 @@ public class MiningTask implements Task, EventListener {
 		}
 		World world = bot.getWorld();
 		MainPlayerEntity player = bot.getPlayer();
-		if(nextTarget != null && player.getDistanceTo(nextTarget) < 5) {
+		if(nextTarget != null && player.getDistanceTo(nextTarget) < 3.5) {
 			int id = world.getBlockIdAt(nextTarget);
 			if(id == 0 || id == 8 || id == 9 || id == 10 || id == 11) {
 				nextTarget = checkSurrounding(nextTarget);
@@ -161,9 +94,7 @@ public class MiningTask implements Task, EventListener {
 		} else if(nextTarget != null && player.getDistanceTo(nextTarget) > 8)
 			nextTarget = null;
 		System.out.println("Mining!");
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		checkTorches(ourLocation);
 		if(BlockType.getById(
 				world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1,
@@ -177,6 +108,7 @@ public class MiningTask implements Task, EventListener {
 		}
 		BlockLocation newLocation = null;
 		if(ourLocation.getY() < 11) {
+			skipForward = 0;
 			for(int offset = 1; offset < Math.max(11 - ourLocation.getY(), 3); offset++) {
 				newLocation = ourLocation.offset(offset == 1 ? -1 : 0,
 						offset == 1 ? 2 : offset - 1, 0);
@@ -192,23 +124,33 @@ public class MiningTask implements Task, EventListener {
 				placeBlockAt(newLocation.offset(0, -1, 0));
 			player.face(newLocation.getX(), newLocation.getY() + 1,
 					newLocation.getZ());
-			walkTask.setTarget(newLocation);
+			bot.setActivity(new WalkActivity(bot, newLocation));
 		} else if(ourLocation.getY() > 11) {
-			for(int offset = 1; offset >= -1; offset--) {
-				newLocation = new BlockLocation(ourLocation.getX() - 1,
-						ourLocation.getY() + offset, ourLocation.getZ());
-				if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
-					breakBlock(newLocation);
-					return;
+			if(skipForward == 0) {
+				for(int offset = 1; offset >= -1; offset--) {
+					newLocation = new BlockLocation(ourLocation.getX() - 1,
+							ourLocation.getY() + offset, ourLocation.getZ());
+					if(BlockType.getById(world.getBlockIdAt(newLocation))
+							.isSolid()) {
+						breakBlock(newLocation);
+						return;
+					}
 				}
+			} else {
+				bot.setActivity(new WalkActivity(bot, ourLocation.offset(-1, 0,
+						0)));
+				skipForward = 0;
+				return;
 			}
 			int belowId = world.getBlockIdAt(newLocation.getX(),
 					newLocation.getY() - 1, newLocation.getZ());
-			if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10
-					|| belowId == 11) {
+			BlockType belowType = BlockType.getById(belowId);
+			if(belowType == BlockType.AIR || !belowType.isSolid()) {
+				if(!belowType.isIndestructable() && belowType.isPlaceable()) {
+					breakBlock(newLocation.offset(0, -1, 0));
+					return;
+				}
 				boolean success = placeBlockAt(newLocation.offset(0, -1, 0));
-				if(!success)
-					success = placeBlockAt(newLocation.offset(1, -1, 0));
 				if(!success) {
 					BlockLocation originalLocation = newLocation;
 					BlockLocation locationOffset = newLocation.offset(0, -1, 0);
@@ -216,8 +158,11 @@ public class MiningTask implements Task, EventListener {
 							.getById(world.getBlockIdAt(locationOffset))
 							.isSolid()) {
 						newLocation = locationOffset;
-						if(originalLocation.getY() - locationOffset.getY() > 5)
+						if(originalLocation.getY() - locationOffset.getY() > 5) {
+							if(placeBlockAt(originalLocation))
+								skipForward++;
 							return;
+						}
 						locationOffset = locationOffset.offset(0, -1, 0);
 					}
 				} else {
@@ -227,8 +172,9 @@ public class MiningTask implements Task, EventListener {
 			}
 			player.face(newLocation.getX(), newLocation.getY() + 1,
 					newLocation.getZ());
-			walkTask.setTarget(newLocation);
+			bot.setActivity(new WalkActivity(bot, newLocation));
 		} else {
+			skipForward = 0;
 			if(ourLocation.getX() % 3 == 0) {
 				if(xStart != ourLocation.getX()) {
 					xStart = ourLocation.getX();
@@ -249,6 +195,52 @@ public class MiningTask implements Task, EventListener {
 								.isSolid()) {
 							breakBlock(newLocation);
 							return;
+						}
+					}
+					if(zStart != ourLocation.getZ() + zDirection) {
+						for(int zFactor = 2; zFactor >= 1; zFactor--) {
+							for(int offset = 0; offset <= 1; offset++) {
+								BlockLocation otherLocation = new BlockLocation(
+										ourLocation.getX(), ourLocation.getY()
+												+ offset, ourLocation.getZ()
+												+ zDirection * zFactor);
+								BlockType type = BlockType.getById(world
+										.getBlockIdAt(otherLocation));
+								if(type == BlockType.LAVA
+										|| type == BlockType.STATIONARY_LAVA) {
+									if(placeBlockAt(otherLocation))
+										return;
+								}
+							}
+						}
+						for(int xOffset = 1; xOffset >= -1; xOffset--) {
+							if(xOffset != 0) {
+								for(int offset = 1; offset >= 0; offset--) {
+									BlockLocation otherLocation = new BlockLocation(
+											ourLocation.getX() + xOffset,
+											ourLocation.getY() + offset,
+											ourLocation.getZ() + zDirection);
+									BlockType type = BlockType.getById(world
+											.getBlockIdAt(otherLocation));
+									if(type == BlockType.AIR
+											|| (!type.isSolid() && !type
+													.isPlaceable())) {
+										if(placeBlockAt(otherLocation))
+											return;
+									}
+								}
+								continue;
+							}
+							BlockLocation otherLocation = new BlockLocation(
+									ourLocation.getX(), ourLocation.getY() + 2,
+									ourLocation.getZ() + zDirection);
+							BlockType type = BlockType.getById(world
+									.getBlockIdAt(otherLocation));
+							if(type == BlockType.AIR
+									|| (!type.isSolid() && !type.isPlaceable())) {
+								if(placeBlockAt(otherLocation))
+									return;
+							}
 						}
 					}
 				} else {
@@ -307,7 +299,7 @@ public class MiningTask implements Task, EventListener {
 									newLocation.getY() - 1, newLocation.getZ()));
 						player.face(newLocation.getX(), newLocation.getY() + 1,
 								newLocation.getZ());
-						walkTask.setTarget(newLocation);
+						bot.setActivity(new WalkActivity(bot, newLocation));
 						return;
 					}
 					for(int offset = 1; offset >= 0; offset--) {
@@ -340,7 +332,7 @@ public class MiningTask implements Task, EventListener {
 						newLocation.getY() - 1, newLocation.getZ()));
 			player.face(newLocation.getX(), newLocation.getY() + 1,
 					newLocation.getZ());
-			walkTask.setTarget(newLocation);
+			bot.setActivity(new WalkActivity(bot, newLocation));
 		}
 	}
 
@@ -371,6 +363,9 @@ public class MiningTask implements Task, EventListener {
 		World world = bot.getWorld();
 		if(player == null)
 			return;
+		int face = getBreakBlockFaceAt(location);
+		if(face == -1)
+			return;
 		player.face(x, y, z);
 		int idAbove = world.getBlockIdAt(x, y + 1, z);
 		if(idAbove == 12 || idAbove == 13) {
@@ -379,15 +374,40 @@ public class MiningTask implements Task, EventListener {
 		} else if(nextTarget == null && previous != null)
 			nextTarget = checkSurrounding(previous);
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		switchToBestTool(world.getBlockIdAt(location));
+		player.switchTools(BlockType.getById(world.getBlockIdAt(location))
+				.getToolType());
 		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
 				.getYaw(), (float) player.getPitch(), true));
 		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
 				Animation.SWING_ARM));
-		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, 0));
-		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, 0));
+		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, face));
+		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, face));
 		currentlyBreaking = location;
 		previous = location;
+	}
+
+	private int getBreakBlockFaceAt(BlockLocation location) {
+		int x = location.getX(), y = location.getY(), z = location.getZ();
+		World world = bot.getWorld();
+		if(isEmpty(world.getBlockIdAt(x - 1, y, z))) {
+			return 4;
+		} else if(isEmpty(world.getBlockIdAt(x, y, z + 1))) {
+			return 3;
+		} else if(isEmpty(world.getBlockIdAt(x, y, z - 1))) {
+			return 2;
+		} else if(isEmpty(world.getBlockIdAt(x, y + 1, z))) {
+			return 1;
+		} else if(isEmpty(world.getBlockIdAt(x, y - 1, z))) {
+			return 0;
+		} else if(isEmpty(world.getBlockIdAt(x + 1, y, z))) {
+			return 5;
+		} else
+			return -1;
+	}
+
+	private boolean isEmpty(int id) {
+		BlockType type = BlockType.getById(id);
+		return !type.isSolid() && !type.isInteractable() && !type.isPlaceable();
 	}
 
 	private BlockLocation checkSurrounding(BlockLocation location) {
@@ -426,74 +446,11 @@ public class MiningTask implements Task, EventListener {
 		return new BlockLocation(x, y, z);
 	}
 
-	private void switchToBestTool(int id) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return;
-		PlayerInventory inventory = player.getInventory();
-		int toolType = 0;
-		if(id > 0 && id < 256)
-			if(MINEABLE[id])
-				toolType = 1;
-			else if(DIGGABLE[id])
-				toolType = 2;
-		ItemStack bestTool = null;
-		int bestToolSlot = -1, bestToolValue = -1;
-		for(int i = 0; i < 36; i++) {
-			ItemStack item = inventory.getItemAt(i);
-			if(toolType == 0 && i > 8)
-				break;
-			if(toolType == 0
-					&& (item == null || (PICKAXES[item.getId()] == 0 && SHOVELS[item
-							.getId()] == 0))) {
-				bestTool = item;
-				bestToolSlot = i;
-				break;
-			} else if(toolType == 0)
-				continue;
-			if(item != null) {
-				int toolValue = toolType == 1 ? PICKAXES[item.getId()]
-						: SHOVELS[item.getId()];
-				if(bestTool != null ? toolValue > bestToolValue : toolValue > 0) {
-					bestTool = item;
-					bestToolSlot = i;
-					bestToolValue = toolValue;
-				}
-			}
-		}
-		if(toolType == 0) {
-			if(bestToolSlot != -1
-					&& inventory.getCurrentHeldSlot() != bestToolSlot)
-				inventory.setCurrentHeldSlot(bestToolSlot);
-		} else if(bestTool != null) {
-			if(inventory.getCurrentHeldSlot() != bestToolSlot) {
-				if(bestToolSlot > 8) {
-					int hotbarSpace = 9;
-					for(int hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-						if(inventory.getItemAt(hotbarIndex) == null) {
-							hotbarSpace = hotbarIndex;
-							break;
-						} else if(PICKAXES[hotbarIndex] == 0
-								&& SHOVELS[hotbarIndex] == 0
-								&& hotbarIndex < hotbarSpace) {
-							hotbarSpace = hotbarIndex;
-						}
-					}
-					if(hotbarSpace == 9)
-						return;
-					inventory.selectItemAt(bestToolSlot);
-					inventory.selectItemAt(hotbarSpace);
-					if(inventory.getSelectedItem() != null)
-						inventory.selectItemAt(bestToolSlot);
-					inventory.close();
-					bestToolSlot = hotbarSpace;
-				}
-				inventory.setCurrentHeldSlot(bestToolSlot);
-			}
-		}
-	}
-
 	private boolean placeBlockAt(BlockLocation location) {
+		if(lastPlacement != null && lastPlacement.equals(location)) {
+			lastPlacement = null;
+			return false;
+		}
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return false;
@@ -511,105 +468,13 @@ public class MiningTask implements Task, EventListener {
 		}
 		if(slot == -1)
 			return false;
-		if(inventory.getCurrentHeldSlot() != slot) {
-			if(slot > 8) {
-				int hotbarSpace = 9;
-				for(int hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-					if(inventory.getItemAt(hotbarIndex) == null) {
-						hotbarSpace = hotbarIndex;
-						break;
-					} else if(PICKAXES[hotbarIndex] == 0
-							&& SHOVELS[hotbarIndex] == 0
-							&& hotbarIndex < hotbarSpace) {
-						hotbarSpace = hotbarIndex;
-					}
-				}
-				if(hotbarSpace == 9)
-					return false;
-				inventory.selectItemAt(slot);
-				inventory.selectItemAt(hotbarSpace);
-				if(inventory.getSelectedItem() != null)
-					inventory.selectItemAt(slot);
-				inventory.close();
-				slot = hotbarSpace;
-			}
-			inventory.setCurrentHeldSlot(slot);
-		}
-		return placeAt(location);
-	}
-
-	private boolean placeAt(BlockLocation location) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
+		if(!player.switchHeldItems(slot))
 			return false;
-		PlayerInventory inventory = player.getInventory();
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location
-				.getZ();
-		int face = getPlacementBlockFaceAt(location);
-		location = getOffsetBlock(location, face);
-		if(location == null)
-			return false;
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D),
-				z + ((originalZ - z) / 2.0D));
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = x;
-		placePacket.yPosition = y;
-		placePacket.zPosition = z;
-		placePacket.direction = face;
-		placePacket.itemStack = inventory.getCurrentHeldItem();
-		connectionHandler.sendPacket(placePacket);
-		ticksWait = 4;
-		return true;
-	}
-
-	private int getPlacementBlockFaceAt(BlockLocation location) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		World world = bot.getWorld();
-		if(!UNPLACEABLE[world.getBlockIdAt(x + 1, y, z)]) {
-			return 4;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z - 1)]) {
-			return 3;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z + 1)]) {
-			return 2;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y - 1, z)]) {
-			return 1;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x - 1, y, z)]) {
-			return 5;
-		} else
-			return -1;
-	}
-
-	private BlockLocation getOffsetBlock(BlockLocation location, int face) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		switch(face) {
-		case 0:
-			y++;
-			break;
-		case 1:
-			y--;
-			break;
-		case 2:
-			z++;
-			break;
-		case 3:
-			z--;
-			break;
-		case 4:
-			x++;
-			break;
-		case 5:
-			x--;
-			break;
-		default:
-			return null;
+		if(player.placeBlock(location)) {
+			lastPlacement = location;
+			return true;
 		}
-		return new BlockLocation(x, y, z);
+		return false;
 	}
 
 	private void checkTorches(BlockLocation ourLocation) {
@@ -671,33 +536,11 @@ public class MiningTask implements Task, EventListener {
 		}
 		if(slot == -1)
 			return;
-		if(inventory.getCurrentHeldSlot() != slot) {
-			if(slot > 8) {
-				int hotbarSpace = 9;
-				for(int hotbarIndex = 0; hotbarIndex < 9; hotbarIndex++) {
-					if(inventory.getItemAt(hotbarIndex) == null) {
-						hotbarSpace = hotbarIndex;
-						break;
-					} else if(PICKAXES[hotbarIndex] == 0
-							&& SHOVELS[hotbarIndex] == 0
-							&& hotbarIndex < hotbarSpace) {
-						hotbarSpace = hotbarIndex;
-					}
-				}
-				if(hotbarSpace == 9)
-					return;
-				inventory.selectItemAt(slot);
-				inventory.selectItemAt(hotbarSpace);
-				if(inventory.getSelectedItem() != null)
-					inventory.selectItemAt(slot);
-				inventory.close();
-				slot = hotbarSpace;
-			}
-			inventory.setCurrentHeldSlot(slot);
-		}
+		if(!player.switchHeldItems(slot))
+			return;
 
-		placeAt(new BlockLocation(ourLocation.getX(), ourLocation.getY() + 1,
-				ourLocation.getZ()));
+		player.placeBlock(new BlockLocation(ourLocation.getX(), ourLocation
+				.getY() + 1, ourLocation.getZ()));
 	}
 
 	@Override

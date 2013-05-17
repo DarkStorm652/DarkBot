@@ -9,17 +9,18 @@ import org.darkstorm.darkbot.minecraftbot.world.World;
 public final class Chunk {
 	private final World world;
 	private final ChunkLocation location;
-	private final byte[] blocks, metadata, light, skylight;// add, biomes;
+	private final byte[] blocks, metadata, light, skylight, biomes;
 	private final Map<BlockLocation, TileEntity> tileEntities;
 
 	public Chunk(World world, ChunkLocation location, byte[] blocks,
-			byte[] metadata, byte[] light, byte[] skylight) {
+			byte[] metadata, byte[] light, byte[] skylight, byte[] biomes) {
 		this.world = world;
 		this.location = location;
 		this.blocks = blocks;
 		this.metadata = metadata;
 		this.light = light;
 		this.skylight = skylight;
+		this.biomes = biomes;
 		tileEntities = new HashMap<BlockLocation, TileEntity>();
 	}
 
@@ -79,7 +80,7 @@ public final class Chunk {
 	}
 
 	public int getBlockMetadataAt(int x, int y, int z) {
-		int index = (x << 8) + (y << 4) + z;
+		int index = y << 8 | z << 4 | x;
 		if(index < 0 || index > metadata.length)
 			return 0;
 		return metadata[index] & 0xFF;
@@ -91,7 +92,7 @@ public final class Chunk {
 	}
 
 	public void setBlockMetadataAt(int metadata, int x, int y, int z) {
-		int index = (x << 8) + (y << 4) + z;
+		int index = y << 8 | z << 4 | x;
 		if(index < 0 || index > this.metadata.length)
 			return;
 		BlockLocation location = new BlockLocation((this.location.getX() * 16)
@@ -113,7 +114,7 @@ public final class Chunk {
 	}
 
 	public int getBlockLightAt(int x, int y, int z) {
-		int index = (x << 8) + (y << 4) + z;
+		int index = y << 8 | z << 4 | x;
 		if(index < 0 || index > light.length)
 			return 0;
 		return light[index] & 0xFF;
@@ -125,9 +126,33 @@ public final class Chunk {
 	}
 
 	public int getBlockSkylightAt(int x, int y, int z) {
-		int index = (x << 8) + (y << 4) + z;
+		int index = y << 8 | z << 4 | x;
 		if(index < 0 || index > skylight.length)
 			return 0;
 		return skylight[index] & 0xFF;
+	}
+
+	public BiomeType getBlockBiomeAt(BlockLocation location) {
+		return getBlockBiomeAt(location.getX(), location.getY(),
+				location.getZ());
+	}
+
+	public BiomeType getBlockBiomeAt(int x, int y, int z) {
+		int index = z << 4 | x;
+		if(index < 0 || index > biomes.length)
+			return null;
+		return BiomeType.getById(biomes[index] & 0xFF);
+	}
+
+	public void setBlockBiomeAt(BiomeType biome, BlockLocation location) {
+		setBlockBiomeAt(biome, location.getX(), location.getY(),
+				location.getZ());
+	}
+
+	public void setBlockBiomeAt(BiomeType biome, int x, int y, int z) {
+		int index = z << 4 | x;
+		if(index < 0 || index > biomes.length)
+			return;
+		biomes[index] = (byte) biome.getId();
 	}
 }

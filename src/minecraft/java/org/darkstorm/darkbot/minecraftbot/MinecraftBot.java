@@ -31,7 +31,7 @@ import org.darkstorm.darkbot.minecraftbot.world.item.*;
 		botDataClass = MinecraftBotData.Builder.class)
 public class MinecraftBot extends Bot implements EventListener, GameListener {
 	public static final int DEFAULT_PORT = 25565;
-	public static final int PROTOCOL_VERSION = 60;
+	public static final int PROTOCOL_VERSION = 61;
 
 	private final ExecutorService service;
 	private final EventManager eventManager;
@@ -42,7 +42,6 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	private final Proxy loginProxy;
 
 	private MainPlayerEntity player;
-	private Inventory currentWindow;
 
 	private MinecraftLogger logger;
 	private World world;
@@ -50,6 +49,7 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	private boolean hasSpawned = false, movementDisabled = false;
 	private Random random = new Random();
 	private int keepAliveTimer = 0;
+	private Activity activity;
 
 	public MinecraftBot(DarkBot darkBot, MinecraftBotData.Builder botData) {
 		this(darkBot, botData.build());
@@ -60,7 +60,7 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		service = Executors.newCachedThreadPool();
 		eventManager = new EventManager();
 		eventManager.registerListener(this);
-		taskManager = new BasicTaskManager();
+		taskManager = new BasicTaskManager(this);
 		connectionHandler = new ConnectionHandler(this, botData);
 		gameHandler = new GameHandler(this);
 		gameHandler.registerListener(this);
@@ -121,11 +121,13 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 				eventManager.sendEvent(new SpawnEvent(player));
 			hasSpawned = true;
 		} else if(packet instanceof Packet100OpenWindow) {
+			if(player == null)
+				return;
 			Packet100OpenWindow openWindowPacket = (Packet100OpenWindow) packet;
 			switch(openWindowPacket.inventoryType) {
 			case 0:
-				currentWindow = new ChestInventory(this,
-						openWindowPacket.windowId, false);
+				player.setWindow(new ChestInventory(this,
+						openWindowPacket.windowId, false));
 				break;
 			case 1:
 				break;
@@ -137,23 +139,31 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 				break;
 			}
 		} else if(packet instanceof Packet101CloseWindow) {
-			currentWindow = null;
+			if(player == null)
+				return;
+			player.setWindow(null);
 		} else if(packet instanceof Packet103SetSlot) {
+			if(player == null)
+				return;
+			Inventory window = player.getWindow();
 			Packet103SetSlot slotPacket = (Packet103SetSlot) packet;
 			if(slotPacket.windowId != 0
-					&& (currentWindow == null || slotPacket.windowId != currentWindow
+					&& (window == null || slotPacket.windowId != window
 							.getWindowId()))
 				return;
 			if(slotPacket.windowId == 0)
 				player.getInventory().setItemFromServerAt(slotPacket.itemSlot,
 						slotPacket.itemStack);
 			else
-				currentWindow.setItemFromServerAt(slotPacket.itemSlot,
+				window.setItemFromServerAt(slotPacket.itemSlot,
 						slotPacket.itemStack);
 		} else if(packet instanceof Packet104WindowItems) {
+			if(player == null)
+				return;
+			Inventory window = player.getWindow();
 			Packet104WindowItems itemsPacket = (Packet104WindowItems) packet;
 			if(itemsPacket.windowId != 0
-					&& (currentWindow == null || itemsPacket.windowId != currentWindow
+					&& (window == null || itemsPacket.windowId != window
 							.getWindowId()))
 				return;
 			ItemStack[] items = itemsPacket.itemStack;
@@ -162,7 +172,7 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 					player.getInventory().setItemFromServerAt(i, items[i]);
 			else
 				for(int i = 0; i < items.length; i++)
-					currentWindow.setItemFromServerAt(i, items[i]);
+					window.setItemFromServerAt(i, items[i]);
 		} else if(packet instanceof Packet255KickDisconnect) {
 			connectionHandler.disconnect("Kicked: "
 					+ ((Packet255KickDisconnect) packet).reason);
@@ -181,8 +191,7 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 		if(!serverId.equals("-")) {
 			String hash = new BigInteger(CryptManager.encrypt(serverId,
 					publicKey, secretKey)).toString(16);
-			if(session.getPassword() != null
-					&& session.getPassword().length() != 0) {
+			if(session.getSessionId() != null) {
 				String response = authenticate(session.getUsername(),
 						session.getSessionId(), hash);
 
@@ -212,14 +221,14 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 			BufferedReader bufferedreader;
 			if(loginProxy != null) {
 				URLConnection connection = url.openConnection(loginProxy);
-				connection.setConnectTimeout(5000);
-				connection.setReadTimeout(5000);
+				connection.setConnectTimeout(30000);
+				connection.setReadTimeout(30000);
 				bufferedreader = new BufferedReader(new InputStreamReader(
 						connection.getInputStream()));
 			} else {
 				URLConnection connection = url.openConnection();
-				connection.setConnectTimeout(5000);
-				connection.setReadTimeout(5000);
+				connection.setConnectTimeout(30000);
+				connection.setReadTimeout(30000);
 				bufferedreader = new BufferedReader(new InputStreamReader(
 						connection.getInputStream()));
 			}
@@ -242,9 +251,22 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	@Override
 	public synchronized void onTick() {
 		connectionHandler.update();
-		taskManager.update();
 
 		if(hasSpawned) {
+			taskManager.update();
+			if(activity != null) {
+				if(activity.isActive()) {
+					activity.run();
+					if(!activity.isActive()) {
+						activity.stop();
+						activity = null;
+					}
+				} else {
+					activity.stop();
+					activity = null;
+				}
+			}
+
 			updateKeepAlive();
 			if(!movementDisabled)
 				updateMovement();
@@ -297,8 +319,10 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	public void onPacketSent(PacketSentEvent event) {
 		Packet packet = event.getPacket();
 		if(packet instanceof Packet101CloseWindow) {
+			if(player == null)
+				return;
 			if(((Packet101CloseWindow) packet).windowId != 0)
-				currentWindow = null;
+				player.setWindow(null);
 		}
 	}
 
@@ -310,7 +334,13 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 	}
 
 	public void say(String message) {
-		connectionHandler.sendPacket(new Packet3Chat(message));
+		while(message.length() > Packet3Chat.MAX_CHAT_LENGTH) {
+			String part = message.substring(0, Packet3Chat.MAX_CHAT_LENGTH);
+			connectionHandler.sendPacket(new Packet3Chat(part));
+			message = message.substring(part.length());
+		}
+		if(!message.isEmpty())
+			connectionHandler.sendPacket(new Packet3Chat(message));
 	}
 
 	public boolean hasSpawned() {
@@ -323,6 +353,20 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 
 	public synchronized void setWorld(World world) {
 		this.world = world;
+	}
+
+	public Activity getActivity() {
+		return activity;
+	}
+
+	public void setActivity(Activity activity) {
+		if(activity == null && this.activity != null)
+			this.activity.stop();
+		this.activity = activity;
+	}
+
+	public boolean hasActivity() {
+		return activity != null;
 	}
 
 	public Session getSession() {
@@ -372,9 +416,5 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 
 	public MainPlayerEntity getPlayer() {
 		return player;
-	}
-
-	public Inventory getCurrentWindow() {
-		return currentWindow;
 	}
 }

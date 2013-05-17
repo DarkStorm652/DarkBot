@@ -1,14 +1,17 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
+import java.math.BigInteger;
 import java.util.*;
 
-import java.math.BigInteger;
+import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 
 public class BasicTaskManager implements TaskManager {
+	private final MinecraftBot bot;
 	private final Map<Class<? extends Task>, Task> tasks = new HashMap<Class<? extends Task>, Task>();
 	private final Map<Task, BigInteger> startTimes = new HashMap<Task, BigInteger>();
 
-	public BasicTaskManager() {
+	public BasicTaskManager(MinecraftBot bot) {
+		this.bot = bot;
 	}
 
 	@Override
@@ -79,11 +82,13 @@ public class BasicTaskManager implements TaskManager {
 				exclusiveIgnoringTasks.add(task);
 		}
 
-		if(highestExclusiveTask != null) {
-			highestExclusiveTask.run();
-			if(!highestExclusiveTask.isActive()) {
-				highestExclusiveTask.stop();
-				startTimes.remove(highestExclusiveTask);
+		if(bot.hasActivity() || highestExclusiveTask != null) {
+			if(!bot.hasActivity()) {
+				highestExclusiveTask.run();
+				if(!highestExclusiveTask.isActive()) {
+					highestExclusiveTask.stop();
+					startTimes.remove(highestExclusiveTask);
+				}
 			}
 			for(Task task : exclusiveIgnoringTasks) {
 				if(task.isActive()) {

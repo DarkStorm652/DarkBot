@@ -98,6 +98,8 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 							&& z2 == z ? true : !emptyBlocks[world
 							.getBlockIdAt(x2, y2 - 1, z2)])))
 					|| !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)];
+		if(y != y2 && (x != x2 || z != z2))
+			return false;
 		if(x != x2 && z != z2) {
 			valid &= emptyBlocks[world.getBlockIdAt(x2, y, z)];
 			valid &= emptyBlocks[world.getBlockIdAt(x, y, z2)];

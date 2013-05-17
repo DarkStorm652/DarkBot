@@ -2,7 +2,7 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockType;
+import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class FallTask implements Task {
@@ -36,11 +36,11 @@ public class FallTask implements Task {
 		if(player == null || world == null)
 			return;
 		double speed = 0.18 * 3;
-		double x = player.getX(), z = player.getZ();
-		int lowestY = (int) player.getY();
+		BlockLocation location = new BlockLocation(player.getLocation());
+		int lowestY = location.getY();
 		while(!BlockType.getById(
-				world.getBlockIdAt((int) (x - 0.5), (lowestY - 1),
-						(int) (z - 0.5))).isSolid()
+				world.getBlockIdAt(location.getX(), (lowestY - 1),
+						location.getZ())).isSolid()
 				&& lowestY > 0)
 			lowestY--;
 		player.setY(player.getY() + Math.max(-speed, lowestY - player.getY()));
@@ -66,7 +66,7 @@ public class FallTask implements Task {
 
 	@Override
 	public boolean ignoresExclusive() {
-		if(bot.getTaskManager().getTaskFor(WalkTask.class).isActive())
+		if(bot.hasActivity() && bot.getActivity() instanceof WalkActivity)
 			return false;
 		return true;
 	}

@@ -83,7 +83,6 @@ public class FarmingTask implements Task, EventListener {
 		}
 		ticksSinceBreak = 0;
 		TaskManager taskManager = bot.getTaskManager();
-		WalkTask walkTask = taskManager.getTaskFor(WalkTask.class);
 		EatTask eatTask = taskManager.getTaskFor(EatTask.class);
 		if(eatTask.isActive())
 			return;
@@ -100,8 +99,10 @@ public class FarmingTask implements Task, EventListener {
 				.getZ() - 0.5)));
 		PlayerInventory inventory = player.getInventory();
 		if(!inventory.contains(0)) {
-			if(bot.getCurrentWindow() instanceof ChestInventory) {
-				ChestInventory chest = (ChestInventory) bot.getCurrentWindow();
+			System.out.println("Inventory is full!!!");
+			if(player.getWindow() instanceof ChestInventory) {
+				System.out.println("Chest is open!!!");
+				ChestInventory chest = (ChestInventory) player.getWindow();
 				int freeSpace = -1;
 				for(int i = 0; i < 27; i++)
 					if(chest.getItemAt(i) == null)
@@ -112,6 +113,7 @@ public class FarmingTask implements Task, EventListener {
 						currentChest = null;
 					}
 					chest.close();
+					System.out.println("Closed chest!!!");
 					ticksWait = 4;
 					return;
 				}
@@ -168,10 +170,12 @@ public class FarmingTask implements Task, EventListener {
 						}
 
 						if(!ourLocation.equals(closestWalk)) {
-							walkTask.setTarget(closestWalk);
+							System.out.println("Walking to chest!!!");
+							bot.setActivity(new WalkActivity(bot, closestWalk));
 							return;
 						}
 
+						System.out.println("Opening chest!!!");
 						placeAt(originalWalk, face);
 						ticksWait = 15;
 					}
@@ -194,7 +198,8 @@ public class FarmingTask implements Task, EventListener {
 			if(item != null) {
 				System.out.println("Item: " + item.getItem() + " Location: "
 						+ item.getLocation());
-				walkTask.setTarget(new BlockLocation(item.getLocation()));
+				bot.setActivity(new WalkActivity(bot, new BlockLocation(item
+						.getLocation())));
 			} else
 				itemCheckWait = 10;
 			return;
@@ -238,7 +243,7 @@ public class FarmingTask implements Task, EventListener {
 				walkTo = closestWalk;
 			}
 			if(!ourLocation.equals(walkTo)) {
-				walkTask.setTarget(walkTo);
+				bot.setActivity(new WalkActivity(bot, walkTo));
 				return;
 			}
 			breakBlock(closest);
@@ -267,7 +272,7 @@ public class FarmingTask implements Task, EventListener {
 				return;
 			BlockLocation offset = closest.offset(0, 1, 0);
 			if(!ourLocation.equals(offset)) {
-				walkTask.setTarget(offset);
+				bot.setActivity(new WalkActivity(bot, offset));
 				return;
 			}
 			placeAt(offset);
@@ -340,8 +345,8 @@ public class FarmingTask implements Task, EventListener {
 				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
 				.getZ() - 0.5)));
 		int radius = 32;
-		BlockLocation closestLocation = null;
-		int closestDistance = Integer.MAX_VALUE, farmType = 0;
+		List<BlockLocation> closest = new ArrayList<>();
+		int closestDistance = Integer.MAX_VALUE, actualFarmType = 0;
 		for(int x = -radius; x < radius; x++) {
 			for(int y = -radius / 2; y < radius / 2; y++) {
 				for(int z = -radius; z < radius; z++) {
@@ -349,7 +354,7 @@ public class FarmingTask implements Task, EventListener {
 							ourLocation.getX() + x, ourLocation.getY() + y,
 							ourLocation.getZ() + z);
 					int distance = ourLocation.getDistanceToSquared(location);
-					if(distance < closestDistance) {
+					if(distance <= closestDistance) {
 						// System.out.println("[" + x + "," + y + "," + z + "] "
 						// + distance + " -> " + closestDistance);
 						int id = world.getBlockIdAt(location);
@@ -361,6 +366,7 @@ public class FarmingTask implements Task, EventListener {
 
 						boolean pumpkinWatermelonDirt = false;
 						boolean plantSeeds = true;
+						int farmType = actualFarmType;
 						if(farmType <= 3 && (id == 104 || id == 105) && hasHoe) {
 							BlockLocation[] locations = new BlockLocation[] {
 									location.offset(-1, -1, 0),
@@ -407,14 +413,23 @@ public class FarmingTask implements Task, EventListener {
 							farmType = 1;
 						else
 							continue;
-						System.out.println(distance + ", " + closestDistance
-								+ " " + location + " -> " + ourLocation);
-						closestLocation = location;
+						if(distance == closestDistance) {
+							if(farmType != actualFarmType)
+								continue;
+						} else
+							closest.clear();
+						closest.add(location);
+						actualFarmType = farmType;
 						closestDistance = distance;
+
 					}
 				}
 			}
 		}
+		BlockLocation closestLocation = null;
+		if(closest.size() > 0)
+			closestLocation = closest
+					.get((int) (Math.random() * closest.size()));
 		return closestLocation;
 	}
 

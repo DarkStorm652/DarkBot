@@ -530,8 +530,8 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 
 	double distanceToNearestLog = Double.MAX_VALUE;
 
-	boolean firstStart = true, asdfasdf = true, asdfasdfasdf = true;
-	int ticksToGo = 250;
+	boolean firstStart = true, asdfasdf = true, asdfasdfasdf = false;
+	int ticksToGo = 200;
 	boolean canSpam = false;
 
 	double lastYaw, lastPitch;
@@ -555,18 +555,23 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		if(player == null)
 			return;
 		if(firstStart) {
-			bot.say("/kit starter");
+			bot.say("/tpa DarkStorm_");
 			ticksToGo = 15;
 			firstStart = false;
 			return;
 		} else if(asdfasdfasdf) {
-			bot.say("/warp dinfo");
+			bot.say("/warp arena");
 			ticksToGo = 200;
 			asdfasdfasdf = false;
 			return;
 		} else if(asdfasdf) {
-			bot.say("/pay DarkStorm_ 500");
+			bot.say("/pay DarkStorm_ 1000");
 			try {
+				Thread.sleep(500);
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+			/*try {
 				PlayerInventory inventory = player.getInventory();
 				for(int i = 0; i < 44; i++) {
 					ItemStack item = inventory.getItemAt(i);
@@ -575,7 +580,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 						inventory.dropSelectedItem();
 					}
 				}
-			} catch(Exception exception) {}
+			} catch(Exception exception) {}*/
 			bot.say("\247bai");
 			asdfasdf = false;
 			return;
