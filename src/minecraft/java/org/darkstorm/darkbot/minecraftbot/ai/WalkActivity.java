@@ -11,6 +11,7 @@ import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 public class WalkActivity implements Activity {
 	private static double defaultSpeed = 0.15, defaultJumpFactor = 3,
 			defaultFallFactor = 4, defaultLiquidFactor = 0.5;
+	private static int defaultTimeout = 60000;
 
 	private final MinecraftBot bot;
 	private final ExecutorService service = Executors.newSingleThreadExecutor();
@@ -21,7 +22,7 @@ public class WalkActivity implements Activity {
 	private Future<PathNode> thread;
 	private PathNode nextStep;
 	private int ticksSinceStepChange = 0;
-	private int timeout = 0;
+	private int timeout = defaultTimeout;
 	private double speed = defaultSpeed, jumpFactor = defaultJumpFactor,
 			fallFactor = defaultFallFactor, liquidFactor = defaultLiquidFactor;
 
@@ -262,5 +263,13 @@ public class WalkActivity implements Activity {
 
 	public static void setDefaultLiquidFactor(double defaultLiquidFactor) {
 		WalkActivity.defaultLiquidFactor = defaultLiquidFactor;
+	}
+
+	public static int getDefaultTimeout() {
+		return defaultTimeout;
+	}
+
+	public static void setDefaultTimeout(int defaultTimeout) {
+		WalkActivity.defaultTimeout = defaultTimeout;
 	}
 }

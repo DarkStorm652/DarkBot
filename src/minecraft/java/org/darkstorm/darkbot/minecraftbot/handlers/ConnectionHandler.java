@@ -158,6 +158,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 	public void sendPacket(WriteablePacket packet) {
 		synchronized(packetWriteQueue) {
 			packetWriteQueue.offer(packet);
+			packetWriteQueue.notifyAll();
 		}
 	}
 
@@ -297,6 +298,8 @@ public class ConnectionHandler extends MinecraftHandler implements
 					synchronized(packetWriteQueue) {
 						if(!packetWriteQueue.isEmpty())
 							packet = packetWriteQueue.poll();
+						else
+							packetWriteQueue.wait(500);
 					}
 					if(packet != null) {
 						DataOutputStream outputStream = connection

@@ -76,10 +76,11 @@ public final class GameHandler extends MinecraftHandler implements
 				timer.update();
 				for(int i = 0; i < timer.getElapsedTicks(); i++)
 					runTick();
-				if(timer.getFPSCoolDown() > 0)
+				if(timer.getFPSCoolDown() > 0) {
 					try {
 						Thread.sleep(timer.getFPSCoolDown());
 					} catch(InterruptedException exception) {}
+				}
 			}
 		}
 	}
