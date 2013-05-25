@@ -13,7 +13,6 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 	public byte[][] chunkData;
 	public int chunkDataLength;
 	public boolean skylight;
-	private static byte[] chunkDataCache = new byte[0];
 
 	public Packet56MapChunks() {
 	}
@@ -29,14 +28,11 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 		secondaryBitmap = new int[chunkLength];
 		chunkData = new byte[chunkLength][];
 
-		if(chunkDataCache.length < chunkDataLength) {
-			chunkDataCache = new byte[chunkDataLength];
-		}
-
-		in.readFully(chunkDataCache, 0, chunkDataLength);
+		byte[] compressedChunkData = new byte[chunkDataLength];
+		in.readFully(compressedChunkData, 0, chunkDataLength);
 		byte[] chunkData = new byte[196864 * chunkLength];
 		Inflater inflater = new Inflater();
-		inflater.setInput(chunkDataCache, 0, chunkDataLength);
+		inflater.setInput(compressedChunkData, 0, chunkDataLength);
 
 		try {
 			inflater.inflate(chunkData);
@@ -71,8 +67,7 @@ public class Packet56MapChunks extends AbstractPacket implements ReadablePacket 
 				dataLength += 2048 * primarySize;
 
 			this.chunkData[var6] = new byte[dataLength];
-			System.arraycopy(chunkData, index, this.chunkData[var6], 0,
-					dataLength);
+			System.arraycopy(chunkData, index, this.chunkData[var6], 0, dataLength);
 			index += dataLength;
 		}
 	}

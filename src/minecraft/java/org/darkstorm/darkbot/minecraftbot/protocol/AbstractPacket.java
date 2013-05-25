@@ -6,60 +6,6 @@ import org.darkstorm.darkbot.minecraftbot.nbt.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public abstract class AbstractPacket implements Packet {
-	private static final boolean[] damageableItems = new boolean[3200];
-
-	static {
-		damageableItems[256] = true;
-		damageableItems[257] = true;
-		damageableItems[258] = true;
-		damageableItems[259] = true;
-		damageableItems[261] = true;
-		damageableItems[267] = true;
-		damageableItems[268] = true;
-		damageableItems[269] = true;
-		damageableItems[270] = true;
-		damageableItems[271] = true;
-		damageableItems[272] = true;
-		damageableItems[273] = true;
-		damageableItems[274] = true;
-		damageableItems[275] = true;
-		damageableItems[276] = true;
-		damageableItems[277] = true;
-		damageableItems[278] = true;
-		damageableItems[279] = true;
-		damageableItems[283] = true;
-		damageableItems[284] = true;
-		damageableItems[285] = true;
-		damageableItems[286] = true;
-		damageableItems[290] = true;
-		damageableItems[291] = true;
-		damageableItems[292] = true;
-		damageableItems[293] = true;
-		damageableItems[294] = true;
-		damageableItems[298] = true;
-		damageableItems[299] = true;
-		damageableItems[300] = true;
-		damageableItems[301] = true;
-		damageableItems[302] = true;
-		damageableItems[303] = true;
-		damageableItems[304] = true;
-		damageableItems[305] = true;
-		damageableItems[306] = true;
-		damageableItems[307] = true;
-		damageableItems[308] = true;
-		damageableItems[309] = true;
-		damageableItems[310] = true;
-		damageableItems[311] = true;
-		damageableItems[312] = true;
-		damageableItems[313] = true;
-		damageableItems[314] = true;
-		damageableItems[315] = true;
-		damageableItems[316] = true;
-		damageableItems[317] = true;
-		damageableItems[346] = true;
-		damageableItems[359] = true;
-	}
-
 	public static String readString(DataInputStream in) throws IOException {
 		return readString(in, 32767);
 	}

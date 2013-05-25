@@ -13,8 +13,6 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 	public boolean biomes;
 	public byte[] chunkData;
 
-	private static byte[] compressedCache = new byte[0];
-
 	public Packet51MapChunk() {
 	}
 
@@ -27,10 +25,8 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 		additionalBitmask = in.readShort();
 		int tempLength = in.readInt();
 
-		if(compressedCache.length < tempLength)
-			compressedCache = new byte[tempLength];
-
-		in.readFully(compressedCache, 0, tempLength);
+		byte[] compressedChunkData = new byte[tempLength];
+		in.readFully(compressedChunkData, 0, tempLength);
 		int i = 0;
 
 		for(int j = 0; j < 16; j++)
@@ -43,7 +39,7 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 
 		chunkData = new byte[k];
 		Inflater inflater = new Inflater();
-		inflater.setInput(compressedCache, 0, tempLength);
+		inflater.setInput(compressedChunkData, 0, tempLength);
 
 		try {
 			inflater.inflate(chunkData);
@@ -55,7 +51,7 @@ public class Packet51MapChunk extends AbstractPacket implements ReadablePacket {
 				inflater.end();
 
 				inflater = new Inflater();
-				inflater.setInput(compressedCache, 0, tempLength);
+				inflater.setInput(compressedChunkData, 0, tempLength);
 
 				inflater.inflate(chunkData);
 			} catch(DataFormatException dataformatexception) {

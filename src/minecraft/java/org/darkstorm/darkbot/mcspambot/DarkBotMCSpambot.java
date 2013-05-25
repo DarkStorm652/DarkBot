@@ -20,7 +20,7 @@ import joptsimple.*;
 
 import org.darkstorm.darkbot.DarkBot;
 import org.darkstorm.darkbot.minecraftbot.*;
-import org.darkstorm.darkbot.minecraftbot.ai.TaskManager;
+import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
@@ -33,31 +33,19 @@ import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet8UpdateHealth;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.darkbot.minecraftbot.world.block.*;
+import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 @SuppressWarnings("unused")
 public class DarkBotMCSpambot implements EventListener, GameListener {
-	private static final char[] alphas = { 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-			'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-			'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-			'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-			'u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-			'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-			'u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-			'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-			'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7',
-			'8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' };
-	private static final char[] msgChars = { 'a', 'e', 'i', 'o', 'u' };
-	private static final AtomicInteger amountJoined = new AtomicInteger();
-	private static final String[] skills = new String[] { "", "mining",
-			"woodcutting", "herbalism", "unarmed", "archery", "swords",
-			"repair", "excavation", "fishing", "abilities", "parties",
-			"leveling", "axes", "taming", "repair" };
-	private static final boolean createFaction = true;
 	public static final DarkBot DARK_BOT = new DarkBot();
+
+	private static final AtomicInteger amountJoined = new AtomicInteger();
+	private static final boolean createFaction = true;
 	private static final List<DarkBotMCSpambot> bots = new ArrayList<DarkBotMCSpambot>();
+	private static final char[] msgChars = new char[] { 'a', 'e', 'i', 'o', 'u' };
 
 	private static final String[] spamList;
 
@@ -66,8 +54,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 	static {
 		List<String> spamlist = new ArrayList<String>();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					"spamlist.txt")));
+			BufferedReader reader = new BufferedReader(new FileReader(new File("spamlist.txt")));
 			String line;
 			while((line = reader.readLine()) != null) {
 				if(line.trim().isEmpty())
@@ -75,9 +62,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				spamlist.add(line);
 			}
 			reader.close();
-		} catch(Exception exception) {
-			throw new RuntimeException(exception);
-		}
+		} catch(Exception exception) {}
 		spamList = spamlist.toArray(new String[0]);
 	}
 
@@ -91,12 +76,15 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 
 	private static String spamMessage = null;
 	private static boolean die = false;
+	private static int messageDelay = 70;
 
 	private String owner;
 
-	private DarkBotMCSpambot(DarkBot darkBot, String server, String username,
-			String password, String sessionId, String loginProxy, String proxy,
-			String owner) {
+	private boolean firstStart = false;
+	private int ticksToGo = 200, nextMessage = 0;
+	private boolean canSpam = false;
+
+	private DarkBotMCSpambot(DarkBot darkBot, String server, String username, String password, String sessionId, String loginProxy, String proxy, String owner) {
 		synchronized(bots) {
 			bots.add(this);
 			// slotsTaken.incrementAndGet();
@@ -105,9 +93,6 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 			}
 		}
 		MinecraftBotData.Builder builder = MinecraftBotData.builder();
-		// botData.nickname = "";
-		// for(int i = 0; i < 10; i++)
-		// botData.nickname += alphas[random.nextInt(alphas.length)];
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
 			ProxyType type = ProxyType.SOCKS;
@@ -119,8 +104,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
 			builder.withSocksProxy(new ProxyData(proxy, port, type));
-			this.proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(
-					proxy, port));
+			this.proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy, port));
 		}
 		if(loginProxy != null && !loginProxy.isEmpty()) {
 			int port = 80;
@@ -129,10 +113,8 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.withHttpProxy(new ProxyData(loginProxy, port,
-					ProxyType.HTTP));
-			this.loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					loginProxy, port));
+			builder.withHttpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
+			this.loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(loginProxy, port));
 		}
 		builder.withUsername(username);
 		if(sessionId != null)
@@ -156,89 +138,24 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		System.setProperty("socksProxyPort", "");
 		System.out.println("[" + username + "] Connecting...");
 		bot = new MinecraftBot(darkBot, botData);
-		bot.setMovementDisabled(true);
+		TaskManager taskManager = bot.getTaskManager();
+		taskManager.registerTask(new FallTask(bot));
+		taskManager.registerTask(new FollowTask(bot));
+		taskManager.registerTask(new DefendTask(bot));
+		taskManager.registerTask(new AttackTask(bot));
+		taskManager.registerTask(new HostileTask(bot));
+		taskManager.registerTask(new EatTask(bot));
+		// bot.setMovementDisabled(true);
 		connectionHandler = bot.getConnectionHandler();
 		Session session = bot.getSession();
-		// System.gc();
-		System.out.println("[" + username + "] Done! ("
-				+ amountJoined.incrementAndGet() + ")");
+		System.gc();
+		System.out.println("[" + username + "] Done! (" + amountJoined.incrementAndGet() + ")");
 		bot.getEventManager().registerListener(this);
 		bot.getGameHandler().registerListener(this);
 
 		long lastShoutTime = System.currentTimeMillis();
 		while(bot.isConnected()) {
-			if(die) {
-				connectionHandler.sendPacket(new Packet255KickDisconnect(
-						"Goodbye"));
-				return;
-			}
-			try {
-				Thread.sleep(3000 + random.nextInt(1000));
-			} catch(InterruptedException exception) {
-				exception.printStackTrace();
-			}
-			if(!bot.hasSpawned())
-				continue;
-			connectionHandler
-					.sendPacket(new Packet0KeepAlive(random.nextInt()));
-			if(spamMessage == null || !canSpam)
-				continue;
-			String message = spamMessage;
-			if(message.contains("%skill"))
-				message = message.replace("%skill", skills[nextSkill++]);
-			if(nextSkill >= skills.length)
-				nextSkill = 0;
-			if(message.contains("%bot")) {
-				synchronized(bots) {
-					message = message.replace("%bot", bots.get(nextBot > bots
-							.size() ? (nextBot = 0) * 0 : nextBot++).bot
-							.getSession().getUsername());
-				}
-			}
-			if(message.contains("%spamlist"))
-				message = message
-						.replace("%spamlist", spamList[nextSpamList++]);
-			if(nextSpamList >= spamList.length)
-				nextSpamList = 0;
-			if(message.contains("%rnd")) {
-				int length = 1;
-				int index = message.indexOf("%rnd") + "%rnd".length();
-				int lastIndex;
-				for(lastIndex = index; lastIndex < message.length(); lastIndex++)
-					if(Character.isDigit(message.charAt(lastIndex)))
-						lastIndex++;
-					else
-						break;
-				if(lastIndex > message.length())
-					lastIndex--;
-				try {
-					System.out.println(index + "," + lastIndex + ","
-							+ message.length());
-					length = Integer.parseInt(message.substring(index,
-							lastIndex));
-				} catch(Exception exception) {}
 
-				String randomChars = "";
-				for(int i = 0; i < length; i++)
-					randomChars += alphas[random.nextInt(alphas.length)];
-				message = message.replace("%rnd", randomChars);
-			}
-			if(message.contains("%msg"))
-				message = "/msg " + msgChars[nextMsgChar++] + " "
-						+ message.replace("%msg", "");
-			if(message.contains("%ernd")) {
-				message = message.replace("%ernd", "");
-				int extraMessageLength = 15 + random.nextInt(6);
-				message = message.substring(0,
-						Math.min(100 - extraMessageLength, message.length()))
-						+ " [";
-				extraMessageLength -= 3;
-				for(int i = 0; i < extraMessageLength; i++)
-					message += alphas[random.nextInt(alphas.length)];
-				message += "]";
-			} else
-				message = message.substring(0, Math.min(100, message.length()));
-			connectionHandler.sendPacket(new Packet3Chat(message));
 		}
 		synchronized(bots) {
 			bots.remove(this);
@@ -257,21 +174,18 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		Packet packet = event.getPacket();
 		switch(packet.getId()) {
 		case 0:
-			connectionHandler.sendPacket(new Packet0KeepAlive(new Random()
-					.nextInt()));
+			connectionHandler.sendPacket(new Packet0KeepAlive(new Random().nextInt()));
 			break;
 		case 3:
 			String message = ((Packet3Chat) packet).message;
-			message = removeColors(message);
-			System.out.println("[" + bot.getSession().getUsername() + "] "
-					+ message);
+			message = Util.stripColors(message);
+			System.out.println("[" + bot.getSession().getUsername() + "] " + message);
 			String testMessage = "[MineCaptcha] To be unmuted answer this question: What is ";
 			String testMessage2 = "Please type '";
 			String testMessage3 = "' to continue sending messages/commands";
 			if(message.contains(testMessage)) {
 				try {
-					String captcha = message.split(Pattern.quote(testMessage))[1]
-							.split("[ \\?]")[0];
+					String captcha = message.split(Pattern.quote(testMessage))[1].split("[ \\?]")[0];
 					ScriptEngineManager mgr = new ScriptEngineManager();
 					ScriptEngine engine = mgr.getEngineByName("JavaScript");
 					String solved = engine.eval(captcha).toString();
@@ -280,62 +194,47 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				} catch(Exception exception) {
 					exception.printStackTrace();
 				}
-			} else if(message.contains(testMessage2)
-					&& message.contains(testMessage3)) {
+			} else if(message.contains(testMessage2) && message.contains(testMessage3)) {
 				try {
-					String captcha = message.split(Pattern.quote(testMessage2))[1]
-							.split(Pattern.quote(testMessage3))[0];
+					String captcha = message.split(Pattern.quote(testMessage2))[1].split(Pattern.quote(testMessage3))[0];
 					connectionHandler.sendPacket(new Packet3Chat(captcha));
 				} catch(Exception exception) {
 					exception.printStackTrace();
 				}
 			} else if(message.startsWith("Please register with \"/register")) {
-				String password = "";
-				for(int i = 0; i < 10 + random.nextInt(6); i++)
-					password += alphas[random.nextInt(alphas.length)];
+				String password = Util.generateRandomString(10 + random.nextInt(6));
 				bot.say("/register " + password + " " + password);
 			} else if(message.startsWith("/uc ")) {
 				connectionHandler.sendPacket(new Packet3Chat(message));
-			} else if((message.contains("do the crime") && message
-					.contains("do the time"))
-					|| message.contains("You have been muted")) {
+			} else if((message.contains("do the crime") && message.contains("do the time")) || message.contains("You have been muted")) {
 				connectionHandler.sendPacket(new Packet3Chat("\247Leaving!"));
-			} else if(message.contains(owner
-					+ " has requested to teleport to you.")) {
+			} else if(message.contains(owner + " has requested to teleport to you.")) {
 				connectionHandler.sendPacket(new Packet3Chat("/tpaccept"));
 			} else if(message.contains(owner)) {
 				if(message.contains("Go ")) {
-					spamMessage = message.substring(message.indexOf("Go ")
-							+ "Go ".length());
+					spamMessage = message.substring(message.indexOf("Go ") + "Go ".length());
 				} else if(message.contains("Stop")) {
 					spamMessage = null;
 					bot.getTaskManager().stopAll();
+					bot.setActivity(null);
 				} else if(message.contains("Die")) {
 					die = true;
+					bot.getTaskManager().stopAll();
+					bot.setActivity(null);
 				} else if(message.contains("Say ")) {
-					connectionHandler.sendPacket(new Packet3Chat(message
-							.substring(message.indexOf("Say ")
-									+ "Say ".length())));
+					connectionHandler.sendPacket(new Packet3Chat(message.substring(message.indexOf("Say ") + "Say ".length())));
 				} else if(message.contains("Leave")) {
-					connectionHandler.sendPacket(new Packet255KickDisconnect(
-							"Quit"));
+					connectionHandler.sendPacket(new Packet255KickDisconnect("Quit"));
 				} else if(message.contains("Tool")) {
 					MainPlayerEntity player = bot.getPlayer();
 					if(player == null)
 						return;
 					PlayerInventory inventory = player.getInventory();
-					inventory
-							.setCurrentHeldSlot(Integer.parseInt(message
-									.substring(
-											message.indexOf("Tool ")
-													+ "Tool ".length()).split(
-											" ")[0]));
+					inventory.setCurrentHeldSlot(Integer.parseInt(message.substring(message.indexOf("Tool ") + "Tool ".length()).split(" ")[0]));
 				} else if(message.contains("DropId ")) {
 					MainPlayerEntity player = bot.getPlayer();
 					PlayerInventory inventory = player.getInventory();
-					String substring = message.substring(
-							message.indexOf("DropId ") + "DropId ".length())
-							.split(" ")[0];
+					String substring = message.substring(message.indexOf("DropId ") + "DropId ".length()).split(" ")[0];
 					int id = Integer.parseInt(substring);
 					for(int slot = 0; slot < 40; slot++) {
 						ItemStack item = inventory.getItemAt(slot);
@@ -349,9 +248,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					MainPlayerEntity player = bot.getPlayer();
 					PlayerInventory inventory = player.getInventory();
 					if(message.contains("Drop ")) {
-						String substring = message.substring(
-								message.indexOf("Drop ") + "Drop ".length())
-								.split(" ")[0];
+						String substring = message.substring(message.indexOf("Drop ") + "Drop ".length()).split(" ")[0];
 						try {
 							int slot = Integer.parseInt(substring);
 							if(slot < 0 || slot >= 40)
@@ -373,8 +270,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 				} else if(message.contains("Switch ")) {
 					MainPlayerEntity player = bot.getPlayer();
 					PlayerInventory inventory = player.getInventory();
-					String substring = message.substring(message
-							.indexOf("Switch ") + "Switch ".length());
+					String substring = message.substring(message.indexOf("Switch ") + "Switch ".length());
 					try {
 						int slot1 = Integer.parseInt(substring.split(" ")[0]);
 						int slot2 = Integer.parseInt(substring.split(" ")[1]);
@@ -399,24 +295,16 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 							continue;
 						int armorSlot;
 						int id = item.getId();
-						if(!helmet
-								&& (id == 86 || id == 298 || id == 302
-										|| id == 306 || id == 310 || id == 314)) {
+						if(!helmet && (id == 86 || id == 298 || id == 302 || id == 306 || id == 310 || id == 314)) {
 							armorSlot = 0;
 							helmet = true;
-						} else if(!chestplate
-								&& (id == 299 || id == 303 || id == 307
-										|| id == 311 || id == 315)) {
+						} else if(!chestplate && (id == 299 || id == 303 || id == 307 || id == 311 || id == 315)) {
 							armorSlot = 1;
 							chestplate = true;
-						} else if(!leggings
-								&& (id == 300 || id == 304 || id == 308
-										|| id == 312 || id == 316)) {
+						} else if(!leggings && (id == 300 || id == 304 || id == 308 || id == 312 || id == 316)) {
 							armorSlot = 2;
 							leggings = true;
-						} else if(!boots
-								&& (id == 301 || id == 305 || id == 309
-										|| id == 313 || id == 317)) {
+						} else if(!boots && (id == 301 || id == 305 || id == 309 || id == 313 || id == 317)) {
 							armorSlot = 3;
 							boots = true;
 						} else if(helmet && chestplate && leggings && boots)
@@ -445,8 +333,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 							} else if(boots) {
 								armorSlot = 3;
 								boots = false;
-							} else if(!helmet && !chestplate && !leggings
-									&& !boots)
+							} else if(!helmet && !chestplate && !leggings && !boots)
 								break;
 							else
 								continue;
@@ -457,22 +344,91 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					inventory.close();
 					bot.say("Equipped armor.");
 				} else if(message.contains("Owner ")) {
-					String name = message.substring(
-							message.indexOf("Owner ") + "Owner ".length())
-							.split(" ")[0];
+					String name = message.substring(message.indexOf("Owner ") + "Owner ".length()).split(" ")[0];
 					owner = name;
 					bot.say("Set owner to " + name);
+				} else if(message.contains("Follow")) {
+					String[] args = new String[0];
+					if(message.trim().contains("Follow "))
+						args = message.substring(message.indexOf("Follow ") + "Follow ".length()).split(" ");
+					String name = owner;
+					if(args.length > 0) {
+						name = args[0];
+						if(name.equalsIgnoreCase(owner)) {
+							name = owner;
+							args = new String[0];
+						}
+					}
+					FollowTask followTask = bot.getTaskManager().getTaskFor(FollowTask.class);
+					if(followTask.isActive())
+						followTask.stop();
+					for(Entity entity : bot.getWorld().getEntities()) {
+						if(entity instanceof PlayerEntity && Util.stripColors(((PlayerEntity) entity).getName()).equalsIgnoreCase(name)) {
+							followTask.follow(entity);
+							bot.say("Following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
+							return;
+						}
+					}
+					bot.say("Player " + name + " not found.");
+				} else if(message.contains("Attack ")) {
+					String[] args = message.substring(message.indexOf("Attack ") + "Attack ".length()).split(" ");
+					String name = args[0];
+					AttackTask attackTask = bot.getTaskManager().getTaskFor(AttackTask.class);
+					for(Entity entity : bot.getWorld().getEntities()) {
+						if(entity instanceof PlayerEntity && Util.stripColors(((PlayerEntity) entity).getName()).equalsIgnoreCase(name)) {
+							attackTask.setAttackEntity(entity);
+							bot.say("Attacking " + Util.stripColors(((PlayerEntity) entity).getName()) + "!");
+							return;
+						}
+					}
+					bot.say("Player " + name + " not found.");
+				} else if(message.contains("Walk ")) {
+					String[] args = message.substring(message.indexOf("Walk ") + "Walk ".length()).split(" ");
+					MainPlayerEntity player = bot.getPlayer();
+					BlockLocation location = new BlockLocation(player.getLocation());
+					boolean relativeX = args[0].charAt(0) == '+', relativeZ = args[args.length - 1].charAt(0) == '+';
+					int x, y, z;
+
+					if(relativeX)
+						x = location.getX() + Integer.parseInt(args[0].substring(1));
+					else
+						x = Integer.parseInt(args[0]);
+
+					if(relativeZ)
+						z = location.getZ() + Integer.parseInt(args[args.length - 1].substring(1));
+					else
+						z = Integer.parseInt(args[args.length - 1]);
+
+					if(args.length < 3) {
+						World world = bot.getWorld();
+						for(y = 256; y > 0; y--) {
+							int id = world.getBlockIdAt(x, y - 1, z);
+							if(BlockType.getById(id).isSolid())
+								break;
+						}
+						if(y <= 0) {
+							bot.say("No appropriate walkable y value!");
+							return;
+						}
+					} else
+						y = Integer.parseInt(args[1]);
+
+					BlockLocation target = new BlockLocation(x, y, z);
+					bot.setActivity(new WalkActivity(bot, target));
+					bot.say("Walking to (" + x + ", " + y + ", " + z + ").");
+				} else if(message.contains("AttackAll")) {
+					HostileTask task = bot.getTaskManager().getTaskFor(HostileTask.class);
+					if(task.isActive()) {
+						task.stop();
+						bot.say("No longer in hostile mode.");
+					} else {
+						task.start();
+						bot.say("Now in hostile mode!");
+					}
 				}
-			} else if(message.contains("You are not member of any faction.")
-					&& spamMessage != null && createFaction) {
-				String msg = "/f create ";
-				for(int i = 0; i < 7 + random.nextInt(3); i++)
-					msg += alphas[random.nextInt(alphas.length)];
+			} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
+				String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
 				bot.say(msg);
-			}
-			if(message.matches("[\\*]*SPQR [\\w]{1,16} invited you to SPQR")) {
-				bot.say("/f join SPQR");
-				bot.say("\247asdf");
 			}
 			break;
 		case 8:
@@ -483,20 +439,9 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		case 9:
 			TaskManager taskManager = bot.getTaskManager();
 			taskManager.stopAll();
+			bot.setActivity(null);
 			break;
 		}
-	}
-
-	// @EventHandler
-	// public void onPacketSent(PacketSentEvent event) {
-	// System.out.println("Packet sent: " + event.getPacket().getId() + " ("
-	// + event.getPacket() + ")");
-	// }
-
-	private String removeColors(final String input) {
-		if(input != null)
-			return input.replaceAll("(?i)§[0-F]", "");
-		return null;
 	}
 
 	public MinecraftBot getBot() {
@@ -506,41 +451,13 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 	@EventHandler
 	public void onSpawn(SpawnEvent event) {
 		bot.getPlayer().getInventory().setDelay(500);
-		// bot.say("/msg GrimReaperV1 Invite me!@#");
-		// // String password = "";
-		// // for(int i = 0; i < 10 + random.nextInt(6); i++)
-		// // password += alphas[random.nextInt(alphas.length)];
-		// // bot.say("/register " + password + " " + password);
-		// if(spamMessage != null && createFaction) {
-		// String msg = "/f create ";
-		// for(int i = 0; i < 7 + random.nextInt(3); i++)
-		// msg += alphas[random.nextInt(alphas.length)];
-		// bot.say(msg);
-		// }
-		// bot.getConnectionHandler().sendPacket(
-		// new Packet255KickDisconnect("Quit"));
 	}
 
 	@EventHandler
 	public void onDisconnect(DisconnectEvent event) {
-		System.out.println("[" + bot.getSession().getUsername()
-				+ "] Disconnected: " + event.getReason());
+		System.out.println("[" + bot.getSession().getUsername() + "] Disconnected: " + event.getReason());
 		bot.getService().shutdownNow();
 	}
-
-	double distanceToNearestLog = Double.MAX_VALUE;
-
-	boolean firstStart = true, asdfasdf = true, asdfasdfasdf = false;
-	int ticksToGo = 200;
-	boolean canSpam = false;
-
-	double lastYaw, lastPitch;
-	int ticksLeftTillMove = 100;
-
-	BlockLocation spawn = new BlockLocation(287, 69, 291);
-	int mode = 0;
-
-	// BlockLocation spawn = new BlockLocation(373, 73, 583);
 
 	@Override
 	public void onTick() {
@@ -555,16 +472,6 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		if(player == null)
 			return;
 		if(firstStart) {
-			bot.say("/tpa DarkStorm_");
-			ticksToGo = 15;
-			firstStart = false;
-			return;
-		} else if(asdfasdfasdf) {
-			bot.say("/warp arena");
-			ticksToGo = 200;
-			asdfasdfasdf = false;
-			return;
-		} else if(asdfasdf) {
 			bot.say("/pay DarkStorm_ 1000");
 			try {
 				Thread.sleep(500);
@@ -581,130 +488,64 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					}
 				}
 			} catch(Exception exception) {}*/
-			bot.say("\247bai");
-			asdfasdf = false;
+			connectionHandler.sendPacket(new Packet255KickDisconnect("Quit"));
+			ticksToGo = 15;
+			firstStart = false;
 			return;
-		}
-		// connectionHandler.disconnect("");
-		// return;
-		// } else if("".equals(""))
-		// return;
-		// if(player.getDistanceTo(spawn) < 7 && player.getZ() < 589.5) {
-		// player.setZ(player.getZ() + 0.12);
-		// bot.updateMovement();
-		// } else
-		// canSpam = true;
-
-		// if(player.getDistanceTo(spawn) < 10 && player.getY() < 72) {
-		// if(player.getZ() < -37.6)
-		// player.setZ(player.getZ() + 0.1);
-		// else if(player.getX() < 232.4)
-		// player.setX(player.getX() + 0.1);
-		// else
-		// player.setY(player.getY() + 0.1);
-		// bot.updateMovement();
-		// } else if(player.getZ() > -38 && player.getZ() < -36.6
-		// && player.getX() > 232 && player.getX() < 233) {
-		// player.setZ(player.getZ() + 0.1);
-		// bot.updateMovement();
-		// } else
-
-		// if(player.getDistanceToSquared(spawn) > 49)
-		// mode = 3;
-		// if(mode == 0)
-		// mode = player.getZ() > 295 ? 2 : 1;
-		// switch(mode) {
-		// case -1:
-		// canSpam = true;
-		// break;
-		// case 1:
-		// canSpam = false;
-		// if(player.getZ() < 296.3) {
-		// player.setZ(player.getZ() + 0.1);
-		// bot.updateMovement();
-		// } else
-		// mode = -1;
-		// break;
-		// case 2:
-		// canSpam = false;
-		// if(player.getZ() > 286.6) {
-		// player.setZ(player.getZ() - 0.1);
-		// bot.updateMovement();
-		// } else
-		// mode = -1;
-		// break;
-		// default:
-		// connectionHandler.disconnect("Bad location!");
-		// break;
-		// }
-
-		canSpam = true;
-	}
-
-	private DarkBotMCSpambot getClosest() {
-		double closestDistance = Double.MAX_VALUE;
-		DarkBotMCSpambot closestBot = null;
-		synchronized(bots) {
-			for(DarkBotMCSpambot bot : bots) {
-				if(!bot.getBot().hasSpawned())
-					continue;
-				double distance = bot.getBot().getPlayer()
-						.getDistanceToSquared(bot.getBot().getPlayer());
-				if(distance < closestDistance) {
-					distance = closestDistance;
-					closestBot = bot;
-				}
+		} else
+			canSpam = true;
+		if(canSpam) {
+			if(die) {
+				connectionHandler.sendPacket(new Packet255KickDisconnect("Quit"));
+				ticksToGo = 15;
+				return;
 			}
+			if(!bot.hasSpawned())
+				return;
+			if(spamMessage == null)
+				return;
+			if(nextMessage > 0) {
+				nextMessage--;
+				return;
+			}
+			String message = spamMessage;
+			MessageFormatter formatter = new MessageFormatter();
+			String botName;
+			synchronized(bots) {
+				botName = bots.get(nextBot++).bot.getSession().getUsername();
+				if(nextBot >= bots.size())
+					nextBot = 0;
+			}
+			formatter.setVariable("bot", botName);
+			if(spamList.length > 0) {
+				formatter.setVariable("spamlist", spamList[nextSpamList++]);
+				if(nextSpamList >= spamList.length)
+					nextSpamList = 0;
+			}
+			formatter.setVariable("rnd", Util.generateRandomString(15 + random.nextInt(6)));
+			formatter.setVariable("msg", Character.toString(msgChars[nextMsgChar++]));
+			if(nextMsgChar >= msgChars.length)
+				nextMsgChar = 0;
+			message = formatter.format(message);
+			connectionHandler.sendPacket(new Packet3Chat(message));
 		}
-		return closestBot;
 	}
 
 	public static void main(String[] args) {
 		// TODO main
 		OptionParser parser = new OptionParser();
 		parser.acceptsAll(Arrays.asList("h", "help"), "Show this help dialog.");
-		OptionSpec<String> serverOption = parser
-				.acceptsAll(Arrays.asList("s", "server"), "Server to join.")
-				.withRequiredArg().describedAs("server-address[:port]");
-		OptionSpec<String> proxyOption = parser
-				.acceptsAll(Arrays.asList("P", "proxy"),
-						"SOCKS proxy to use. Ignored in presence of 'socks-proxy-list'.")
-				.withRequiredArg().describedAs("proxy-address");
-		OptionSpec<String> ownerOption = parser
-				.acceptsAll(Arrays.asList("o", "owner"),
-						"Owner of the bot (username of in-game control).")
-				.withRequiredArg().describedAs("username");
-		OptionSpec<?> offlineOption = parser
-				.acceptsAll(
-						Arrays.asList("O", "offline"),
-						"Offline-mode. Ignores 'password' and 'account-list' (will "
-								+ "generate random usernames if 'username' is not supplied).");
-		OptionSpec<?> autoRejoinOption = parser.acceptsAll(
-				Arrays.asList("a", "auto-rejoin"),
-				"Auto-rejoin a server on disconnect.");
-		OptionSpec<Integer> loginDelayOption = parser
-				.acceptsAll(
-						Arrays.asList("d", "login-delay"),
-						"Delay between bot joins, in milliseconds. 5000 is "
-								+ "recommended if not using socks proxies.")
-				.withRequiredArg().describedAs("delay").ofType(Integer.class);
-		OptionSpec<Integer> botAmountOption = parser
-				.acceptsAll(Arrays.asList("b", "bot-amount"),
-						"Amount of bots to join. Must be <= amount of accounts.")
-				.withRequiredArg().describedAs("amount").ofType(Integer.class);
+		OptionSpec<String> serverOption = parser.acceptsAll(Arrays.asList("s", "server"), "Server to join.").withRequiredArg().describedAs("server-address[:port]");
+		OptionSpec<String> proxyOption = parser.acceptsAll(Arrays.asList("P", "proxy"), "SOCKS proxy to use. Ignored in presence of 'socks-proxy-list'.").withRequiredArg().describedAs("proxy-address");
+		OptionSpec<String> ownerOption = parser.acceptsAll(Arrays.asList("o", "owner"), "Owner of the bot (username of in-game control).").withRequiredArg().describedAs("username");
+		OptionSpec<?> offlineOption = parser.acceptsAll(Arrays.asList("O", "offline"), "Offline-mode. Ignores 'password' and 'account-list' (will " + "generate random usernames if 'username' is not supplied).");
+		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
+		OptionSpec<Integer> loginDelayOption = parser.acceptsAll(Arrays.asList("d", "login-delay"), "Delay between bot joins, in milliseconds. 5000 is " + "recommended if not using socks proxies.").withRequiredArg().describedAs("delay").ofType(Integer.class);
+		OptionSpec<Integer> botAmountOption = parser.acceptsAll(Arrays.asList("b", "bot-amount"), "Amount of bots to join. Must be <= amount of accounts.").withRequiredArg().describedAs("amount").ofType(Integer.class);
 
-		OptionSpec<String> accountListOption = parser
-				.accepts("account-list",
-						"File containing a list of accounts, in username/email:password format.")
-				.withRequiredArg().describedAs("file");
-		OptionSpec<String> socksProxyListOption = parser
-				.accepts("socks-proxy-list",
-						"File containing a list of SOCKS proxies, in address:port format.")
-				.withRequiredArg().describedAs("file");
-		OptionSpec<String> httpProxyListOption = parser
-				.accepts("http-proxy-list",
-						"File containing a list of HTTP proxies, in address:port format.")
-				.withRequiredArg().describedAs("file");
+		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
+		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
+		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
 
 		OptionSet options;
 		try {
@@ -730,8 +571,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		if(options.has(accountListOption)) {
 			accounts = loadAccounts(options.valueOf(accountListOption));
 		} else if(!offline) {
-			System.out.println("Option 'accounts' must be supplied in "
-					+ "absence of option 'offline'.");
+			System.out.println("Option 'accounts' must be supplied in " + "absence of option 'offline'.");
 			printHelp(parser);
 			return;
 		} else
@@ -764,8 +604,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		if(options.has(httpProxyListOption))
 			httpProxies = loadLoginProxies(options.valueOf(httpProxyListOption));
 		else if(!offline && accounts != null) {
-			System.out.println("Option 'http-proxy-list' required if "
-					+ "option 'account-list' is supplied.");
+			System.out.println("Option 'http-proxy-list' required if " + "option 'account-list' is supplied.");
 			printHelp(parser);
 			return;
 		} else
@@ -796,8 +635,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 
 		final Queue<Runnable> lockQueue = new ArrayDeque<Runnable>();
 
-		ExecutorService service = Executors.newFixedThreadPool(botAmount
-				+ (loginDelay > 0 ? 1 : 0));
+		ExecutorService service = Executors.newFixedThreadPool(botAmount + (loginDelay > 0 ? 1 : 0));
 		final Object firstWait = new Object();
 		if(loginDelay > 0) {
 			service.execute(new Runnable() {
@@ -863,14 +701,12 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 							}
 							Session session = null;
 							String loginProxy;
-							String account = accounts.get(random
-									.nextInt(accounts.size()));
+							String account = accounts.get(random.nextInt(accounts.size()));
 							synchronized(accountsInUse) {
 								if(accountsInUse.size() == accounts.size())
 									System.exit(0);
 								while(accountsInUse.contains(account))
-									account = accounts.get(random
-											.nextInt(accounts.size()));
+									account = accounts.get(random.nextInt(accounts.size()));
 								accountsInUse.add(account);
 							}
 							String[] accountParts = account.split(":");
@@ -882,32 +718,22 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								loginProxy = httpProxies.get(random
-										.nextInt(httpProxies.size()));
+								loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));
 								try {
-									session = Util.retrieveSession(
-											accountParts[0], accountParts[1],
-											loginProxy);
+									session = Util.retrieveSession(accountParts[0], accountParts[1], loginProxy);
 									// addAccount(session);
 									sessionCount.incrementAndGet();
 									authenticated = true;
 									break;
 								} catch(AuthenticationException exception) {
-									System.err.println("[Bot" + botNumber
-											+ "] " + exception);
-									if(!exception.getMessage().startsWith(
-											"Exception"))
+									System.err.println("[Bot" + botNumber + "] " + exception);
+									if(!exception.getMessage().startsWith("Exception"))
 										// && !exception.getMessage().equals(
 										// "Too many failed logins"))
 										continue user;
 								}
 							}
-							System.out
-									.println("[" + session.getUsername()
-											+ "] Password: "
-											+ session.getPassword()
-											+ ", Session ID: "
-											+ session.getSessionId());
+							System.out.println("[" + session.getUsername() + "] Password: " + session.getPassword() + ", Session ID: " + session.getSessionId());
 							while(!joins.get()) {
 								synchronized(joins) {
 									try {
@@ -927,50 +753,34 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 							}
 
 							while(true) {
-								String proxy = useProxy ? socksProxies
-										.get(random.nextInt(socksProxies.size()))
-										: null;
+								String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 								try {
-									new DarkBotMCSpambot(DARK_BOT, server,
-											session.getUsername(),
-											session.getPassword(),
-											session.getSessionId(), null,
-											proxy, owner);
+									new DarkBotMCSpambot(DARK_BOT, server, session.getUsername(), session.getPassword(), session.getSessionId(), null, proxy, owner);
 									if(die)
 										break user;
 									else if(!autoRejoin)
 										break;
 								} catch(Exception exception) {
 									exception.printStackTrace();
-									System.out.println("["
-											+ session.getUsername()
-											+ "] Error connecting: "
-											+ exception.getCause().toString());
+									System.out.println("[" + session.getUsername() + "] Error connecting: " + exception.getCause().toString());
 								}
 							}
-							System.out.println("[" + session.getUsername()
-									+ "] Account failed");
+							System.out.println("[" + session.getUsername() + "] Account failed");
 						}
 					} else {
 						while(true) {
-							String proxy = useProxy ? socksProxies.get(random
-									.nextInt(socksProxies.size())) : null;
+							String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 							try {
-								String username = "";
+								String username;
 								if(accounts != null) {
-									username = accounts.get(
-											random.nextInt(accounts.size()))
-											.split(":")[0];
+									username = accounts.get(random.nextInt(accounts.size())).split(":")[0];
 									synchronized(accountsInUse) {
 										while(accountsInUse.contains(username))
-											username = accounts.get(random
-													.nextInt(accounts.size()));
+											username = accounts.get(random.nextInt(accounts.size()));
 										accountsInUse.add(username);
 									}
 								} else
-									for(int i = 0; i < 10 + random.nextInt(6); i++)
-										username += alphas[random
-												.nextInt(alphas.length)];
+									username = Util.generateRandomString(10 + random.nextInt(6));
 								if(loginDelay > 0) {
 									synchronized(this) {
 										try {
@@ -981,16 +791,13 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								new DarkBotMCSpambot(DARK_BOT, server,
-										username, "", "", null, proxy, owner);
+								new DarkBotMCSpambot(DARK_BOT, server, username, "", "", null, proxy, owner);
 								if(die || !autoRejoin)
 									break;
 								else
 									continue;
 							} catch(Exception exception) {
-								System.out.println("[Bot" + botNumber
-										+ "] Error connecting: "
-										+ exception.toString());
+								System.out.println("[Bot" + botNumber + "] Error connecting: " + exception.toString());
 							}
 						}
 					}
@@ -1025,9 +832,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		frame.setLayout(new GridBagLayout());
 		Insets noInsets = new Insets(0, 0, 0, 0);
 		final JToggleButton sessionsButton = new JToggleButton("Login (0)");
-		frame.add(sessionsButton, new GridBagConstraints(0, 0, 2, 1, 0, 0,
-				GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets,
-				0, 0));
+		frame.add(sessionsButton, new GridBagConstraints(0, 0, 2, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets, 0, 0));
 		sessionsButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1038,9 +843,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 			}
 		});
 		final JToggleButton joinsButton = new JToggleButton("Join (0)");
-		frame.add(joinsButton, new GridBagConstraints(0, 1, 2, 1, 0, 0,
-				GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets,
-				0, 0));
+		frame.add(joinsButton, new GridBagConstraints(0, 1, 2, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets, 0, 0));
 		joinsButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1051,13 +854,9 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 			}
 		});
 		final JTextField field = new JTextField();
-		frame.add(field, new GridBagConstraints(0, 2, 1, 1, 1, 0,
-				GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets,
-				0, 0));
+		frame.add(field, new GridBagConstraints(0, 2, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets, 0, 0));
 		final JButton button = new JButton("Start");
-		frame.add(button, new GridBagConstraints(1, 2, 1, 1, 0, 0,
-				GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets,
-				0, 0));
+		frame.add(button, new GridBagConstraints(1, 2, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, noInsets, 0, 0));
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1075,10 +874,8 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		Timer timer = new Timer(500, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				sessionsButton.setText(sessionsButton.getText().split(" ")[0]
-						+ " (" + Integer.toString(sessionCount.get()) + ")");
-				joinsButton.setText(joinsButton.getText().split(" ")[0] + " ("
-						+ Integer.toString(amountJoined.get()) + ")");
+				sessionsButton.setText(sessionsButton.getText().split(" ")[0] + " (" + Integer.toString(sessionCount.get()) + ")");
+				joinsButton.setText(joinsButton.getText().split(" ")[0] + " (" + Integer.toString(amountJoined.get()) + ")");
 			}
 		});
 		timer.setRepeats(true);
@@ -1100,15 +897,13 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 	private static List<String> loadProxies(String fileName) {
 		List<String> proxies = new ArrayList<String>();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					fileName)));
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
 			String line;
 			while((line = reader.readLine()) != null) {
 				if(line.trim().isEmpty())
 					continue;
 				String[] parts = line.split(" ")[0].trim().split(":");
-				proxies.add(parts[0].trim() + ":"
-						+ Integer.parseInt(parts[1].trim()));
+				proxies.add(parts[0].trim() + ":" + Integer.parseInt(parts[1].trim()));
 			}
 			reader.close();
 		} catch(Exception exception) {
@@ -1121,15 +916,13 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 	private static List<String> loadLoginProxies(String fileName) {
 		List<String> proxies = new ArrayList<String>();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					fileName)));
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
 			String line;
 			while((line = reader.readLine()) != null) {
 				if(line.trim().isEmpty())
 					continue;
 				String[] parts = line.split(" ")[0].trim().split(":");
-				proxies.add(parts[0].trim() + ":"
-						+ Integer.parseInt(parts[1].trim()));
+				proxies.add(parts[0].trim() + ":" + Integer.parseInt(parts[1].trim()));
 			}
 			reader.close();
 		} catch(Exception exception) {
@@ -1143,8 +936,7 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		List<String> accounts = new ArrayList<String>();
 		try {
 			Pattern pattern = Pattern.compile("[\\w]{1,16}");
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					fileName)));
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
 			String line;
 			while((line = reader.readLine()) != null) {
 				Matcher matcher = pattern.matcher(line);
@@ -1162,5 +954,38 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		}
 		System.out.println("Loaded " + accounts.size() + " accounts.");
 		return accounts;
+	}
+
+	private static final class MessageFormatter {
+		private static final Pattern variablePattern = Pattern.compile("(?i)\\$(\\{[a-z0-9_]{1,}\\}|[a-z0-9_]{1,})");
+		private static final Pattern colorPattern = Pattern.compile("(?i)&[0-9A-FK-OR]");
+
+		private final Map<String, String> variables;
+
+		public MessageFormatter() {
+			variables = new HashMap<String, String>();
+		}
+
+		public synchronized void setVariable(String variable, String value) {
+			variables.put(variable, value);
+		}
+
+		public synchronized String format(String message) {
+			Matcher matcher = variablePattern.matcher(message);
+			while(matcher.find()) {
+				String variable = matcher.group();
+				variable = variable.substring(1);
+				if(variable.startsWith("{") && variable.endsWith("}"))
+					variable = variable.substring(1, variable.length() - 1);
+				String value = variables.get(variable);
+				if(value == null)
+					value = "";
+				message = message.replaceFirst(Pattern.quote(matcher.group()), Matcher.quoteReplacement(value));
+			}
+			matcher = colorPattern.matcher(message);
+			while(matcher.find())
+				message = message.substring(0, matcher.start()) + "\247" + message.substring(matcher.end() - 1);
+			return message;
+		}
 	}
 }

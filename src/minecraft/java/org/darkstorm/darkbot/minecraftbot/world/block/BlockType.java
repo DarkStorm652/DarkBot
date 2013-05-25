@@ -221,7 +221,6 @@ public enum BlockType {
 	}
 
 	protected static final class Flag {
-		private static final int SOLID = 1, INTERACTABLE = 2, PLACEABLE = 4,
-				INDESTRUCTABLE = 8;
+		public static final int SOLID = 1, INTERACTABLE = 2, PLACEABLE = 4, INDESTRUCTABLE = 8;
 	}
 }

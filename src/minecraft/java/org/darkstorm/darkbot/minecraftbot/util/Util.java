@@ -15,6 +15,7 @@ import org.darkstorm.darkbot.minecraftbot.Session;
 
 public final class Util {
 	private static final ScriptEngine engine;
+	private static final Random random = new Random();
 
 	static {
 		ScriptEngineManager mgr = new ScriptEngineManager();
@@ -146,6 +147,27 @@ public final class Util {
 		return null;
 	}
 
+	public static String join(Object[] objects) {
+		return join(objects, ", ", "");
+	}
+
+	public static String join(Object[] objects, String separator) {
+		return join(objects, separator, "");
+	}
+
+	public static String join(Object[] objects, String separator,
+			String finalSeparator) {
+		StringBuilder builder = new StringBuilder();
+		for(int i = 0; i < objects.length; i++) {
+			if(i != 0)
+				builder.append(separator);
+			if(i == objects.length - 1)
+				builder.append(finalSeparator);
+			builder.append(objects[i]);
+		}
+		return builder.toString();
+	}
+
 	@SuppressWarnings("resource")
 	public static List<Class<?>> getClassesInPackage(String packageName)
 			throws IOException {
@@ -261,5 +283,25 @@ public final class Util {
 			}
 		}
 		return classes;
+	}
+
+	public static String generateRandomString(int length) {
+		char[] characters = new char[length];
+		for(int i = 0; i < length; i++) {
+			char start, end;
+			switch(random.nextInt(4)) {
+			case 0:
+				start = 'A';
+				end = 'Z';
+			case 1:
+				start = '0';
+				end = '9';
+			default:
+				start = 'a';
+				end = 'z';
+			}
+			characters[i] = (char) (start + random.nextInt(end - start));
+		}
+		return new String(characters);
 	}
 }

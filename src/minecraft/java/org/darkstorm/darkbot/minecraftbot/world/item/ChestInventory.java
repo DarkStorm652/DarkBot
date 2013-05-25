@@ -5,7 +5,7 @@ import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketSentEvent;
 import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
+import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet101CloseWindow;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet102WindowClick;
 
 public class ChestInventory implements Inventory {
@@ -38,11 +38,13 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized ItemStack getItemAt(int slot) {
-		return slot < items.length ? items[slot] : inventory[slot];
+		return slot < items.length ? items[slot] : inventory[slot
+				- items.length];
 	}
 
 	@Override
 	public synchronized void setItemAt(int slot, ItemStack item) {
+		System.out.println("Set chest item at " + slot + ": " + item);
 		if(slot < items.length)
 			items[slot] = item;
 		else
@@ -62,6 +64,7 @@ public class ChestInventory implements Inventory {
 	public synchronized void selectItemAt(int slot, boolean leftClick) {
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		ItemStack item = getItemAt(slot);
+		ItemStack oldSelected = selectedItem;
 		if(leftClick) {
 			if(selectedItem != null) {
 				if(item != null) {
@@ -128,7 +131,10 @@ public class ChestInventory implements Inventory {
 				}
 			}
 		}
-		connectionHandler.sendPacket(new Packet102WindowClick(0, slot,
+		delay();
+		System.out.println("Clicked at " + slot + " | left: " + leftClick
+				+ " item: " + item + " selected: " + oldSelected);
+		connectionHandler.sendPacket(new Packet102WindowClick(id, slot,
 				leftClick ? 0 : 1, false, item, (short) 0));
 	}
 
@@ -174,8 +180,9 @@ public class ChestInventory implements Inventory {
 		if(!slotFound)
 			return;
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, slot, 0, true,
-				item, (short) 0));
+		delay();
+		connectionHandler.sendPacket(new Packet102WindowClick(id, slot, 0,
+				true, item, (short) 0));
 	}
 
 	@Override
@@ -187,14 +194,26 @@ public class ChestInventory implements Inventory {
 	public synchronized void dropSelectedItem() {
 		selectedItem = null;
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, -999, 0, true,
-				null, (short) 0));
+		delay();
+		connectionHandler.sendPacket(new Packet102WindowClick(id, -999, 0,
+				true, null, (short) 0));
 	}
 
 	@Override
 	public synchronized void close() {
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		connectionHandler.sendPacket(new Packet101CloseWindow(id));
+	}
+
+	private void delay() {
+		int delay = bot.getPlayer().getInventory().getDelay();
+		if(delay > 0) {
+			try {
+				Thread.sleep(delay);
+			} catch(InterruptedException exception) {
+				exception.printStackTrace();
+			}
+		}
 	}
 
 	public MinecraftBot getBot() {

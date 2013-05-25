@@ -31,6 +31,7 @@ public class FallTask implements Task {
 
 	@Override
 	public synchronized void run() {
+		System.out.println("Falling!");
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
 		if(player == null || world == null)

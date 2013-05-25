@@ -9,6 +9,7 @@ import org.darkstorm.darkbot.ircbot.handlers.PermissionsHandler.Permissions;
 import org.darkstorm.darkbot.ircbot.irc.Channel;
 import org.darkstorm.darkbot.ircbot.irc.messages.*;
 import org.darkstorm.darkbot.ircbot.util.Tools;
+import org.darkstorm.darkbot.mcspambot.commands.CommandException;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
@@ -17,23 +18,15 @@ import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
 
-public class MCToIRCController implements EventListener {
+class IRCBackend implements Backend, EventListener {
 	private final DarkBotMC mcBot;
 	private final IRCBot ircBot;
 
-	public MCToIRCController(DarkBotMC mcBot) {
+	public IRCBackend(DarkBotMC mcBot, IRCBotData data) {
 		this.mcBot = mcBot;
 		MinecraftBot bot = mcBot.getBot();
-		IRCBotData botData = new IRCBotData();
-		botData.nickname = "DarkBot[" + bot.getSession().getUsername() + "]";
-		botData.password = "";
-		botData.server = "IRC server goes here";
-		botData.port = 6667;
-		botData.owner = "IRC nick of owner here";
-		botData.channels = new String[] { "#channel here" };
-		ircBot = (IRCBot) DarkBotMC.DARK_BOT.createBot(botData);
-		ircBot.getCommandHandler().addCommand(
-				new MCBotCommand(ircBot.getCommandHandler()));
+		ircBot = (IRCBot) DarkBotMC.DARK_BOT.createBot(data);
+		ircBot.getCommandHandler().addCommand(new MCBotCommand(ircBot.getCommandHandler()));
 		bot.getEventManager().registerListener(this);
 	}
 
@@ -43,6 +36,14 @@ public class MCToIRCController implements EventListener {
 		ircBot.disconnect();
 	}
 
+	@Override
+	public void say(String message) {
+		ircBot.getMessageHandler().setFloodControlEnabled(false);
+		for(Channel channel : ircBot.getChannelHandler().getChannels())
+			ircBot.getMessageHandler().sendMessage(channel.getName(), "[BOT] " + message);
+		ircBot.getMessageHandler().setFloodControlEnabled(true);
+	}
+
 	@EventHandler
 	public void onPacketProcess(PacketProcessEvent event) {
 		Packet packet = event.getPacket();
@@ -50,8 +51,7 @@ public class MCToIRCController implements EventListener {
 			Packet3Chat chatPacket = (Packet3Chat) packet;
 			ircBot.getMessageHandler().setFloodControlEnabled(false);
 			for(Channel channel : ircBot.getChannelHandler().getChannels())
-				ircBot.getMessageHandler().sendMessage(channel.getName(),
-						"[CHAT] 00" + mcToIRCColors(chatPacket.message));
+				ircBot.getMessageHandler().sendMessage(channel.getName(), "[CHAT] \u000F\u000300" + mcToIRCColors(chatPacket.message));
 			ircBot.getMessageHandler().setFloodControlEnabled(true);
 		}
 	}
@@ -60,8 +60,7 @@ public class MCToIRCController implements EventListener {
 		Pattern pattern = Pattern.compile("§[0-9a-fk-or]");
 		Matcher matcher = pattern.matcher(message);
 		while(matcher.find())
-			message = message.replace(matcher.group(),
-					convertMCColor(matcher.group()));
+			message = message.replace(matcher.group(), convertMCColor(matcher.group()));
 		return message;
 	}
 
@@ -69,49 +68,49 @@ public class MCToIRCController implements EventListener {
 		char value = color.charAt(1);
 		switch(value) {
 		case '0':
-			return "01";
+			return "\u000F\u000301";
 		case '1':
-			return "02";
+			return "\u000F\u000302";
 		case '2':
-			return "03";
+			return "\u000F\u000303";
 		case '3':
-			return "10";
+			return "\u000F\u000310";
 		case '4':
-			return "05";
+			return "\u000F\u000305";
 		case '5':
-			return "06";
+			return "\u000F\u000306";
 		case '6':
-			return "08";
+			return "\u000F\u000308";
 		case '7':
-			return "15";
+			return "\u000F\u000315";
 		case '8':
-			return "14";
+			return "\u000F\u000314";
 		case '9':
-			return "12";
+			return "\u000F\u000312";
 		case 'a':
-			return "09";
+			return "\u000F\u000309";
 		case 'b':
-			return "11";
+			return "\u000F\u000311";
 		case 'c':
-			return "04";
+			return "\u000F\u000304";
 		case 'd':
-			return "04";
+			return "\u000F\u000304";
 		case 'e':
-			return "08";
+			return "\u000F\u000308";
 		case 'f':
-			return "00";
+			return "\u000F\u000300";
 		case 'k':
 			return "▒";
 		case 'l':
-			return "";
+			return "\u0002";
 		case 'm':
 			return "";
 		case 'n':
-			return "";
+			return "\u001F";
 		case 'o':
 			return "";
 		case 'r':
-			return "";
+			return "\u000F";
 		default:
 			return "";
 		}
@@ -135,12 +134,22 @@ public class MCToIRCController implements EventListener {
 			if(!(message instanceof UserMessage))
 				return;
 			UserMessage userMessage = (UserMessage) message;
-			ircBot.getMessageHandler().sendMessage(
-					Tools.getCorrectTarget(userMessage),
-					"Command executed: " + userMessage.getMessage());
-			mcBot.onPacketProcess(new PacketProcessEvent(new Packet3Chat(
-					"->[IRC] " + mcBot.getOwner() + " "
-							+ userMessage.getMessage())));
+			try {
+				mcBot.getCommandManager().execute(userMessage.getMessage());
+				ircBot.getMessageHandler().sendMessage(Tools.getCorrectTarget(userMessage), "Command executed: " + userMessage.getMessage());
+			} catch(CommandException e) {
+				StringBuilder error = new StringBuilder("Error: ");
+				if(e.getCause() != null)
+					error.append(e.getCause().toString());
+				else if(e.getMessage() == null)
+					error.append("null");
+				if(e.getMessage() != null) {
+					if(e.getCause() != null)
+						error.append(": ");
+					error.append(e.getMessage());
+				}
+				ircBot.getMessageHandler().sendMessage(Tools.getCorrectTarget(userMessage), error.toString());
+			}
 		}
 
 		@Override

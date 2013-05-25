@@ -48,7 +48,8 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 
 	private boolean hasSpawned = false, movementDisabled = false;
 	private Random random = new Random();
-	private int keepAliveTimer = 0;
+	private int keepAliveTimer = 0, messageDelay = 500;
+	private long lastMessage;
 	private Activity activity;
 
 	public MinecraftBot(DarkBot darkBot, MinecraftBotData.Builder botData) {
@@ -124,10 +125,14 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 			if(player == null)
 				return;
 			Packet100OpenWindow openWindowPacket = (Packet100OpenWindow) packet;
+			System.out.println("Opened inventory "
+					+ openWindowPacket.inventoryType + ": "
+					+ openWindowPacket.slotsCount + " slots");
 			switch(openWindowPacket.inventoryType) {
 			case 0:
 				player.setWindow(new ChestInventory(this,
-						openWindowPacket.windowId, false));
+						openWindowPacket.windowId,
+						openWindowPacket.slotsCount == 27 ? false : true));
 				break;
 			case 1:
 				break;
@@ -335,12 +340,27 @@ public class MinecraftBot extends Bot implements EventListener, GameListener {
 
 	public void say(String message) {
 		while(message.length() > Packet3Chat.MAX_CHAT_LENGTH) {
+			long elapsed = System.currentTimeMillis() - lastMessage;
+			if(elapsed < messageDelay) {
+				try {
+					Thread.sleep(messageDelay - elapsed);
+				} catch(InterruptedException e) {}
+			}
 			String part = message.substring(0, Packet3Chat.MAX_CHAT_LENGTH);
 			connectionHandler.sendPacket(new Packet3Chat(part));
 			message = message.substring(part.length());
+			lastMessage = System.currentTimeMillis();
 		}
-		if(!message.isEmpty())
+		if(!message.isEmpty()) {
+			long elapsed = System.currentTimeMillis() - lastMessage;
+			if(elapsed < messageDelay) {
+				try {
+					Thread.sleep(messageDelay - elapsed);
+				} catch(InterruptedException e) {}
+			}
 			connectionHandler.sendPacket(new Packet3Chat(message));
+			lastMessage = System.currentTimeMillis();
+		}
 	}
 
 	public boolean hasSpawned() {

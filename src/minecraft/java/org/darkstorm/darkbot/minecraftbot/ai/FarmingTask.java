@@ -52,6 +52,8 @@ public class FarmingTask implements Task, EventListener {
 	private BlockLocation currentChest;
 	private List<BlockLocation> fullChests = new ArrayList<BlockLocation>();
 
+	private int[] farmedIds = new int[] { 372, 295, 296, 338, 361, 362, 86, 360 };
+
 	public FarmingTask(final MinecraftBot bot) {
 		this.bot = bot;
 		bot.getEventManager().registerListener(this);
@@ -113,13 +115,36 @@ public class FarmingTask implements Task, EventListener {
 						currentChest = null;
 					}
 					chest.close();
-					System.out.println("Closed chest!!!");
+					System.out.println("Closed chest, no spaces!!!");
 					ticksWait = 4;
 					return;
 				}
-				for(int i = 27; i < chest.getSize(); i++) {
-
+				for(int i = 0; i < 36; i++) {
+					ItemStack item = chest.getItemAt(chest.getSize() + i);
+					if(item == null)
+						continue;
+					boolean found = false;
+					for(int id : farmedIds)
+						if(id == item.getId())
+							found = true;
+					if(!found)
+						continue;
+					chest.selectItemAt(chest.getSize() + i);
+					int index = -1;
+					for(int j = 0; j < chest.getSize(); j++) {
+						if(chest.getItemAt(j) == null) {
+							index = j;
+							break;
+						}
+					}
+					if(index == -1)
+						continue;
+					chest.selectItemAt(index);
 				}
+				chest.close();
+				System.out.println("Closed chest!!!");
+				ticksWait = 4;
+				return;
 			} else {
 				BlockLocation[] chests = getBlocks(54, 32);
 				chestLoop: for(BlockLocation chest : chests) {
@@ -177,7 +202,9 @@ public class FarmingTask implements Task, EventListener {
 
 						System.out.println("Opening chest!!!");
 						placeAt(originalWalk, face);
-						ticksWait = 15;
+						currentChest = chest;
+						ticksWait = 80;
+						return;
 					}
 				}
 			}
@@ -193,8 +220,7 @@ public class FarmingTask implements Task, EventListener {
 				itemCheckWait = 10;
 				return;
 			}
-			ItemEntity item = getClosestGroundItem(372, 295, 296, 338, 361,
-					362, 86, 360);
+			ItemEntity item = getClosestGroundItem(farmedIds);
 			if(item != null) {
 				System.out.println("Item: " + item.getItem() + " Location: "
 						+ item.getLocation());

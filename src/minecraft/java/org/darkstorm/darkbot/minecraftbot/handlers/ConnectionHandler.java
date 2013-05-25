@@ -13,7 +13,7 @@ import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
+import org.darkstorm.darkbot.minecraftbot.events.io.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet252SharedKey;
 import org.darkstorm.darkbot.minecraftbot.util.*;
@@ -220,9 +220,8 @@ public class ConnectionHandler extends MinecraftHandler implements
 			packetProcessQueue.clear();
 		}
 		EventManager eventManager = bot.getEventManager();
-		for(ReadablePacket packet : packets) {
+		for(ReadablePacket packet : packets)
 			eventManager.sendEvent(new PacketProcessEvent(packet));
-		}
 	}
 
 	public boolean isConnected() {
@@ -318,8 +317,8 @@ public class ConnectionHandler extends MinecraftHandler implements
 											5120));
 							connection.setOutputStream(encryptedOut);
 						}
-						// bot.getEventManager().sendEvent(
-						// new PacketSentEvent(packet));
+						bot.getEventManager().sendEvent(
+								new PacketSentEvent(packet));
 					}
 				}
 			} catch(Throwable exception) {

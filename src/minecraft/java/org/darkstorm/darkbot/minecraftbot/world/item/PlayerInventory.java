@@ -373,7 +373,6 @@ public class PlayerInventory implements Inventory, EventListener {
 			throw new IllegalArgumentException();
 		MinecraftBot bot = player.getWorld().getBot();
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		delay();
 		connectionHandler.sendPacket(new Packet16BlockItemSwitch(
 				currentHeldSlot));
 		this.currentHeldSlot = currentHeldSlot;
