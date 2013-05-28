@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
+import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.world.*;
@@ -22,14 +22,19 @@ public class MainPlayerEntity extends PlayerEntity {
 		this.gameMode = gameMode;
 	}
 
+	public MainPlayerEntity(World world, MainPlayerEntity player) {
+		this(world, player.getId(), player.getName(), player.getGameMode());
+
+		inventory.setDelay(player.getInventory().getDelay());
+	}
+
 	public PlayerInventory getInventory() {
 		return inventory;
 	}
 
 	@Override
 	public ItemStack getWornItemAt(int slot) {
-		return slot == 0 ? inventory.getCurrentHeldItem() : slot > 0
-				&& slot <= 4 ? inventory.getArmorAt(slot - 1) : null;
+		return slot == 0 ? inventory.getCurrentHeldItem() : slot > 0 && slot <= 4 ? inventory.getArmorAt(slot - 1) : null;
 	}
 
 	public GameMode getGameMode() {
@@ -151,45 +156,26 @@ public class MainPlayerEntity extends PlayerEntity {
 	}
 
 	private float getRotationX(double x, double y, double z) {
-		double d = this.x - (x + 0.5);
-		double d1 = this.z - (z + 0.5);
+		double d = this.x - x;
+		double d1 = this.z - z;
 		return (float) (((Math.atan2(d1, d) * 180D) / Math.PI) + 90) % 360;
 	}
 
 	private float getRotationY(double x, double y, double z) {
 		double dis1 = y - (this.y + 1);
-		double dis2 = Math.sqrt(Math.pow((x + 0.5) - (this.x), 2)
-				+ Math.pow((z + 0.5) - (this.z), 2));
+		double dis2 = Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(z - this.z, 2));
 		return (float) ((Math.atan2(dis2, dis1) * 180D) / Math.PI) - 90F;
 	}
 
 	public boolean isOnGround() {
-		return y % 1 < 0.2
-				&& BlockType.getById(
-						world.getBlockIdAt((int) Math.floor(x),
-								(int) Math.floor(y - 1), (int) Math.floor(z)))
-						.isSolid()
-				&& !world
-						.getPathFinder()
-						.getHeuristic()
-						.isClimbableBlock(
-								new BlockLocation((int) Math.floor(x),
-										(int) Math.floor(y), (int) Math
-												.floor(z)));
+		int id = world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y - 1), (int) Math.floor(z));
+		return y % 1 < 0.2 && BlockType.getById(id).isSolid();
 	}
 
 	public boolean isInLiquid() {
-		BlockType below = BlockType.getById(world.getBlockIdAt(
-				(int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z)));
-		BlockType above = BlockType.getById(world.getBlockIdAt(
-				(int) Math.floor(x), (int) Math.floor(y + 1),
-				(int) Math.floor(z)));
-		return below == BlockType.WATER || below == BlockType.LAVA
-				|| below == BlockType.STATIONARY_WATER
-				|| below == BlockType.STATIONARY_LAVA
-				|| above == BlockType.WATER || above == BlockType.LAVA
-				|| above == BlockType.STATIONARY_WATER
-				|| above == BlockType.STATIONARY_LAVA;
+		BlockType below = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z)));
+		BlockType above = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y + 1), (int) Math.floor(z)));
+		return below == BlockType.WATER || below == BlockType.LAVA || below == BlockType.STATIONARY_WATER || below == BlockType.STATIONARY_LAVA || above == BlockType.WATER || above == BlockType.LAVA || above == BlockType.STATIONARY_WATER || above == BlockType.STATIONARY_LAVA;
 	}
 
 	public void swingArm() {
@@ -255,8 +241,7 @@ public class MainPlayerEntity extends PlayerEntity {
 				if(item == null) {
 					hotbarSpace = hotbarIndex;
 					break;
-				} else if(ToolType.getById(item.getId()) == null
-						&& hotbarIndex < hotbarSpace)
+				} else if(ToolType.getById(item.getId()) == null && hotbarIndex < hotbarSpace)
 					hotbarSpace = hotbarIndex;
 			}
 			if(hotbarSpace == 9)
@@ -273,8 +258,7 @@ public class MainPlayerEntity extends PlayerEntity {
 	}
 
 	public boolean placeBlock(BlockLocation location) {
-		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(),
-				location);
+		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(), location);
 		if(activity.isActive()) {
 			world.getBot().setActivity(activity);
 			return true;
@@ -283,8 +267,7 @@ public class MainPlayerEntity extends PlayerEntity {
 	}
 
 	public boolean breakBlock(BlockLocation location) {
-		BlockBreakActivity activity = new BlockBreakActivity(world.getBot(),
-				location);
+		BlockBreakActivity activity = new BlockBreakActivity(world.getBot(), location);
 		if(activity.isActive()) {
 			world.getBot().setActivity(activity);
 			return true;

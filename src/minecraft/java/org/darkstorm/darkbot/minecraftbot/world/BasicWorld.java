@@ -27,8 +27,7 @@ public final class BasicWorld implements World, EventListener {
 	private final List<Entity> entities;
 	private final PathSearchProvider pathFinder;
 
-	public BasicWorld(MinecraftBot bot, WorldType type, Dimension dimension,
-			Difficulty difficulty, int height) {
+	public BasicWorld(MinecraftBot bot, WorldType type, Dimension dimension, Difficulty difficulty, int height) {
 		this.bot = bot;
 		this.type = type;
 		this.height = height;
@@ -50,8 +49,7 @@ public final class BasicWorld implements World, EventListener {
 			if(entity == null || !(entity instanceof LivingEntity))
 				return;
 			LivingEntity livingEntity = (LivingEntity) entity;
-			livingEntity.setWornItemAt(inventoryPacket.slot,
-					inventoryPacket.item);
+			livingEntity.setWornItemAt(inventoryPacket.slot, inventoryPacket.item);
 		} else if(packet instanceof Packet8UpdateHealth) {
 			Packet8UpdateHealth updateHealthPacket = (Packet8UpdateHealth) packet;
 			MainPlayerEntity player = bot.getPlayer();
@@ -63,20 +61,17 @@ public final class BasicWorld implements World, EventListener {
 			}
 		} else if(packet instanceof Packet20NamedEntitySpawn) {
 			Packet20NamedEntitySpawn spawnPacket = (Packet20NamedEntitySpawn) packet;
-			PlayerEntity entity = new PlayerEntity(this, spawnPacket.entityId,
-					spawnPacket.name);
+			PlayerEntity entity = new PlayerEntity(this, spawnPacket.entityId, spawnPacket.name);
 			entity.setX(spawnPacket.xPosition / 32D);
 			entity.setY(spawnPacket.yPosition / 32D);
 			entity.setZ(spawnPacket.zPosition / 32D);
 			entity.setYaw(spawnPacket.rotation);
 			entity.setPitch(spawnPacket.pitch);
-			entity.setWornItemAt(0, new BasicItemStack(spawnPacket.currentItem,
-					1, 0));
+			entity.setWornItemAt(0, new BasicItemStack(spawnPacket.currentItem, 1, 0));
 			spawnEntity(entity);
 		} else if(packet instanceof Packet21PickupSpawn) {
 			Packet21PickupSpawn spawnPacket = (Packet21PickupSpawn) packet;
-			ItemEntity entity = new ItemEntity(this, spawnPacket.entityId,
-					spawnPacket.item);
+			ItemEntity entity = new ItemEntity(this, spawnPacket.entityId, spawnPacket.item);
 			entity.setX(spawnPacket.xPosition / 32D);
 			entity.setY(spawnPacket.yPosition / 32D);
 			entity.setZ(spawnPacket.zPosition / 32D);
@@ -88,13 +83,11 @@ public final class BasicWorld implements World, EventListener {
 		} else if(packet instanceof Packet23VehicleSpawn) {
 			Packet23VehicleSpawn spawnPacket = (Packet23VehicleSpawn) packet;
 			Entity entity = null;
-			Class<? extends Entity> entityClass = EntityList
-					.getObjectEntityClass(spawnPacket.type);
+			Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnPacket.type);
 			if(entityClass == null)
 				return;
 			try {
-				Constructor<? extends Entity> constructor = entityClass
-						.getConstructor(World.class, Integer.TYPE);
+				Constructor<? extends Entity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
 				entity = constructor.newInstance(this, spawnPacket.entityId);
 			} catch(Exception exception) {
 				exception.printStackTrace();
@@ -109,13 +102,11 @@ public final class BasicWorld implements World, EventListener {
 		} else if(packet instanceof Packet24MobSpawn) {
 			Packet24MobSpawn mobSpawnPacket = (Packet24MobSpawn) packet;
 			LivingEntity entity = null;
-			Class<? extends LivingEntity> entityClass = EntityList
-					.getLivingEntityClass(mobSpawnPacket.type);
+			Class<? extends LivingEntity> entityClass = EntityList.getLivingEntityClass(mobSpawnPacket.type);
 			if(entityClass == null)
 				return;
 			try {
-				Constructor<? extends LivingEntity> constructor = entityClass
-						.getConstructor(World.class, Integer.TYPE);
+				Constructor<? extends LivingEntity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
 				entity = constructor.newInstance(this, mobSpawnPacket.entityId);
 			} catch(Exception exception) {
 				exception.printStackTrace();
@@ -133,9 +124,7 @@ public final class BasicWorld implements World, EventListener {
 			spawnEntity(entity);
 		} else if(packet instanceof Packet25EntityPainting) {
 			Packet25EntityPainting paintingPacket = (Packet25EntityPainting) packet;
-			PaintingEntity entity = new PaintingEntity(this,
-					paintingPacket.entityId,
-					ArtType.getArtTypeByName(paintingPacket.title));
+			PaintingEntity entity = new PaintingEntity(this, paintingPacket.entityId, ArtType.getArtTypeByName(paintingPacket.title));
 			entity.setX(paintingPacket.xPosition);
 			entity.setY(paintingPacket.yPosition);
 			entity.setZ(paintingPacket.zPosition);
@@ -160,8 +149,7 @@ public final class BasicWorld implements World, EventListener {
 			entity.setX(entity.getX() + (entityPacket.xPosition / 32D));
 			entity.setY(entity.getY() + (entityPacket.yPosition / 32D));
 			entity.setZ(entity.getZ() + (entityPacket.zPosition / 32D));
-			if(packet instanceof Packet31RelEntityMove
-					|| packet instanceof Packet33RelEntityMoveLook) {
+			if(packet instanceof Packet31RelEntityMove || packet instanceof Packet33RelEntityMoveLook) {
 				entity.setYaw((entityPacket.yaw * 360) / 256F);
 				entity.setPitch((entityPacket.pitch * 360) / 256F);
 			}
@@ -180,8 +168,7 @@ public final class BasicWorld implements World, EventListener {
 			Entity entity = getEntityById(headRotatePacket.entityId);
 			if(entity == null || !(entity instanceof LivingEntity))
 				return;
-			((LivingEntity) entity)
-					.setHeadYaw((headRotatePacket.headRotationYaw * 360) / 256F);
+			((LivingEntity) entity).setHeadYaw((headRotatePacket.headRotationYaw * 360) / 256F);
 		} else if(packet instanceof Packet39AttachEntity) {
 			Packet39AttachEntity attachEntityPacket = (Packet39AttachEntity) packet;
 			Entity rider = getEntityById(attachEntityPacket.entityId);
@@ -215,17 +202,12 @@ public final class BasicWorld implements World, EventListener {
 			if(bot.isMovementDisabled())
 				return;
 			Packet51MapChunk mapChunkPacket = (Packet51MapChunk) packet;
-			processChunk(mapChunkPacket.x, mapChunkPacket.z,
-					mapChunkPacket.chunkData, mapChunkPacket.bitmask,
-					mapChunkPacket.additionalBitmask, true,
-					mapChunkPacket.biomes);
+			processChunk(mapChunkPacket.x, mapChunkPacket.z, mapChunkPacket.chunkData, mapChunkPacket.bitmask, mapChunkPacket.additionalBitmask, true, mapChunkPacket.biomes);
 		} else if(packet instanceof Packet52MultiBlockChange) {
 			Packet52MultiBlockChange multiBlockChangePacket = (Packet52MultiBlockChange) packet;
 			if(multiBlockChangePacket.metadataArray == null)
 				return;
-			DataInputStream datainputstream = new DataInputStream(
-					new ByteArrayInputStream(
-							multiBlockChangePacket.metadataArray));
+			DataInputStream datainputstream = new DataInputStream(new ByteArrayInputStream(multiBlockChangePacket.metadataArray));
 			try {
 				for(int i = 0; i < multiBlockChangePacket.size; i++) {
 					short word0 = datainputstream.readShort();
@@ -235,36 +217,26 @@ public final class BasicWorld implements World, EventListener {
 					int x = word0 >> 12 & 0xf;
 					int z = word0 >> 8 & 0xf;
 					int y = word0 & 0xff;
-					setBlockIdAt(id, (multiBlockChangePacket.xPosition * 16)
-							+ x, y, (multiBlockChangePacket.zPosition * 16) + z);
-					setBlockMetadataAt(metadata,
-							(multiBlockChangePacket.xPosition * 16) + x, y,
-							(multiBlockChangePacket.zPosition * 16) + z);
+					setBlockIdAt(id, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z);
+					setBlockMetadataAt(metadata, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z);
 				}
 			} catch(IOException exception) {
 				exception.printStackTrace();
 			}
 		} else if(packet instanceof Packet53BlockChange) {
 			Packet53BlockChange blockChangePacket = (Packet53BlockChange) packet;
-			setBlockIdAt(blockChangePacket.type, blockChangePacket.xPosition,
-					blockChangePacket.yPosition, blockChangePacket.zPosition);
-			setBlockMetadataAt(blockChangePacket.metadata,
-					blockChangePacket.xPosition, blockChangePacket.yPosition,
-					blockChangePacket.zPosition);
+			setBlockIdAt(blockChangePacket.type, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition);
+			setBlockMetadataAt(blockChangePacket.metadata, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition);
 		} else if(packet instanceof Packet56MapChunks) {
 			if(bot.isMovementDisabled())
 				return;
 			Packet56MapChunks chunkPacket = (Packet56MapChunks) packet;
 			for(int i = 0; i < chunkPacket.primaryBitmap.length; i++)
-				processChunk(chunkPacket.chunkX[i], chunkPacket.chunkZ[i],
-						chunkPacket.chunkData[i], chunkPacket.primaryBitmap[i],
-						chunkPacket.secondaryBitmap[i], chunkPacket.skylight,
-						true);
+				processChunk(chunkPacket.chunkX[i], chunkPacket.chunkZ[i], chunkPacket.chunkData[i], chunkPacket.primaryBitmap[i], chunkPacket.secondaryBitmap[i], chunkPacket.skylight, true);
 		}
 	}
 
-	private void processChunk(int x, int z, byte[] data, int bitmask,
-			int additionalBitmask, boolean addSkylight, boolean addBiomes) {
+	private void processChunk(int x, int z, byte[] data, int bitmask, int additionalBitmask, boolean addSkylight, boolean addBiomes) {
 		if(data == null)
 			return;
 		int chunksChanged = 0;
@@ -280,19 +252,15 @@ public final class BasicWorld implements World, EventListener {
 				if((bitmask & (1 << y)) == 0)
 					continue;
 				int dataIndex = i * 4096;
-				byte[] blocks = Arrays.copyOfRange(data, dataIndex,
-						dataIndex + 4096);
+				byte[] blocks = Arrays.copyOfRange(data, dataIndex, dataIndex + 4096);
 				dataIndex += ((chunksChanged - i) * 4096) + (i * 2048);
-				byte[] metadata = Arrays.copyOfRange(data, dataIndex,
-						dataIndex + 2048);
+				byte[] metadata = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
 				dataIndex += chunksChanged * 2048;
-				byte[] light = Arrays.copyOfRange(data, dataIndex,
-						dataIndex + 2048);
+				byte[] light = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
 				dataIndex += chunksChanged * 2048;
 				byte[] skylight = null;
 				if(addSkylight)
-					skylight = Arrays.copyOfRange(data, dataIndex,
-							dataIndex + 2048);
+					skylight = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
 
 				byte[] perBlockMetadata = new byte[4096];
 				byte[] perBlockLight = new byte[4096];
@@ -312,12 +280,9 @@ public final class BasicWorld implements World, EventListener {
 				}
 
 				ChunkLocation newLocation = new ChunkLocation(x, y, z);
-				Chunk chunk = new Chunk(this, newLocation, blocks,
-						perBlockMetadata, perBlockLight, perBlockSkylight,
-						biomes);
+				Chunk chunk = new Chunk(this, newLocation, blocks, perBlockMetadata, perBlockLight, perBlockSkylight, biomes);
 				chunks.put(newLocation, chunk);
-				bot.getEventManager()
-						.sendEvent(new ChunkLoadEvent(this, chunk));
+				bot.getEventManager().sendEvent(new ChunkLoadEvent(this, chunk));
 				i++;
 			}
 			System.arraycopy(data, data.length - 256, biomes, 0, 256);
@@ -328,6 +293,15 @@ public final class BasicWorld implements World, EventListener {
 	public void destroy() {
 		EventManager eventManager = bot.getEventManager();
 		eventManager.unregisterListener(this);
+		synchronized(entities) {
+			for(Entity entity : entities)
+				entity.setDead(true);
+			entities.clear();
+		}
+		synchronized(chunks) {
+			chunks.clear();
+		}
+		System.gc();
 	}
 
 	@Override
@@ -351,8 +325,7 @@ public final class BasicWorld implements World, EventListener {
 		int chunkOffsetY = location.getY() - chunkBlockOffset.getY();
 		int chunkOffsetZ = location.getZ() - chunkBlockOffset.getZ();
 		int id = chunk.getBlockIdAt(chunkOffsetX, chunkOffsetY, chunkOffsetZ);
-		int metadata = chunk.getBlockMetadataAt(chunkOffsetX, chunkOffsetY,
-				chunkOffsetZ);
+		int metadata = chunk.getBlockMetadataAt(chunkOffsetX, chunkOffsetY, chunkOffsetZ);
 		return new Block(this, chunk, location, id, metadata);
 	}
 
@@ -368,10 +341,7 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return 0;
-		int id = chunk.getBlockIdAt(
-				blockLocation.getX() - chunkBlockOffset.getX(),
-				blockLocation.getY() - chunkBlockOffset.getY(),
-				blockLocation.getZ() - chunkBlockOffset.getZ());
+		int id = chunk.getBlockIdAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
 		return id;
 	}
 
@@ -387,9 +357,7 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return;
-		chunk.setBlockIdAt(id, blockLocation.getX() - chunkBlockOffset.getX(),
-				blockLocation.getY() - chunkBlockOffset.getY(),
-				blockLocation.getZ() - chunkBlockOffset.getZ());
+		chunk.setBlockIdAt(id, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
 	}
 
 	@Override
@@ -404,10 +372,7 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return 0;
-		int metadata = chunk.getBlockMetadataAt(blockLocation.getX()
-				- chunkBlockOffset.getX(), blockLocation.getY()
-				- chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
+		int metadata = chunk.getBlockMetadataAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
 		return metadata;
 	}
 
@@ -423,10 +388,7 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return;
-		chunk.setBlockMetadataAt(metadata, blockLocation.getX()
-				- chunkBlockOffset.getX(), blockLocation.getY()
-				- chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
+		chunk.setBlockMetadataAt(metadata, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
 	}
 
 	@Override

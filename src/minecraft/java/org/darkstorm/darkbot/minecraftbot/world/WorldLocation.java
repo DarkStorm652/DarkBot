@@ -12,9 +12,9 @@ public final class WorldLocation {
 	}
 
 	public WorldLocation(BlockLocation location) {
-		x = location.getX();
+		x = location.getX() + 0.5;
 		y = location.getY();
-		z = location.getZ();
+		z = location.getZ() + 0.5;
 	}
 
 	public WorldLocation(ChunkLocation location) {
@@ -40,8 +40,7 @@ public final class WorldLocation {
 		if(!(obj instanceof WorldLocation))
 			return false;
 		WorldLocation location = (WorldLocation) obj;
-		return location.getX() == x && location.getY() == y
-				&& location.getZ() == z;
+		return location.getX() == x && location.getY() == y && location.getZ() == z;
 	}
 
 	@Override
@@ -50,13 +49,11 @@ public final class WorldLocation {
 	}
 
 	public double getDistanceTo(WorldLocation other) {
-		return Math.sqrt(Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2)
-				+ Math.pow(z - other.z, 2));
+		return Math.sqrt(Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2) + Math.pow(z - other.z, 2));
 	}
 
 	public double getDistanceToSquared(WorldLocation other) {
-		return Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2)
-				+ Math.pow(z - other.z, 2);
+		return Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2) + Math.pow(z - other.z, 2);
 	}
 
 	public WorldLocation offset(WorldLocation location) {

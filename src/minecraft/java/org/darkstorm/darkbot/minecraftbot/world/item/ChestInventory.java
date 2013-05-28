@@ -3,8 +3,7 @@ package org.darkstorm.darkbot.minecraftbot.world.item;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketSentEvent;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
+import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet101CloseWindow;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet102WindowClick;
 

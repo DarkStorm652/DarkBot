@@ -31,19 +31,24 @@ public class FallTask implements Task {
 
 	@Override
 	public synchronized void run() {
-		System.out.println("Falling!");
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
 		if(player == null || world == null)
 			return;
-		double speed = 0.18 * 3;
+		double speed = WalkActivity.getDefaultSpeed();
 		BlockLocation location = new BlockLocation(player.getLocation());
+		if(player.isInLiquid())
+			speed *= WalkActivity.getDefaultLiquidFactor();
+		else if(!bot.getWorld().getPathFinder().getHeuristic().isClimbableBlock(location))
+			speed *= WalkActivity.getDefaultFallFactor();
 		int lowestY = location.getY();
-		while(!BlockType.getById(
-				world.getBlockIdAt(location.getX(), (lowestY - 1),
-						location.getZ())).isSolid()
-				&& lowestY > 0)
+		while(true) {
+			int id = world.getBlockIdAt(location.getX(), (lowestY - 1), location.getZ());
+			BlockType type = BlockType.getById(id);
+			if(type.isSolid() || lowestY <= 0)
+				break;
 			lowestY--;
+		}
 		player.setY(player.getY() + Math.max(-speed, lowestY - player.getY()));
 	}
 

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.handlers;
+package org.darkstorm.darkbot.minecraftbot.protocol;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
@@ -14,17 +14,17 @@ import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
 import org.darkstorm.darkbot.minecraftbot.events.io.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet252SharedKey;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 
-public class ConnectionHandler extends MinecraftHandler implements
-		EventListener {
+public class ConnectionHandler implements EventListener {
 	private static final IntHashMap<Class<? extends ReadablePacket>> defaultReadablePackets;
+
+	private final MinecraftBot bot;
 	private final IntHashMap<Class<? extends ReadablePacket>> readablePackets;
-	public final Queue<ReadablePacket> packetProcessQueue;
-	public final Queue<WriteablePacket> packetWriteQueue;
-	public final Connection connection;
+	private final Queue<ReadablePacket> packetProcessQueue;
+	private final Queue<WriteablePacket> packetWriteQueue;
+	private final Connection connection;
 	private final String username, password;
 	private final Proxy loginProxy;
 
@@ -39,11 +39,10 @@ public class ConnectionHandler extends MinecraftHandler implements
 	}
 
 	public ConnectionHandler(MinecraftBot bot, MinecraftBotData botData) {
-		super(bot);
+		this.bot = bot;
 		packetProcessQueue = new ArrayDeque<ReadablePacket>();
 		packetWriteQueue = new ArrayDeque<WriteablePacket>();
-		readablePackets = new IntHashMap<Class<? extends ReadablePacket>>(
-				defaultReadablePackets.size());
+		readablePackets = new IntHashMap<Class<? extends ReadablePacket>>(defaultReadablePackets.size());
 		for(int i = 0; i < 256; i++) {
 			Class<? extends ReadablePacket> c = defaultReadablePackets.get(i);
 			if(c != null)
@@ -52,14 +51,11 @@ public class ConnectionHandler extends MinecraftHandler implements
 		username = botData.getUsername();
 		password = botData.getPassword();
 		if(botData.getHttpProxy() != null)
-			loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					botData.getHttpProxy().getHostName(), botData
-							.getHttpProxy().getPort()));
+			loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(botData.getHttpProxy().getHostName(), botData.getHttpProxy().getPort()));
 		else
 			loginProxy = null;
 		if(botData.getSocksProxy() != null)
-			connection = new Connection(botData.getServer(), botData.getPort(),
-					botData.getSocksProxy());
+			connection = new Connection(botData.getServer(), botData.getPort(), botData.getSocksProxy());
 		else
 			connection = new Connection(botData.getServer(), botData.getPort());
 		bot.getEventManager().registerListener(this);
@@ -78,24 +74,20 @@ public class ConnectionHandler extends MinecraftHandler implements
 
 	private static void defineDefaultPackets() {
 		try {
-			String packageName = Packet.class.getPackage().getName()
-					+ ".bidirectional";
+			String packageName = Packet.class.getPackage().getName() + ".bidirectional";
 			for(Class<?> c : Util.getClassesInPackage(packageName))
 				if(ReadablePacket.class.isAssignableFrom(c))
-					defineDefaultReadablePacket(c
-							.asSubclass(ReadablePacket.class));
+					defineDefaultReadablePacket(c.asSubclass(ReadablePacket.class));
 			packageName = Packet.class.getPackage().getName() + ".readable";
 			for(Class<?> c : Util.getClassesInPackage(packageName))
 				if(ReadablePacket.class.isAssignableFrom(c))
-					defineDefaultReadablePacket(c
-							.asSubclass(ReadablePacket.class));
+					defineDefaultReadablePacket(c.asSubclass(ReadablePacket.class));
 		} catch(Exception exception) {
 			exception.printStackTrace();
 		}
 	}
 
-	private static void defineDefaultReadablePacket(
-			Class<? extends ReadablePacket> packetClass) {
+	private static void defineDefaultReadablePacket(Class<? extends ReadablePacket> packetClass) {
 		if(packetClass == null)
 			throw new NullPointerException("Null packet");
 		Constructor<? extends ReadablePacket> constructor;
@@ -116,13 +108,11 @@ public class ConnectionHandler extends MinecraftHandler implements
 		defaultReadablePackets.put(id, packetClass);
 	}
 
-	private static Class<? extends ReadablePacket> getDefaultReadablePacketClass(
-			int id) {
+	private static Class<? extends ReadablePacket> getDefaultReadablePacketClass(int id) {
 		return defaultReadablePackets.get(id);
 	}
 
-	public synchronized void defineReadablePacket(
-			Class<? extends ReadablePacket> packetClass) {
+	public synchronized void defineReadablePacket(Class<? extends ReadablePacket> packetClass) {
 		if(packetClass == null)
 			throw new NullPointerException("Null packet");
 		Constructor<? extends ReadablePacket> constructor;
@@ -150,8 +140,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 		return null;
 	}
 
-	private synchronized Class<? extends ReadablePacket> getReadablePacketClass(
-			int id) {
+	private synchronized Class<? extends ReadablePacket> getReadablePacketClass(int id) {
 		return readablePackets.get(id);
 	}
 
@@ -167,17 +156,13 @@ public class ConnectionHandler extends MinecraftHandler implements
 		if(!result.contains(":"))
 			throw new AuthenticationException(result);
 		String[] values = result.split(":");
-		return new Session(values[2], password, values[3].replaceAll("[\n\r]",
-				""));
+		return new Session(values[2], password, values[3].replaceAll("[\n\r]", ""));
 	}
 
 	private String login(String username, String password) {
 		try {
-			String parameters = "user=" + URLEncoder.encode(username, "UTF-8")
-					+ "&password=" + URLEncoder.encode(password, "UTF-8")
-					+ "&version=" + 12;
-			String result = Util.post("https://login.minecraft.net/",
-					parameters, loginProxy);
+			String parameters = "user=" + URLEncoder.encode(username, "UTF-8") + "&password=" + URLEncoder.encode(password, "UTF-8") + "&version=" + 12;
+			String result = Util.post("https://login.minecraft.net/", parameters, loginProxy);
 			if(result == null)
 				return "Unable to connect";
 			if(!result.contains(":"))
@@ -215,8 +200,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 		synchronized(packetProcessQueue) {
 			if(packetProcessQueue.size() == 0)
 				return;
-			packets = packetProcessQueue
-					.toArray(new ReadablePacket[packetProcessQueue.size()]);
+			packets = packetProcessQueue.toArray(new ReadablePacket[packetProcessQueue.size()]);
 			packetProcessQueue.clear();
 		}
 		EventManager eventManager = bot.getEventManager();
@@ -225,9 +209,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 	}
 
 	public boolean isConnected() {
-		return connection.isConnected() && readTask != null
-				&& !readTask.isDone() && writeTask != null
-				&& !writeTask.isDone();
+		return connection.isConnected() && readTask != null && !readTask.isDone() && writeTask != null && !writeTask.isDone();
 	}
 
 	public String getServer() {
@@ -246,11 +228,6 @@ public class ConnectionHandler extends MinecraftHandler implements
 		connection.setPort(port);
 	}
 
-	@Override
-	public String getName() {
-		return "ConnectionHandler";
-	}
-
 	private final class ReadTask implements Runnable {
 		@Override
 		public void run() {
@@ -267,9 +244,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 
 					if(!decrypting && packet instanceof Packet252SharedKey) {
 						decrypting = true;
-						connection.setInputStream(new DataInputStream(
-								CryptManager.decryptInputStream(sharedKey,
-										connection.getInputStream())));
+						connection.setInputStream(new DataInputStream(CryptManager.decryptInputStream(sharedKey, connection.getInputStream())));
 					}
 					synchronized(packetProcessQueue) {
 						packetProcessQueue.offer(packet);
@@ -301,8 +276,7 @@ public class ConnectionHandler extends MinecraftHandler implements
 							packetWriteQueue.wait(500);
 					}
 					if(packet != null) {
-						DataOutputStream outputStream = connection
-								.getOutputStream();
+						DataOutputStream outputStream = connection.getOutputStream();
 						outputStream.write(packet.getId());
 						packet.writeData(outputStream);
 						outputStream.flush();
@@ -310,15 +284,10 @@ public class ConnectionHandler extends MinecraftHandler implements
 						if(!encrypting && packet instanceof Packet252SharedKey) {
 							sharedKey = ((Packet252SharedKey) packet).sharedKey;
 							encrypting = true;
-							DataOutputStream encryptedOut = new DataOutputStream(
-									new BufferedOutputStream(
-											CryptManager.encryptOuputStream(
-													sharedKey, outputStream),
-											5120));
+							DataOutputStream encryptedOut = new DataOutputStream(new BufferedOutputStream(CryptManager.encryptOuputStream(sharedKey, outputStream), 5120));
 							connection.setOutputStream(encryptedOut);
 						}
-						bot.getEventManager().sendEvent(
-								new PacketSentEvent(packet));
+						bot.getEventManager().sendEvent(new PacketSentEvent(packet));
 					}
 				}
 			} catch(Throwable exception) {

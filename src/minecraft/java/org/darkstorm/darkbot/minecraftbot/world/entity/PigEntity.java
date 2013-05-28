@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
+import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet7UseEntity;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
 import org.darkstorm.darkbot.minecraftbot.world.World;

@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
+import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;

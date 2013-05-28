@@ -5,8 +5,7 @@ import java.util.Arrays;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.io.*;
-import org.darkstorm.darkbot.minecraftbot.handlers.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
+import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -30,8 +29,7 @@ public class PlayerInventory implements Inventory, EventListener {
 	@EventHandler
 	public synchronized void onPacketSent(PacketSentEvent event) {
 		Packet packet = event.getPacket();
-		if(packet instanceof Packet101CloseWindow
-				&& ((Packet101CloseWindow) packet).windowId == 0) {
+		if(packet instanceof Packet101CloseWindow && ((Packet101CloseWindow) packet).windowId == 0) {
 			selectedItem = null;
 			Arrays.fill(crafting, null);
 		}
@@ -42,13 +40,11 @@ public class PlayerInventory implements Inventory, EventListener {
 		Packet packet = event.getPacket();
 		if(packet instanceof Packet106Transaction) {
 			Packet106Transaction transactionPacket = (Packet106Transaction) packet;
-			System.out.println("Transaction "
-					+ (transactionPacket.accepted ? "" : "not ") + "accepted");
+			System.out.println("Transaction " + (transactionPacket.accepted ? "" : "not ") + "accepted");
 			if(!transactionPacket.accepted) {
 				selectedItem = null;
 				transactionPacket.accepted = true;
-				ConnectionHandler connectionHandler = player.getWorld()
-						.getBot().getConnectionHandler();
+				ConnectionHandler connectionHandler = player.getWorld().getBot().getConnectionHandler();
 				connectionHandler.sendPacket(transactionPacket);
 			}
 		}
@@ -61,9 +57,7 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@Override
 	public synchronized ItemStack getItemAt(int slot) {
-		return slot < 36 ? items[slot] : slot < 40 ? armor[slot - 36]
-				: slot < 44 ? crafting[slot - 40] : slot == 44 ? craftingOutput
-						: null;
+		return slot < 36 ? items[slot] : slot < 40 ? armor[slot - 36] : slot < 44 ? crafting[slot - 40] : slot == 44 ? craftingOutput : null;
 	}
 
 	public synchronized ItemStack getArmorAt(int slot) {
@@ -122,20 +116,16 @@ public class PlayerInventory implements Inventory, EventListener {
 			boolean valid = false;
 			switch(slot) {
 			case 36:
-				valid = id == 86 || id == 298 || id == 302 || id == 306
-						|| id == 310 || id == 314;
+				valid = id == 86 || id == 298 || id == 302 || id == 306 || id == 310 || id == 314;
 				break;
 			case 37:
-				valid = id == 299 || id == 303 || id == 307 || id == 311
-						|| id == 315;
+				valid = id == 299 || id == 303 || id == 307 || id == 311 || id == 315;
 				break;
 			case 38:
-				valid = id == 300 || id == 304 || id == 308 || id == 312
-						|| id == 316;
+				valid = id == 300 || id == 304 || id == 308 || id == 312 || id == 316;
 				break;
 			case 39:
-				valid = id == 301 || id == 305 || id == 309 || id == 313
-						|| id == 317;
+				valid = id == 301 || id == 305 || id == 309 || id == 313 || id == 317;
 				break;
 			default:
 				break armorSlotCheck;
@@ -145,9 +135,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				selectedItem = null;
 			}
 			delay();
-			connectionHandler.sendPacket(new Packet102WindowClick(0,
-					getServerSlotFor(slot), leftClick ? 0 : 1, false, item,
-					(short) 0));
+			connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), leftClick ? 0 : 1, false, item, (short) 0));
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -161,15 +149,13 @@ public class PlayerInventory implements Inventory, EventListener {
 				}
 			}
 		}
-		System.out.println("Selected item at " + slot + " (" + item + ","
-				+ selectedItem + ")");
+		System.out.println("Selected item at " + slot + " (" + item + "," + selectedItem + ")");
 		if(leftClick) {
 			if(selectedItem != null) {
 				if(item != null) {
 					if(item.getId() == selectedItem.getId()) {
 						if(item.getStackSize() != 64) {
-							int newStackSize = item.getStackSize()
-									+ selectedItem.getStackSize();
+							int newStackSize = item.getStackSize() + selectedItem.getStackSize();
 							item.setStackSize(Math.min(64, newStackSize));
 							newStackSize -= 64;
 							if(newStackSize > 0)
@@ -196,8 +182,7 @@ public class PlayerInventory implements Inventory, EventListener {
 						if(item.getStackSize() != 64) {
 							item.setStackSize(item.getStackSize() + 1);
 							if(selectedItem.getStackSize() > 1)
-								selectedItem.setStackSize(selectedItem
-										.getStackSize() - 1);
+								selectedItem.setStackSize(selectedItem.getStackSize() - 1);
 							else
 								selectedItem = null;
 						}
@@ -210,8 +195,7 @@ public class PlayerInventory implements Inventory, EventListener {
 					newItem.setStackSize(1);
 					setItemAt(slot, newItem);
 					if(selectedItem.getStackSize() > 1)
-						selectedItem
-								.setStackSize(selectedItem.getStackSize() - 1);
+						selectedItem.setStackSize(selectedItem.getStackSize() - 1);
 					else
 						selectedItem = null;
 				}
@@ -223,16 +207,13 @@ public class PlayerInventory implements Inventory, EventListener {
 					int stackSize = item.getStackSize();
 					item.setStackSize(stackSize / 2);
 					ItemStack newSelectedItem = item.clone();
-					newSelectedItem.setStackSize(newSelectedItem.getStackSize()
-							+ (stackSize % 2));
+					newSelectedItem.setStackSize(newSelectedItem.getStackSize() + (stackSize % 2));
 					selectedItem = newSelectedItem;
 				}
 			}
 		}
 		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0,
-				getServerSlotFor(slot), leftClick ? 0 : 1, false, item,
-				(short) 0));
+		connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), leftClick ? 0 : 1, false, item, (short) 0));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -291,8 +272,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		MinecraftBot bot = player.getWorld().getBot();
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0,
-				getServerSlotFor(slot), 0, true, originalItem, (short) 0));
+		connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), 0, true, originalItem, (short) 0));
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -343,8 +323,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		MinecraftBot bot = player.getWorld().getBot();
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, -999, 0, true,
-				null, (short) 0));
+		connectionHandler.sendPacket(new Packet102WindowClick(0, -999, 0, true, null, (short) 0));
 	}
 
 	@Override
@@ -373,8 +352,7 @@ public class PlayerInventory implements Inventory, EventListener {
 			throw new IllegalArgumentException();
 		MinecraftBot bot = player.getWorld().getBot();
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet16BlockItemSwitch(
-				currentHeldSlot));
+		connectionHandler.sendPacket(new Packet16BlockItemSwitch(currentHeldSlot));
 		this.currentHeldSlot = currentHeldSlot;
 	}
 
@@ -429,5 +407,9 @@ public class PlayerInventory implements Inventory, EventListener {
 	@Override
 	public int getWindowId() {
 		return 0;
+	}
+
+	public void destroy() {
+		player.getWorld().getBot().getEventManager().unregisterListener(this);
 	}
 }

@@ -23,23 +23,22 @@ import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.events.general.*;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
 import org.darkstorm.darkbot.minecraftbot.events.world.SpawnEvent;
-import org.darkstorm.darkbot.minecraftbot.handlers.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
+import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet8UpdateHealth;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 @SuppressWarnings("unused")
-public class DarkBotMCSpambot implements EventListener, GameListener {
+public class DarkBotMCSpambot implements EventListener {
 	public static final DarkBot DARK_BOT = new DarkBot();
 
 	private static final AtomicInteger amountJoined = new AtomicInteger();
@@ -151,7 +150,6 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		System.gc();
 		System.out.println("[" + username + "] Done! (" + amountJoined.incrementAndGet() + ")");
 		bot.getEventManager().registerListener(this);
-		bot.getGameHandler().registerListener(this);
 
 		long lastShoutTime = System.currentTimeMillis();
 		while(bot.isConnected()) {
@@ -342,11 +340,11 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 						}
 					}
 					inventory.close();
-					bot.say("Equipped armor.");
+					bot.say("/msg " + owner + " Equipped armor.");
 				} else if(message.contains("Owner ")) {
 					String name = message.substring(message.indexOf("Owner ") + "Owner ".length()).split(" ")[0];
 					owner = name;
-					bot.say("Set owner to " + name);
+					bot.say("/msg " + owner + " Set owner to " + name);
 				} else if(message.contains("Follow")) {
 					String[] args = new String[0];
 					if(message.trim().contains("Follow "))
@@ -365,11 +363,11 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					for(Entity entity : bot.getWorld().getEntities()) {
 						if(entity instanceof PlayerEntity && Util.stripColors(((PlayerEntity) entity).getName()).equalsIgnoreCase(name)) {
 							followTask.follow(entity);
-							bot.say("Following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
+							bot.say("/msg " + owner + " Following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
 							return;
 						}
 					}
-					bot.say("Player " + name + " not found.");
+					bot.say("/msg " + owner + " Player " + name + " not found.");
 				} else if(message.contains("Attack ")) {
 					String[] args = message.substring(message.indexOf("Attack ") + "Attack ".length()).split(" ");
 					String name = args[0];
@@ -377,11 +375,11 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 					for(Entity entity : bot.getWorld().getEntities()) {
 						if(entity instanceof PlayerEntity && Util.stripColors(((PlayerEntity) entity).getName()).equalsIgnoreCase(name)) {
 							attackTask.setAttackEntity(entity);
-							bot.say("Attacking " + Util.stripColors(((PlayerEntity) entity).getName()) + "!");
+							bot.say("/msg " + owner + " Attacking " + Util.stripColors(((PlayerEntity) entity).getName()) + "!");
 							return;
 						}
 					}
-					bot.say("Player " + name + " not found.");
+					bot.say("/msg " + owner + " Player " + name + " not found.");
 				} else if(message.contains("Walk ")) {
 					String[] args = message.substring(message.indexOf("Walk ") + "Walk ".length()).split(" ");
 					MainPlayerEntity player = bot.getPlayer();
@@ -407,24 +405,20 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 								break;
 						}
 						if(y <= 0) {
-							bot.say("No appropriate walkable y value!");
+							bot.say("/msg " + owner + " No appropriate walkable y value!");
 							return;
 						}
 					} else
 						y = Integer.parseInt(args[1]);
 
 					BlockLocation target = new BlockLocation(x, y, z);
+					player.getLocation().getDistanceTo(new WorldLocation(target));
 					bot.setActivity(new WalkActivity(bot, target));
-					bot.say("Walking to (" + x + ", " + y + ", " + z + ").");
+					bot.say("/msg " + owner + " Walking to (" + x + ", " + y + ", " + z + ").");
 				} else if(message.contains("AttackAll")) {
 					HostileTask task = bot.getTaskManager().getTaskFor(HostileTask.class);
-					if(task.isActive()) {
-						task.stop();
-						bot.say("No longer in hostile mode.");
-					} else {
-						task.start();
-						bot.say("Now in hostile mode!");
-					}
+					task.start();
+					bot.say("/msg " + owner + " Now in hostile mode!");
 				}
 			} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
 				String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
@@ -459,8 +453,8 @@ public class DarkBotMCSpambot implements EventListener, GameListener {
 		bot.getService().shutdownNow();
 	}
 
-	@Override
-	public void onTick() {
+	@EventHandler
+	public void onTick(TickEvent event) {
 		if(!bot.hasSpawned() || !bot.isConnected())
 			return;
 		if(ticksToGo > 0) {
