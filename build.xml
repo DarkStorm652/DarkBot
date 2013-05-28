@@ -1,6 +1,6 @@
 <project name="DarkBot" default="deploy" basedir=".">
 	<target name="init">
-		<property name="outputDir" value="bin1" />
+		<property name="outputDir" value="bin" />
 		<property name="deployJar" value="DarkBot.jar" />
 		<property name="libraryDir" value="lib" />
 		<property name="tempDir" value="temp" />
