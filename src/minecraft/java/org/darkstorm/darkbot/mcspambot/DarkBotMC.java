@@ -105,6 +105,7 @@ public class DarkBotMC implements EventListener {
 		commandManager.register(new AttackCommand(this));
 		commandManager.register(new BuildCommand(this));
 		commandManager.register(new CalcCommand(this));
+		commandManager.register(new ChatDelayCommand(this));
 		commandManager.register(new ChopCommand(this));
 		commandManager.register(new DestroyCommand(this));
 		commandManager.register(new DropAllCommand(this));

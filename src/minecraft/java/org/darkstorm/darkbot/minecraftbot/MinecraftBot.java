@@ -43,7 +43,7 @@ public class MinecraftBot extends Bot implements EventListener {
 
 	private boolean hasSpawned = false, movementDisabled = false;
 	private Random random = new Random();
-	private int keepAliveTimer = 0, messageDelay = 500;
+	private int keepAliveTimer = 0, messageDelay = 2000;
 	private long lastMessage;
 	private Activity activity;
 
@@ -381,6 +381,14 @@ public class MinecraftBot extends Bot implements EventListener {
 
 	public void setMovementDisabled(boolean movementDisabled) {
 		this.movementDisabled = movementDisabled;
+	}
+
+	public int getMessageDelay() {
+		return messageDelay;
+	}
+
+	public void setMessageDelay(int messageDelay) {
+		this.messageDelay = messageDelay;
 	}
 
 	public MainPlayerEntity getPlayer() {
