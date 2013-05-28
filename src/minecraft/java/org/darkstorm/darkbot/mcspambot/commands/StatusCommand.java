@@ -16,25 +16,18 @@ public class StatusCommand extends AbstractCommand {
 		if(player == null)
 			return;
 
-		controller.say("Health: [" + player.getHealth() + "/20] Hunger: ["
-				+ player.getHunger() + "/20] Level "
-				+ player.getExperienceLevel() + " ("
-				+ player.getExperienceTotal() + " total exp.)");
+		controller.say("Health: [" + player.getHealth() + "/20] Hunger: [" + player.getHunger() + "/20] Level " + player.getExperienceLevel() + " (" + player.getExperienceTotal() + " total exp.)");
 		try {
-			String tasks = "";
-			String activeTasks = "";
+			StringBuilder activeTasks = new StringBuilder();
 			TaskManager manager = bot.getTaskManager();
 			for(Task task : manager.getRegisteredTasks()) {
-				tasks += task.getClass().getSimpleName() + ", ";
-				if(task.isActive())
-					activeTasks += task.getClass().getSimpleName() + ", ";
+				if(task.isActive()) {
+					if(activeTasks.length() > 0)
+						activeTasks.append(", ");
+					activeTasks.append(task.getClass().getSimpleName());
+				}
 			}
-			if(!tasks.isEmpty())
-				tasks = tasks.substring(0, tasks.length() - 2);
-			if(!activeTasks.isEmpty())
-				activeTasks = activeTasks
-						.substring(0, activeTasks.length() - 2);
-			bot.say("Tasks: [" + tasks + "] Active: [" + activeTasks + "]");
+			bot.say("Active tasks: [" + activeTasks + "]");
 		} catch(Exception exception) {
 			exception.printStackTrace();
 		}

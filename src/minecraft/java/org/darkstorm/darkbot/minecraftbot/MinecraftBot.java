@@ -292,7 +292,7 @@ public class MinecraftBot extends Bot implements EventListener {
 		world = null;
 	}
 
-	public void say(String message) {
+	public synchronized void say(String message) {
 		while(message.length() > Packet3Chat.MAX_CHAT_LENGTH) {
 			long elapsed = System.currentTimeMillis() - lastMessage;
 			if(elapsed < messageDelay) {
