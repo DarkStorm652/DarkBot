@@ -96,9 +96,7 @@ public class FarmingTask implements Task, EventListener {
 		World world = bot.getWorld();
 		if(player == null || world == null)
 			return;
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		PlayerInventory inventory = player.getInventory();
 		if(!inventory.contains(0)) {
 			System.out.println("Inventory is full!!!");
@@ -149,19 +147,14 @@ public class FarmingTask implements Task, EventListener {
 				BlockLocation[] chests = getBlocks(54, 32);
 				chestLoop: for(BlockLocation chest : chests) {
 					if(!fullChests.contains(chest)) {
-						BlockLocation[] surrounding = new BlockLocation[] {
-								chest.offset(0, 1, 0), chest.offset(-1, 0, 0),
-								chest.offset(1, 0, 0), chest.offset(0, 0, -1),
-								chest.offset(0, 0, 1) };
+						BlockLocation[] surrounding = new BlockLocation[] { chest.offset(0, 1, 0), chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
 						BlockLocation closestWalk = null;
 						int closestDistance = Integer.MAX_VALUE;
 						int face = 0;
 						for(BlockLocation walk : surrounding) {
-							if(BlockType.getById(world.getBlockIdAt(walk))
-									.isSolid())
+							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid())
 								continue;
-							int distance = ourLocation
-									.getDistanceToSquared(walk);
+							int distance = ourLocation.getDistanceToSquared(walk);
 							if(distance < closestDistance) {
 								closestWalk = walk;
 								closestDistance = distance;
@@ -182,16 +175,12 @@ public class FarmingTask implements Task, EventListener {
 						if(closestWalk == null)
 							continue chestLoop;
 						BlockLocation originalWalk = closestWalk;
-						BlockLocation closestWalkOffset = closestWalk.offset(0,
-								-1, 0);
-						while(!BlockType.getById(
-								world.getBlockIdAt(closestWalkOffset))
-								.isSolid()) {
+						BlockLocation closestWalkOffset = closestWalk.offset(0, -1, 0);
+						while(!BlockType.getById(world.getBlockIdAt(closestWalkOffset)).isSolid()) {
 							closestWalk = closestWalkOffset;
 							if(originalWalk.getY() - closestWalkOffset.getY() > 5)
 								continue chestLoop;
-							closestWalkOffset = closestWalkOffset.offset(0, -1,
-									0);
+							closestWalkOffset = closestWalkOffset.offset(0, -1, 0);
 						}
 
 						if(!ourLocation.equals(closestWalk)) {
@@ -222,10 +211,8 @@ public class FarmingTask implements Task, EventListener {
 			}
 			ItemEntity item = getClosestGroundItem(farmedIds);
 			if(item != null) {
-				System.out.println("Item: " + item.getItem() + " Location: "
-						+ item.getLocation());
-				bot.setActivity(new WalkActivity(bot, new BlockLocation(item
-						.getLocation())));
+				System.out.println("Item: " + item.getItem() + " Location: " + item.getLocation());
+				bot.setActivity(new WalkActivity(bot, new BlockLocation(item.getLocation())));
 			} else
 				itemCheckWait = 10;
 			return;
@@ -234,16 +221,12 @@ public class FarmingTask implements Task, EventListener {
 		System.out.println("Farming at " + closest + "!");
 		int id = world.getBlockIdAt(closest);
 		if(id == 115 || id == 59 || id == 83 || id == 86 || id == 103) {
-			System.out.println("Target: " + id + "-"
-					+ world.getBlockMetadataAt(closest));
+			System.out.println("Target: " + id + "-" + world.getBlockMetadataAt(closest));
 			BlockLocation walkTo = closest;
 			if(id == 83)
 				walkTo = closest.offset(0, -1, 0);
 			else if(id == 86 || id == 103) {
-				BlockLocation[] surrounding = new BlockLocation[] {
-						closest.offset(0, 1, 0), closest.offset(-1, 0, 0),
-						closest.offset(1, 0, 0), closest.offset(0, 0, -1),
-						closest.offset(0, 0, 1) };
+				BlockLocation[] surrounding = new BlockLocation[] { closest.offset(0, 1, 0), closest.offset(-1, 0, 0), closest.offset(1, 0, 0), closest.offset(0, 0, -1), closest.offset(0, 0, 1) };
 				BlockLocation closestWalk = null;
 				int closestDistance = Integer.MAX_VALUE;
 				for(BlockLocation walk : surrounding) {
@@ -259,8 +242,7 @@ public class FarmingTask implements Task, EventListener {
 					return;
 				BlockLocation originalWalk = closestWalk;
 				BlockLocation closestWalkOffset = closestWalk.offset(0, -1, 0);
-				while(!BlockType.getById(world.getBlockIdAt(closestWalkOffset))
-						.isSolid()) {
+				while(!BlockType.getById(world.getBlockIdAt(closestWalkOffset)).isSolid()) {
 					closestWalk = closestWalkOffset;
 					if(originalWalk.getY() - closestWalkOffset.getY() > 5)
 						return;
@@ -275,9 +257,7 @@ public class FarmingTask implements Task, EventListener {
 			breakBlock(closest);
 		} else if(id == 88 || id == 60 || id == 3 || id == 104 || id == 105) {
 			if(id == 104 || id == 105) {
-				BlockLocation[] locations = new BlockLocation[] {
-						closest.offset(-1, -1, 0), closest.offset(1, -1, 0),
-						closest.offset(0, -1, -1), closest.offset(0, -1, -1) };
+				BlockLocation[] locations = new BlockLocation[] { closest.offset(-1, -1, 0), closest.offset(1, -1, 0), closest.offset(0, -1, -1), closest.offset(0, -1, -1) };
 				for(BlockLocation dirtLocation : locations)
 					if(world.getBlockIdAt(dirtLocation) == 3)
 						closest = dirtLocation;
@@ -287,8 +267,7 @@ public class FarmingTask implements Task, EventListener {
 				tools = new int[] { 372 };
 			else if(id == 60)
 				tools = new int[] { 295 };
-			else if(((id == 3 && inventory.contains(295)) || id == 104 || id == 105)
-					&& inventory.contains(HOES))
+			else if(((id == 3 && inventory.contains(295)) || id == 104 || id == 105) && inventory.contains(HOES))
 				tools = HOES;
 			// else if(inventory.contains(338) && (id == 3 || id == 12))
 			// tools = new int[] { 338 };
@@ -324,8 +303,7 @@ public class FarmingTask implements Task, EventListener {
 					if(itemId == id) {
 						int distance = player.getDistanceToSquared(item);
 						if(distance < closestDistance) {
-							int blockId = world.getBlockIdAt(new BlockLocation(
-									item.getLocation()));
+							int blockId = world.getBlockIdAt(new BlockLocation(item.getLocation()));
 							if(!BlockType.getById(blockId).isSolid()) {
 								closest = item;
 								closestDistance = distance;
@@ -347,9 +325,7 @@ public class FarmingTask implements Task, EventListener {
 	public synchronized void onBlockChange(BlockChangeEvent event) {
 		BlockLocation location = event.getLocation();
 		Block newBlock = event.getNewBlock();
-		if((event.getOldBlock() == null && newBlock == null)
-				|| (event.getOldBlock() != null && newBlock != null && event
-						.getOldBlock().getId() == newBlock.getId()))
+		if((event.getOldBlock() == null && newBlock == null) || (event.getOldBlock() != null && newBlock != null && event.getOldBlock().getId() == newBlock.getId()))
 			return;
 		if(newBlock == null || newBlock.getId() == 0) {
 			if(currentlyBreaking != null && currentlyBreaking.equals(location)) {
@@ -364,78 +340,51 @@ public class FarmingTask implements Task, EventListener {
 		if(player == null || world == null)
 			return null;
 		PlayerInventory inventory = player.getInventory();
-		boolean hasNetherwarts = inventory.contains(372), hasSeeds = inventory
-				.contains(295), hasHoe = inventory.contains(HOES);
+		boolean hasNetherwarts = inventory.contains(372), hasSeeds = inventory.contains(295), hasHoe = inventory.contains(HOES);
 		// boolean hasReeds = inventory.contains(338);
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		int radius = 32;
 		List<BlockLocation> closest = new ArrayList<>();
 		int closestDistance = Integer.MAX_VALUE, actualFarmType = 0;
 		for(int x = -radius; x < radius; x++) {
 			for(int y = -radius / 2; y < radius / 2; y++) {
 				for(int z = -radius; z < radius; z++) {
-					BlockLocation location = new BlockLocation(
-							ourLocation.getX() + x, ourLocation.getY() + y,
-							ourLocation.getZ() + z);
+					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					int distance = ourLocation.getDistanceToSquared(location);
 					if(distance <= closestDistance) {
 						// System.out.println("[" + x + "," + y + "," + z + "] "
 						// + distance + " -> " + closestDistance);
 						int id = world.getBlockIdAt(location);
-						int idAbove = world.getBlockIdAt(location.offset(0, 1,
-								0));
-						int idBelow = world.getBlockIdAt(location.offset(0, -1,
-								0));
+						int idAbove = world.getBlockIdAt(location.offset(0, 1, 0));
+						int idBelow = world.getBlockIdAt(location.offset(0, -1, 0));
 						int metadata = world.getBlockMetadataAt(location);
 
 						boolean pumpkinWatermelonDirt = false;
 						boolean plantSeeds = true;
 						int farmType = actualFarmType;
 						if(farmType <= 3 && (id == 104 || id == 105) && hasHoe) {
-							BlockLocation[] locations = new BlockLocation[] {
-									location.offset(-1, -1, 0),
-									location.offset(1, -1, 0),
-									location.offset(0, -1, -1),
-									location.offset(0, -1, 1) };
+							BlockLocation[] locations = new BlockLocation[] { location.offset(-1, -1, 0), location.offset(1, -1, 0), location.offset(0, -1, -1), location.offset(0, -1, 1) };
 							for(BlockLocation dirtLocation : locations)
-								if(world.getBlockIdAt(dirtLocation) == 3
-										&& world.getBlockIdAt(dirtLocation
-												.offset(0, 1, 0)) == 0)
+								if(world.getBlockIdAt(dirtLocation) == 3 && world.getBlockIdAt(dirtLocation.offset(0, 1, 0)) == 0)
 									pumpkinWatermelonDirt = true;
 						}
-						if(farmType <= 1
-								&& (id == 3 && idAbove == 0 && hasHoe && hasSeeds)) {
-							BlockLocation[] locations = new BlockLocation[] {
-									location.offset(-1, 0, 0),
-									location.offset(1, 0, 0),
-									location.offset(0, 0, -1),
-									location.offset(0, 0, 1) };
+						if(farmType <= 1 && (id == 3 && idAbove == 0 && hasHoe && hasSeeds)) {
+							BlockLocation[] locations = new BlockLocation[] { location.offset(-1, 0, 0), location.offset(1, 0, 0), location.offset(0, 0, -1), location.offset(0, 0, 1) };
 							for(BlockLocation adjacent : locations) {
 								int adjacentId = world.getBlockIdAt(adjacent);
 								if(adjacentId == 104 || adjacentId == 105)
 									plantSeeds = false;
 							}
 						}
-						if(farmType <= 3
-								&& (pumpkinWatermelonDirt || id == 103
-										|| id == 86
-										|| (id == 115 && metadata > 2)
-										|| (id == 59 && metadata > 6) || (id == 83
-										&& idBelow == 83 && idAbove == 83))) {
+						if(farmType <= 3 && (pumpkinWatermelonDirt || id == 103 || id == 86 || (id == 115 && metadata > 2) || (id == 59 && metadata > 6) || (id == 83 && idBelow == 83 && idAbove == 83))) {
 							farmType = 3;
-						} else if(farmType <= 2
-								&& ((id == 88 && idAbove == 0 && hasNetherwarts) || (id == 60
-										&& idAbove == 0 && hasSeeds)))
+						} else if(farmType <= 2 && ((id == 88 && idAbove == 0 && hasNetherwarts) || (id == 60 && idAbove == 0 && hasSeeds)))
 							farmType = 2;
 						// else if(farmType < 2
 						// && ((id == 3 || id == 12) && idAbove == 0 &&
 						// hasReeds))
 						// farmType = 2;
-						else if(farmType <= 1
-								&& (id == 3 && idAbove == 0 && hasHoe
-										&& hasSeeds && plantSeeds))
+						else if(farmType <= 1 && (id == 3 && idAbove == 0 && hasHoe && hasSeeds && plantSeeds))
 							farmType = 1;
 						else
 							continue;
@@ -447,15 +396,13 @@ public class FarmingTask implements Task, EventListener {
 						closest.add(location);
 						actualFarmType = farmType;
 						closestDistance = distance;
-
 					}
 				}
 			}
 		}
 		BlockLocation closestLocation = null;
 		if(closest.size() > 0)
-			closestLocation = closest
-					.get((int) (Math.random() * closest.size()));
+			closestLocation = closest.get((int) (Math.random() * closest.size()));
 		return closestLocation;
 	}
 
@@ -464,9 +411,7 @@ public class FarmingTask implements Task, EventListener {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return null;
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player.getZ() - 0.5)));
 		BlockLocation closest = null;
 		int closestDistance = Integer.MAX_VALUE;
 		for(BlockLocation location : getBlocks(id, radius)) {
@@ -484,16 +429,12 @@ public class FarmingTask implements Task, EventListener {
 		World world = bot.getWorld();
 		if(player == null || world == null)
 			return new BlockLocation[0];
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		List<BlockLocation> blocks = new ArrayList<BlockLocation>();
 		for(int x = -radius; x < radius; x++) {
 			for(int y = -radius; y < radius; y++) {
 				for(int z = -radius; z < radius; z++) {
-					BlockLocation location = new BlockLocation(
-							ourLocation.getX() + x, ourLocation.getY() + y,
-							ourLocation.getZ() + z);
+					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					if(world.getBlockIdAt(location) == id)
 						blocks.add(location);
 				}
@@ -553,10 +494,8 @@ public class FarmingTask implements Task, EventListener {
 			return;
 		player.face(x, y, z);
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
+		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, 0));
 		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, 0));
 		currentlyBreaking = location;
@@ -571,19 +510,15 @@ public class FarmingTask implements Task, EventListener {
 		if(player == null)
 			return;
 		PlayerInventory inventory = player.getInventory();
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location
-				.getZ();
+		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
 		location = getOffsetBlock(location, face);
 		if(location == null)
 			return;
 		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D),
-				z + ((originalZ - z) / 2.0D));
+		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D));
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
+		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 		Packet15Place placePacket = new Packet15Place();
 		placePacket.xPosition = x;
 		placePacket.yPosition = y;

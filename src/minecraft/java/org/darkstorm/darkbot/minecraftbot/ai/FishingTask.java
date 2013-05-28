@@ -46,8 +46,7 @@ public class FishingTask implements Task, EventListener {
 			}
 			MainPlayerEntity player = bot.getPlayer();
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-					Animation.SWING_ARM));
+			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 			Packet15Place placePacket = new Packet15Place();
 			placePacket.xPosition = -1;
 			placePacket.yPosition = -1;
@@ -65,17 +64,14 @@ public class FishingTask implements Task, EventListener {
 			ticksFished++;
 			if(ticksFished > 2000) {
 				MainPlayerEntity player = bot.getPlayer();
-				ConnectionHandler connectionHandler = bot
-						.getConnectionHandler();
-				connectionHandler.sendPacket(new Packet18Animation(player
-						.getId(), Animation.SWING_ARM));
+				ConnectionHandler connectionHandler = bot.getConnectionHandler();
+				connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 				Packet15Place placePacket = new Packet15Place();
 				placePacket.xPosition = -1;
 				placePacket.yPosition = -1;
 				placePacket.zPosition = -1;
 				placePacket.direction = 255;
-				placePacket.itemStack = player.getInventory()
-						.getCurrentHeldItem();
+				placePacket.itemStack = player.getInventory().getCurrentHeldItem();
 				connectionHandler.sendPacket(placePacket);
 				fishing = false;
 			}
@@ -94,14 +90,11 @@ public class FishingTask implements Task, EventListener {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return;
-		if(player.getDistanceToSquared(closest.getX(), closest.getY() + 1,
-				closest.getZ()) < 25) {
+		if(player.getDistanceToSquared(closest.getX(), closest.getY() + 1, closest.getZ()) < 25) {
 			player.face(closest.getX(), closest.getY() + 1, closest.getZ());
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-					.getYaw(), (float) player.getPitch(), true));
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-					Animation.SWING_ARM));
+			connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 			Packet15Place placePacket = new Packet15Place();
 			placePacket.xPosition = -1;
 			placePacket.yPosition = -1;
@@ -123,19 +116,14 @@ public class FishingTask implements Task, EventListener {
 		World world = bot.getWorld();
 		if(player == null || world == null)
 			return null;
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		int radius = 8;
 		int closestX = 0, closestY = 0, closestZ = 0, closestDistance = Integer.MAX_VALUE;
 		for(int x = -radius; x < radius; x++) {
 			for(int y = -radius; y < radius; y++) {
 				for(int z = -radius; z < radius; z++) {
-					int id = world.getBlockIdAt(ourLocation.getX() + x,
-							ourLocation.getY() + y, ourLocation.getZ() + z);
-					int distance = player.getDistanceToSquared(
-							ourLocation.getX() + x, ourLocation.getY() + y,
-							ourLocation.getZ() + z);
+					int id = world.getBlockIdAt(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
+					int distance = player.getDistanceToSquared(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					if((id == 8 || id == 9) && distance < closestDistance) {
 						closestX = ourLocation.getX() + x;
 						closestY = ourLocation.getY() + y;
@@ -145,8 +133,7 @@ public class FishingTask implements Task, EventListener {
 				}
 			}
 		}
-		return closestDistance < Integer.MAX_VALUE ? new BlockLocation(
-				closestX, closestY, closestZ) : null;
+		return closestDistance < Integer.MAX_VALUE ? new BlockLocation(closestX, closestY, closestZ) : null;
 	}
 
 	@EventHandler
@@ -161,25 +148,21 @@ public class FishingTask implements Task, EventListener {
 			if(entity == null || !(entity instanceof FishingBobEntity))
 				return;
 			System.out.println("Fishing bob velocity!");
-			if(velocityPacket.motionX == 0 && velocityPacket.motionY < 0
-					&& velocityPacket.motionZ == 0) {
+			if(velocityPacket.motionX == 0 && velocityPacket.motionY < 0 && velocityPacket.motionZ == 0) {
 				if(fishing) {
 					if(!switchToFishingRod()) {
 						stop();
 						return;
 					}
 					MainPlayerEntity player = bot.getPlayer();
-					ConnectionHandler connectionHandler = bot
-							.getConnectionHandler();
-					connectionHandler.sendPacket(new Packet18Animation(player
-							.getId(), Animation.SWING_ARM));
+					ConnectionHandler connectionHandler = bot.getConnectionHandler();
+					connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 					Packet15Place placePacket = new Packet15Place();
 					placePacket.xPosition = -1;
 					placePacket.yPosition = -1;
 					placePacket.zPosition = -1;
 					placePacket.direction = 255;
-					placePacket.itemStack = player.getInventory()
-							.getCurrentHeldItem();
+					placePacket.itemStack = player.getInventory().getCurrentHeldItem();
 					connectionHandler.sendPacket(placePacket);
 				}
 				fishing = false;

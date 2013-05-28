@@ -9,8 +9,7 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 
 public class WalkActivity implements Activity {
-	private static double defaultSpeed = 0.15, defaultJumpFactor = 3,
-			defaultFallFactor = 4, defaultLiquidFactor = 0.5;
+	private static double defaultSpeed = 0.15, defaultJumpFactor = 3, defaultFallFactor = 4, defaultLiquidFactor = 0.5;
 	private static int defaultTimeout = 60000;
 
 	private final MinecraftBot bot;
@@ -23,22 +22,19 @@ public class WalkActivity implements Activity {
 	private PathNode nextStep;
 	private int ticksSinceStepChange = 0;
 	private int timeout = defaultTimeout;
-	private double speed = defaultSpeed, jumpFactor = defaultJumpFactor,
-			fallFactor = defaultFallFactor, liquidFactor = defaultLiquidFactor;
+	private double speed = defaultSpeed, jumpFactor = defaultJumpFactor, fallFactor = defaultFallFactor, liquidFactor = defaultLiquidFactor;
 
 	public WalkActivity(MinecraftBot bot, BlockLocation target) {
 		this(bot, target, false);
 	}
 
-	public WalkActivity(final MinecraftBot bot, final BlockLocation target,
-			boolean keepWalking) {
+	public WalkActivity(final MinecraftBot bot, final BlockLocation target, boolean keepWalking) {
 		this.bot = bot;
 		this.target = target;
 		System.out.println("Walking!");
 		if(keepWalking) {
 			Activity activity = bot.getActivity();
-			if(activity != null && activity instanceof WalkActivity
-					&& ((WalkActivity) activity).isMoving()) {
+			if(activity != null && activity instanceof WalkActivity && ((WalkActivity) activity).isMoving()) {
 				WalkActivity walkActivity = (WalkActivity) activity;
 				nextStep = walkActivity.nextStep;
 				ticksSinceStepChange = walkActivity.ticksSinceStepChange;
@@ -51,11 +47,8 @@ public class WalkActivity implements Activity {
 				MainPlayerEntity player = bot.getPlayer();
 				if(world == null || player == null || target == null)
 					return null;
-				BlockLocation ourLocation = new BlockLocation((int) (Math
-						.round(player.getX() - 0.5)), (int) player.getY(),
-						(int) (Math.round(player.getZ() - 0.5)));
-				PathSearch search = world.getPathFinder().provideSearch(
-						ourLocation, target);
+				BlockLocation ourLocation = new BlockLocation(player.getLocation());
+				PathSearch search = world.getPathFinder().provideSearch(ourLocation, target);
 				while(!search.isDone() && !Thread.interrupted())
 					search.step();
 				return search.getPath();
@@ -136,9 +129,7 @@ public class WalkActivity implements Activity {
 		}
 		if(nextStep != null) {
 			MainPlayerEntity player = bot.getPlayer();
-			if(nextStep.getNext() != null
-					&& player.getDistanceToSquared(nextStep.getNext()
-							.getLocation()) < 0.2) {
+			if(nextStep.getNext() != null && player.getDistanceToSquared(nextStep.getNext().getLocation()) < 0.2) {
 				nextStep = nextStep.getNext();
 				ticksSinceStepChange = 0;
 			}
@@ -154,62 +145,28 @@ public class WalkActivity implements Activity {
 			double speed = this.speed;
 			WorldLocation location = nextStep.getLocation();
 			BlockLocation block = new BlockLocation(player.getLocation());
-			double x = location.getX(), y = location.getY(), z = location
-					.getZ();
+			double x = location.getX(), y = location.getY(), z = location.getZ();
 			boolean inLiquid = player.isInLiquid();
-			if(BlockType.getById(bot.getWorld().getBlockIdAt(
-					block.offset(0, -1, 0))) == BlockType.SOUL_SAND) {
-				if(BlockType.getById(bot.getWorld().getBlockIdAt(
-						new BlockLocation(location).offset(0, -1, 0))) == BlockType.SOUL_SAND)
-					y -= 0.125;
+			if(BlockType.getById(bot.getWorld().getBlockIdAt(block.offset(0, -1, 0))) == BlockType.SOUL_SAND) {
+				if(BlockType.getById(bot.getWorld().getBlockIdAt(new BlockLocation(location).offset(0, -1, 0))) == BlockType.SOUL_SAND)
+					y -= 0.12;
 				speed *= liquidFactor;
 			} else if(inLiquid)
 				speed *= liquidFactor;
 			if(player.getY() != y) {
-				if(!inLiquid
-						&& !bot.getWorld().getPathFinder().getHeuristic()
-								.isClimbableBlock(block))
+				if(!inLiquid && !bot.getWorld().getPathFinder().getHeuristic().isClimbableBlock(block))
 					if(player.getY() < y)
 						speed *= jumpFactor;
 					else
 						speed *= fallFactor;
-				player.setY(player.getY()
-						+ (player.getY() < y ? Math.min(speed,
-								y - player.getY()) : Math.max(-speed, y
-								- player.getY())));
+				player.setY(player.getY() + (player.getY() < y ? Math.min(speed, y - player.getY()) : Math.max(-speed, y - player.getY())));
 			}
-			if(player.getX() != (x + 0.5D)) {
-				player.setX(player.getX()
-						+ (player.getX() < (x + 0.5D) ? Math.min(speed,
-								(x + 0.5D) - player.getX()) : Math.max(-speed,
-								(x + 0.5D) - player.getX())));
-			}
-			if(player.getZ() != (z + 0.5D)) {
-				player.setZ(player.getZ()
-						+ (player.getZ() < (z + 0.5D) ? Math.min(speed,
-								(z + 0.5D) - player.getZ()) : Math.max(-speed,
-								(z + 0.5D) - player.getZ())));
-			}
-			if(player.getX() == (x + 0.5D) && player.getY() == y
-					&& player.getZ() == (z + 0.5D)) {
-				/*if(BlockType.getById(bot.getWorld().getBlockIdAt(
-						new BlockLocation(location).offset(0, -1, 0))) == BlockType.SOUL_SAND) {
-					y -= 0.125;
-					if(player.getY() != y) {
-						if(!inLiquid
-								&& !bot.getWorld().getPathFinder()
-										.getHeuristic().isClimbableBlock(block))
-							if(player.getY() < y)
-								speed *= jumpFactor;
-							else
-								speed *= fallFactor;
-						player.setY(player.getY()
-								+ (player.getY() < y ? Math.min(speed, y
-										- player.getY()) : Math.max(-speed, y
-										- player.getY())));
-						return;
-					}
-				}*/
+			if(player.getX() != x)
+				player.setX(player.getX() + (player.getX() < x ? Math.min(speed, x - player.getX()) : Math.max(-speed, x - player.getX())));
+			if(player.getZ() != z)
+				player.setZ(player.getZ() + (player.getZ() < z ? Math.min(speed, z - player.getZ()) : Math.max(-speed, z - player.getZ())));
+
+			if(player.getX() == x && player.getY() == y && player.getZ() == z) {
 				nextStep = nextStep.getNext();
 				ticksSinceStepChange = 0;
 			}

@@ -60,13 +60,10 @@ public class HostileTask implements Task {
 			return;
 		player.face(entity.getX(), entity.getY() + 1, entity.getZ());
 		if(closestDistance > 16) {
-			BlockLocation location = new BlockLocation((int) entity.getX(),
-					(int) (entity.getY() + 0.5), (int) entity.getZ());
+			BlockLocation location = new BlockLocation(entity.getLocation());
 			BlockLocation original = location;
 			BlockLocation below = location.offset(0, -1, 0);
-			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid()
-					&& !world.getPathFinder().getHeuristic()
-							.isClimbableBlock(below)) {
+			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
 				location = below;
 				below = below.offset(0, -1, 0);
 				if(original.getY() - location.getY() >= 5)
@@ -80,16 +77,13 @@ public class HostileTask implements Task {
 			bot.setActivity(new WalkActivity(bot, location, true));
 			return;
 		} else {
-			if(closestDistance < 9 && bot.hasActivity()
-					&& bot.getActivity() instanceof WalkActivity)
+			if(closestDistance < 9 && bot.hasActivity() && bot.getActivity() instanceof WalkActivity)
 				bot.setActivity(null);
 			if(attackCooldown > 0)
 				return;
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-					Animation.SWING_ARM));
-			connectionHandler.sendPacket(new Packet7UseEntity(player.getId(),
-					entity.getId(), 1));
+			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
+			connectionHandler.sendPacket(new Packet7UseEntity(player.getId(), entity.getId(), 1));
 			attackCooldown = 5;
 		}
 	}

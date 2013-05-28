@@ -52,10 +52,8 @@ public class BuildingTask implements Task, EventListener {
 		TaskManager taskManager = bot.getTaskManager();
 		eatTask = taskManager.getTaskFor(EatTask.class);
 		blockId = Integer.parseInt(options[0]);
-		point1 = new BlockLocation(Integer.parseInt(options[1]),
-				Integer.parseInt(options[2]), Integer.parseInt(options[3]));
-		point2 = new BlockLocation(Integer.parseInt(options[4]),
-				Integer.parseInt(options[5]), Integer.parseInt(options[6]));
+		point1 = new BlockLocation(Integer.parseInt(options[1]), Integer.parseInt(options[2]), Integer.parseInt(options[3]));
+		point2 = new BlockLocation(Integer.parseInt(options[4]), Integer.parseInt(options[5]), Integer.parseInt(options[6]));
 		BlockLocation temp = point1;
 		point1 = point1.getY() <= point2.getY() ? point1 : point2;
 		point2 = temp.getY() > point2.getY() ? temp : point2;
@@ -81,13 +79,10 @@ public class BuildingTask implements Task, EventListener {
 		World world = bot.getWorld();
 		MainPlayerEntity player = bot.getPlayer();
 		System.out.println("Building!");
-		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player
-				.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player
-				.getZ() - 0.5)));
+		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		boolean flip = false;
 		for(int y = point1.getY(); y <= point2.getY(); y++) {
-			for(int x = Math.min(point1.getX(), point2.getX()); x <= Math.max(
-					point1.getX(), point2.getX()); x++) {
+			for(int x = Math.min(point1.getX(), point2.getX()); x <= Math.max(point1.getX(), point2.getX()); x++) {
 				int z1 = Math.min(point1.getZ(), point2.getZ());
 				int z2 = Math.max(point1.getZ(), point2.getZ());
 				if(flip) {
@@ -96,10 +91,7 @@ public class BuildingTask implements Task, EventListener {
 					z2 = temp;
 				}
 				for(int z = z1; flip ? z >= z2 : z <= z2; z += flip ? -1 : 1) {
-					if(startCounterLocation != null
-							&& startCounterLocation.getX() == x
-							&& startCounterLocation.getY() == y
-							&& startCounterLocation.getZ() == z)
+					if(startCounterLocation != null && startCounterLocation.getX() == x && startCounterLocation.getY() == y && startCounterLocation.getZ() == z)
 						continue;
 					int id = world.getBlockIdAt(x, y, z);
 					if(!BlockType.getById(id).isSolid()) {
@@ -108,10 +100,7 @@ public class BuildingTask implements Task, EventListener {
 							System.out.println(ourLocation + " -> " + location);
 							BlockLocation original = location;
 							BlockLocation below = location.offset(0, -1, 0);
-							while(!BlockType.getById(world.getBlockIdAt(below))
-									.isSolid()
-									&& !world.getPathFinder().getHeuristic()
-											.isClimbableBlock(below)) {
+							while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
 								location = below;
 								below = below.offset(0, -1, 0);
 								if(original.getY() - location.getY() >= 5)
@@ -123,8 +112,7 @@ public class BuildingTask implements Task, EventListener {
 								ticksWait = 4;
 								return;
 							}
-							int index = player.getInventory().getFirstSlot(
-									blockId);
+							int index = player.getInventory().getFirstSlot(blockId);
 							if(index == -1) {
 								System.out.println("Stopping! No blocks left");
 								stop();

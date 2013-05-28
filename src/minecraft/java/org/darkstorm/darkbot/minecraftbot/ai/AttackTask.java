@@ -52,9 +52,7 @@ public class AttackTask implements Task {
 			if(world == null)
 				return false;
 			for(Entity entity : world.getEntities())
-				if(entity instanceof PlayerEntity
-						&& name.equalsIgnoreCase(Util
-								.stripColors(((PlayerEntity) entity).getName())))
+				if(entity instanceof PlayerEntity && name.equalsIgnoreCase(Util.stripColors(((PlayerEntity) entity).getName())))
 					attackEntity = entity;
 		}
 		if(attackEntity == null)
@@ -74,16 +72,11 @@ public class AttackTask implements Task {
 		if(player == null)
 			return;
 		if(player.getDistanceTo(attackEntity) > 4) {
-			BlockLocation location = new BlockLocation(
-					(int) attackEntity.getX(),
-					(int) (attackEntity.getY() + 0.5),
-					(int) attackEntity.getZ());
+			BlockLocation location = new BlockLocation(attackEntity.getLocation());
 			World world = bot.getWorld();
 			BlockLocation original = location;
 			BlockLocation below = location.offset(0, -1, 0);
-			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid()
-					&& !world.getPathFinder().getHeuristic()
-							.isClimbableBlock(below)) {
+			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
 				location = below;
 				below = below.offset(0, -1, 0);
 				if(original.getY() - location.getY() >= 5)
@@ -99,10 +92,8 @@ public class AttackTask implements Task {
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
 			if(!bot.getTaskManager().getTaskFor(EatTask.class).isActive())
 				switchToBestSword();
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-					Animation.SWING_ARM));
-			connectionHandler.sendPacket(new Packet7UseEntity(player.getId(),
-					attackEntity.getId(), 1));
+			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
+			connectionHandler.sendPacket(new Packet7UseEntity(player.getId(), attackEntity.getId(), 1));
 			attackCooldown = 5;
 		}
 	}
@@ -156,16 +147,12 @@ public class AttackTask implements Task {
 			MainPlayerEntity player = bot.getPlayer();
 			if(player == null)
 				return true;
-			player.face(attackEntity.getX(), attackEntity.getY() + 1.5,
-					attackEntity.getZ());
+			player.face(attackEntity.getX(), attackEntity.getY() + 1.5, attackEntity.getZ());
 			Activity activity = bot.getActivity();
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
 			WalkActivity walkActivity = (WalkActivity) activity;
-			if(walkActivity.isActive()
-					&& (player.getDistanceTo(attackEntity) < 3 || attackEntity
-							.getDistanceTo(walkActivity.getTarget()) > 3)
-					&& player.isOnGround())
+			if(walkActivity.isActive() && (player.getDistanceTo(attackEntity) < 3 || attackEntity.getDistanceTo(walkActivity.getTarget()) > 3) && player.isOnGround())
 				bot.setActivity(null);
 		}
 		return active;
