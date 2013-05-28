@@ -1,33 +1,64 @@
 <project name="DarkBot" default="deploy" basedir=".">
-  <target name="init">
-    <property name="outputDir" value="bin" />
-    <property name="deployJar" value="DarkBot.jar" />
-  	<property name="libraryDir" value="lib" />
-  	<property name="tempDir" value="temp" />
-  </target>
+	<target name="init">
+		<property name="outputDir" value="bin1" />
+		<property name="deployJar" value="DarkBot.jar" />
+		<property name="libraryDir" value="lib" />
+		<property name="tempDir" value="temp" />
+	</target>
 
-  <target name="clean" depends="init">
-  	<delete file="${deployJar}" />
-  </target>
+	<target name="clean" depends="init">
+		<delete file="${deployJar}" failonerror="false" />
+		<delete dir="${outputDir}" failonerror="false" />
+		<delete dir="${tempDir}" failonerror="false" />
+	</target>
 
-  <target name="deploy" depends="clean">
-  	<mkdir dir="${tempDir}" />
-  	<unzip dest="${tempDir}">
-  	  <patternset>
-  	    <exclude name="META-INF/**" />
-  	  </patternset>
-      <fileset dir="${libraryDir}">
-  	    <include name="**/*.jar"/>
-  	  </fileset>
-  	</unzip>
-  	<copy todir="${tempDir}">
-  	  <fileset dir="${outputDir}">
-  		<include name = "*"/>
-  	  </fileset>
-  	</copy>
-  	
-    <jar destfile="${deployJar}" basedir="${outputDir}"  manifest="manifest.txt" includes="**/**" />
-  	<jar destfile="${deployJar}" basedir="${tempDir}" includes="**/**" update="true" />
-  	<delete dir="${tempDir}" />
-  </target>
+	<target name="compile" depends="clean">
+		<mkdir dir="${outputDir}" />
+		<javac destdir="${outputDir}" includeantruntime="false">
+			<src path="src/main/java" />
+			<src path="src/irc/java" />
+			<src path="src/minecraft/java" />
+			<src path="src/minecraft/resources" />
+			<classpath>
+				  <fileset dir="${libraryDir}">
+				    <include name="**/*.jar" />
+				  </fileset>
+			</classpath>
+		</javac>
+		<copy todir="${outputDir}">
+			<fileset dir="src/main/java">
+				<exclude name="**/*.java" />
+			</fileset>
+			<fileset dir="src/irc/java">
+				<exclude name="**/*.java" />
+			</fileset>
+			<fileset dir="src/minecraft/java">
+				<exclude name="**/*.java" />
+			</fileset>
+			<fileset dir="src/minecraft/resources">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy" depends="compile">
+		<mkdir dir="${tempDir}" />
+		<unzip dest="${tempDir}">
+			<patternset>
+				<exclude name="META-INF/**" />
+			</patternset>
+			<fileset dir="${libraryDir}">
+				<include name="**/*.jar" />
+			</fileset>
+		</unzip>
+		<copy todir="${tempDir}">
+			<fileset dir="${outputDir}">
+				<include name="*" />
+			</fileset>
+		</copy>
+
+		<jar destfile="${deployJar}" basedir="${outputDir}" manifest="manifest.txt" includes="**/**" />
+		<jar destfile="${deployJar}" basedir="${tempDir}" includes="**/**" update="true" />
+		<delete dir="${tempDir}" />
+	</target>
 </project>
