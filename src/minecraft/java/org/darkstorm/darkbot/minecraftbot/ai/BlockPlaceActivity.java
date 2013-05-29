@@ -20,8 +20,7 @@ public class BlockPlaceActivity implements Activity {
 		this(bot, location, 5 * 20);
 	}
 
-	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location,
-			int timeout) {
+	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location, int timeout) {
 		this.location = location;
 		lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
@@ -29,8 +28,7 @@ public class BlockPlaceActivity implements Activity {
 		if(player == null)
 			return;
 		PlayerInventory inventory = player.getInventory();
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location
-				.getZ();
+		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
 		int face = getPlacementBlockFaceAt(location);
 		System.out.println("Placing with face: " + face);
 		if(face == -1)
@@ -39,15 +37,10 @@ public class BlockPlaceActivity implements Activity {
 		if(location == null)
 			return;
 		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D),
-				z + ((originalZ - z) / 2.0D));
-		System.out.println("Angle to- Yaw: " + player.getYaw() + " Pitch: "
-				+ player.getPitch());
+		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
+		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 		Packet15Place placePacket = new Packet15Place();
 		placePacket.xPosition = x;
 		placePacket.yPosition = y;
@@ -79,11 +72,7 @@ public class BlockPlaceActivity implements Activity {
 
 	private int getPlacementBlockFaceAt(BlockLocation location) {
 		// Stack<Integer> blockFaces = new Stack<>();
-		BlockLocation ourLocation = new BlockLocation(bot.getPlayer()
-				.getLocation());
 		int x = location.getX(), y = location.getY(), z = location.getZ();
-		int x1 = ourLocation.getX(), y1 = ourLocation.getY() + 1, z1 = ourLocation
-				.getZ();
 		World world = bot.getWorld();
 		if(isPlaceable(world.getBlockIdAt(x, y - 1, z)))
 			return 1;

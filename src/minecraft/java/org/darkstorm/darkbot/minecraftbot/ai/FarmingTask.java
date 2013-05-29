@@ -152,7 +152,7 @@ public class FarmingTask implements Task, EventListener {
 						int closestDistance = Integer.MAX_VALUE;
 						int face = 0;
 						for(BlockLocation walk : surrounding) {
-							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid())
+							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid())
 								continue;
 							int distance = ourLocation.getDistanceToSquared(walk);
 							if(distance < closestDistance) {
@@ -515,7 +515,7 @@ public class FarmingTask implements Task, EventListener {
 		if(location == null)
 			return;
 		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D), y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D));
+		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
 		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));

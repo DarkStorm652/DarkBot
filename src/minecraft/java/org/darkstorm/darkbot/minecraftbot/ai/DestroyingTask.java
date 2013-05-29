@@ -10,18 +10,14 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public class DestroyingTask implements Task, EventListener {
-	private static final BlockLocation[] surrounding = new BlockLocation[] {
-			new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1),
-			new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0),
-			new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1),
-			new BlockLocation(0, 0, -1), new BlockLocation(1, 0, -1), };
+	private static final BlockLocation[] surrounding = new BlockLocation[] { new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1), new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0), new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1), new BlockLocation(0, 0, -1), new BlockLocation(1, 0, -1), };
 
 	private final MinecraftBot bot;
 	private EatTask eatTask;
 	private boolean running = false;
 
 	private int ticksWait;
-	private BlockLocation lastBreakLocation, lastPlacement, nextMove;
+	private BlockLocation lastPlacement, nextMove;
 	private BlockLocation point1, point2;
 
 	public DestroyingTask(final MinecraftBot bot) {
@@ -38,10 +34,8 @@ public class DestroyingTask implements Task, EventListener {
 	public synchronized boolean start(String... options) {
 		TaskManager taskManager = bot.getTaskManager();
 		eatTask = taskManager.getTaskFor(EatTask.class);
-		point1 = new BlockLocation(Integer.parseInt(options[0]),
-				Integer.parseInt(options[1]), Integer.parseInt(options[2]));
-		point2 = new BlockLocation(Integer.parseInt(options[3]),
-				Integer.parseInt(options[4]), Integer.parseInt(options[5]));
+		point1 = new BlockLocation(Integer.parseInt(options[0]), Integer.parseInt(options[1]), Integer.parseInt(options[2]));
+		point2 = new BlockLocation(Integer.parseInt(options[3]), Integer.parseInt(options[4]), Integer.parseInt(options[5]));
 		BlockLocation temp = point1;
 		point1 = point1.getY() <= point2.getY() ? point1 : point2;
 		point2 = temp.getY() > point2.getY() ? temp : point2;
@@ -69,8 +63,7 @@ public class DestroyingTask implements Task, EventListener {
 		System.out.println("Destroying!");
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		boolean flip = false, next = false;
-		for(int x = Math.min(point1.getX(), point2.getX()); x <= Math.max(
-				point1.getX(), point2.getX()); x++) {
+		for(int x = Math.min(point1.getX(), point2.getX()); x <= Math.max(point1.getX(), point2.getX()); x++) {
 			int z1 = Math.min(point1.getZ(), point2.getZ());
 			int z2 = Math.max(point1.getZ(), point2.getZ());
 			if(flip) {
@@ -89,68 +82,33 @@ public class DestroyingTask implements Task, EventListener {
 					if(!BlockType.getById(id).isSolid())
 						continue;
 					if(player.getDistanceToSquared(location) > 16) {
-						BlockLocation[] newSurrounding = Arrays.copyOf(
-								surrounding, surrounding.length);
+						BlockLocation[] newSurrounding = Arrays.copyOf(surrounding, surrounding.length);
 						for(int i = 0; i < newSurrounding.length; i++) {
 							BlockLocation adjacent = newSurrounding[i];
-							newSurrounding[i] = new BlockLocation(x
-									+ adjacent.getX(), y + adjacent.getY(), z
-									+ adjacent.getZ());
+							newSurrounding[i] = new BlockLocation(x + adjacent.getX(), y + adjacent.getY(), z + adjacent.getZ());
 						}
 						for(BlockLocation newLocation : newSurrounding) {
-							if(!BlockType.getById(
-									world.getBlockIdAt(newLocation.getX(),
-											newLocation.getY(),
-											newLocation.getZ())).isSolid()) {
+							if(!BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY(), newLocation.getZ())).isSolid()) {
 								int yChange = 0;
-								while(!BlockType.getById(
-										world.getBlockIdAt(newLocation.getX(),
-												newLocation.getY() - 1,
-												newLocation.getZ())).isSolid()
-										&& newLocation.getY() >= 0
-										&& yChange < 5) {
-									newLocation = new BlockLocation(
-											newLocation.getX(),
-											newLocation.getY() - 1,
-											newLocation.getZ());
+								while(!BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ())).isSolid() && newLocation.getY() >= 0 && yChange < 5) {
+									newLocation = new BlockLocation(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
 									yChange++;
 								}
-								if(yChange == 5
-										|| BlockType.getById(
-												world.getBlockIdAt(
-														newLocation.getX(),
-														newLocation.getY() + 1,
-														newLocation.getZ()))
-												.isSolid())
+								if(yChange == 5 || BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ())).isSolid())
 									continue;
-								bot.setActivity(new WalkActivity(bot,
-										newLocation));
+								bot.setActivity(new WalkActivity(bot, newLocation));
 								return;
 							}
 						}
 					}
 					if(player.breakBlock(location)) {
-						boolean found = false;
-						for(int y1 = y + 1; y1 <= point2.getY(); y1++) {
-							BlockLocation location1 = new BlockLocation(x, y1,
-									z);
-							if(!BlockType
-									.getById(world.getBlockIdAt(location1))
-									.isSolid())
-								continue;
-							found = true;
-							break;
-						}
-						if(!found)
-							lastBreakLocation = location;
 						nextMove = null;
 						return;
 					}
 				}
 
 				if(nextMove != null) {
-					BlockType below = BlockType.getById(world
-							.getBlockIdAt(nextMove.offset(0, -1, 0)));
+					BlockType below = BlockType.getById(world.getBlockIdAt(nextMove.offset(0, -1, 0)));
 					if(!below.isSolid())
 						if(below.isPlaceable() && !below.isIndestructable()) {
 							player.breakBlock(nextMove.offset(0, -1, 0));
@@ -160,7 +118,6 @@ public class DestroyingTask implements Task, EventListener {
 					bot.setActivity(new WalkActivity(bot, nextMove));
 					ticksWait = 4;
 					nextMove = null;
-					lastBreakLocation = null;
 					return;
 				}
 				if(x == ourLocation.getX() && z == ourLocation.getZ())
