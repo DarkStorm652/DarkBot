@@ -14,7 +14,7 @@
 
 	<target name="compile" depends="clean">
 		<mkdir dir="${outputDir}" />
-		<javac destdir="${outputDir}" includeantruntime="false">
+		<javac encoding="UTF-8" destdir="${outputDir}" includeantruntime="false">
 			<src path="src/main/java" />
 			<src path="src/irc/java" />
 			<src path="src/minecraft/java" />
