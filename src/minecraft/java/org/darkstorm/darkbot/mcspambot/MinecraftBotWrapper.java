@@ -105,7 +105,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	}
 
 	public String[] getOwners() {
-		return (String[]) owners.toArray();
+		return owners.toArray(new String[0]);
 	}
 
 	public void addOwner(String owner) {
@@ -124,7 +124,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	}
 
 	public Backend[] getBackends() {
-		return (Backend[]) backends.toArray();
+		return backends.toArray(new Backend[0]);
 	}
 
 	public void addBackend(Backend backend) {
