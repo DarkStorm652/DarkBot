@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.BuildingTask;
 
 public class BuildCommand extends AbstractCommand {
 
-	public BuildCommand(DarkBotMC bot) {
+	public BuildCommand(MinecraftBotWrapper bot) {
 		super(bot, "build", "Fill a cuboid area with blocks",
 				"<id> <x1> <y1> <z1> <x2> <y2> <z2>",
 				"=[0-9]+( =[-]?[0-9]+){6}");

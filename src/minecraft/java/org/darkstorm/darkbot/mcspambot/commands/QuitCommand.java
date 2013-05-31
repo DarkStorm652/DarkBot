@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet255KickDisconnect;
 
 public class QuitCommand extends AbstractCommand {
 
-	public QuitCommand(DarkBotMC bot) {
+	public QuitCommand(MinecraftBotWrapper bot) {
 		super(bot, "quit", "Leave the server");
 	}
 

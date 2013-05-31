@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public class EquipCommand extends AbstractCommand {
 
-	public EquipCommand(DarkBotMC bot) {
+	public EquipCommand(MinecraftBotWrapper bot) {
 		super(bot, "equip", "Equip armor in inventory or remove current armor");
 	}
 

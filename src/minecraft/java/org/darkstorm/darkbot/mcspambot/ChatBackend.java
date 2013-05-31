@@ -8,18 +8,30 @@ import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 
-class ChatBackend implements Backend, EventListener {
-	private final DarkBotMC mcBot;
+public class ChatBackend implements Backend, EventListener {
+	private final MinecraftBotWrapper bot;
 
-	public ChatBackend(DarkBotMC mcBot) {
-		this.mcBot = mcBot;
-		MinecraftBot bot = mcBot.getBot();
-		bot.getEventManager().registerListener(this);
+	private String activator = "!";
+
+	public ChatBackend(MinecraftBotWrapper bot) {
+		this.bot = bot;
+	}
+
+	@Override
+	public void enable() {
+		MinecraftBot mcbot = bot.getBot();
+		mcbot.getEventManager().registerListener(this);
 	}
 
 	@Override
 	public void say(String message) {
-		mcBot.getBot().say(message);
+		bot.getBot().say(message);
+	}
+
+	@Override
+	public void disable() {
+		MinecraftBot mcbot = bot.getBot();
+		mcbot.getEventManager().unregisterListener(this);
 	}
 
 	@EventHandler
@@ -28,16 +40,22 @@ class ChatBackend implements Backend, EventListener {
 		if(packet instanceof Packet3Chat) {
 			Packet3Chat chatPacket = (Packet3Chat) packet;
 			String message = Util.stripColors(chatPacket.message);
-			int index = message.indexOf(mcBot.getOwner());
+			String executor = null;
+			for(String owner : bot.getOwners()) {
+				int index = message.indexOf(owner);
+				if(index == -1)
+					continue;
+				executor = owner;
+			}
+			if(executor == null)
+				return;
+			message = message.substring(message.indexOf(executor) + executor.length());
+			int index = message.indexOf(activator);
 			if(index == -1)
 				return;
-			message = message.substring(index + mcBot.getOwner().length());
-			index = message.indexOf('!');
-			if(index == -1)
-				return;
-			message = message.substring(index + 1);
+			message = message.substring(index + activator.length());
 			try {
-				mcBot.getCommandManager().execute(message);
+				bot.getCommandManager().execute(message);
 			} catch(CommandException e) {
 				StringBuilder error = new StringBuilder("Error: ");
 				if(e.getCause() != null)
@@ -49,12 +67,16 @@ class ChatBackend implements Backend, EventListener {
 						error.append(": ");
 					error.append(e.getMessage());
 				}
-				mcBot.getBot().say(error.toString());
+				bot.getBot().say(error.toString());
 			}
 		}
 	}
 
-	public DarkBotMC getMCBot() {
-		return mcBot;
+	public String getActivator() {
+		return activator;
+	}
+
+	public void setActivator(String activator) {
+		this.activator = activator;
 	}
 }

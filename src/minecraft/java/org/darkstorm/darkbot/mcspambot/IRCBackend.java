@@ -18,16 +18,15 @@ import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
 
-class IRCBackend implements Backend, EventListener {
-	private final DarkBotMC mcBot;
+public class IRCBackend implements Backend, EventListener {
+	private final MinecraftBotWrapper mcBot;
 	private final IRCBot ircBot;
+	private final MCBotCommand command;
 
-	public IRCBackend(DarkBotMC mcBot, IRCBotData data) {
+	public IRCBackend(MinecraftBotWrapper mcBot, IRCBotData data) {
 		this.mcBot = mcBot;
-		MinecraftBot bot = mcBot.getBot();
-		ircBot = (IRCBot) DarkBotMC.DARK_BOT.createBot(data);
-		ircBot.getCommandHandler().addCommand(new MCBotCommand(ircBot.getCommandHandler()));
-		bot.getEventManager().registerListener(this);
+		ircBot = (IRCBot) MinecraftBotWrapper.getDarkBot().createBot(data);
+		command = new MCBotCommand(ircBot.getCommandHandler());
 	}
 
 	@EventHandler
@@ -37,11 +36,25 @@ class IRCBackend implements Backend, EventListener {
 	}
 
 	@Override
+	public void enable() {
+		MinecraftBot bot = mcBot.getBot();
+		ircBot.getCommandHandler().addCommand(command);
+		bot.getEventManager().registerListener(this);
+	}
+
+	@Override
 	public void say(String message) {
 		ircBot.getMessageHandler().setFloodControlEnabled(false);
 		for(Channel channel : ircBot.getChannelHandler().getChannels())
 			ircBot.getMessageHandler().sendMessage(channel.getName(), "[BOT] " + message);
 		ircBot.getMessageHandler().setFloodControlEnabled(true);
+	}
+
+	@Override
+	public void disable() {
+		MinecraftBot bot = mcBot.getBot();
+		ircBot.getCommandHandler().removeCommand(command);
+		bot.getEventManager().unregisterListener(this);
 	}
 
 	@EventHandler
@@ -116,7 +129,7 @@ class IRCBackend implements Backend, EventListener {
 		}
 	}
 
-	public DarkBotMC getMCBot() {
+	public MinecraftBotWrapper getMCBot() {
 		return mcBot;
 	}
 

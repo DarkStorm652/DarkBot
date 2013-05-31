@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class SwitchCommand extends AbstractCommand {
 
-	public SwitchCommand(DarkBotMC bot) {
+	public SwitchCommand(MinecraftBotWrapper bot) {
 		super(bot, "switch", "Move items in inventory",
 				"<slot1 0-45> <slot2 0-45>",
 				"([1-3]?[0-9]|4[0-5]) ([1-3]?[0-9]|4[0-5])");

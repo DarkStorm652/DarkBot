@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.FishingTask;
 
 public class FishCommand extends AbstractCommand {
 
-	public FishCommand(DarkBotMC bot) {
+	public FishCommand(MinecraftBotWrapper bot) {
 		super(bot, "fish", "Activate the fishing task");
 	}
 

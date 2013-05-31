@@ -1,6 +1,6 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
@@ -10,7 +10,7 @@ import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class InteractCommand extends AbstractCommand {
 
-	public InteractCommand(DarkBotMC bot) {
+	public InteractCommand(MinecraftBotWrapper bot) {
 		super(bot, "interact", "Interact with a block",
 				"<hit|break|use> <x> <y> <z>",
 				"(?i)(hit|break|use) [-]?[0-9]+ [-]?[0-9]+ [-]?[0-9]+");

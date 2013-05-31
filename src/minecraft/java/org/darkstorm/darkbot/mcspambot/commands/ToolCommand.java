@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class ToolCommand extends AbstractCommand {
 
-	public ToolCommand(DarkBotMC bot) {
+	public ToolCommand(MinecraftBotWrapper bot) {
 		super(bot, "tool", "Change held items", "<slot 0-8>", "[0-8]");
 	}
 

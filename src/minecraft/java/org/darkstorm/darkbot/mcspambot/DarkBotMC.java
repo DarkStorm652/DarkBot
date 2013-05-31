@@ -2,88 +2,24 @@ package org.darkstorm.darkbot.mcspambot;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.*;
 
 import javax.naming.AuthenticationException;
 
 import joptsimple.*;
 
-import org.darkstorm.darkbot.DarkBot;
 import org.darkstorm.darkbot.mcspambot.commands.*;
 import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.events.world.SpawnEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet8UpdateHealth;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
-public class DarkBotMC implements EventListener {
-	public static final DarkBot DARK_BOT = new DarkBot();
+public class DarkBotMC extends MinecraftBotWrapper {
+	private DarkBotMC(MinecraftBotData data, String owner) {
+		super(data);
+		addOwner(owner);
+		addBackend(new ChatBackend(this));
 
-	private final MinecraftBot bot;
-	private final CommandManager commandManager;
-	private final List<Backend> backends = new CopyOnWriteArrayList<>();
-
-	private String owner;
-
-	private DarkBotMC(DarkBot darkBot, String server, String username, String password, String sessionId, String loginProxy, String proxy, String owner) {
-		MinecraftBotData.Builder builder = MinecraftBotData.builder();
-		if(proxy != null && !proxy.isEmpty()) {
-			int port = 80;
-			ProxyType type = ProxyType.SOCKS;
-			if(proxy.contains(":")) {
-				String[] parts = proxy.split(":");
-				proxy = parts[0];
-				port = Integer.parseInt(parts[1]);
-				if(parts.length > 2)
-					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
-			}
-			builder.withSocksProxy(new ProxyData(proxy, port, type));
-		}
-		if(loginProxy != null && !loginProxy.isEmpty()) {
-			int port = 80;
-			if(loginProxy.contains(":")) {
-				String[] parts = loginProxy.split(":");
-				loginProxy = parts[0];
-				port = Integer.parseInt(parts[1]);
-			}
-			builder.withHttpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
-		}
-		builder.withUsername(username);
-		if(sessionId != null)
-			builder.withSessionId(sessionId);
-		else
-			builder.withPassword(password);
-		if(server != null && !server.isEmpty()) {
-			int port = 25565;
-			if(server.contains(":")) {
-				String[] parts = server.split(":");
-				server = parts[0];
-				port = Integer.parseInt(parts[1]);
-			}
-			builder.withServer(server).withPort(port);
-		} else
-			throw new IllegalArgumentException("Unknown server!");
-
-		this.owner = owner;
-
-		System.out.println("[" + username + "] Connecting...");
-		MinecraftBotData botData = builder.build();
-		bot = new MinecraftBot(darkBot, botData);
-		backends.add(new ChatBackend(this));
-
-		System.gc();
-		System.out.println("[" + username + "] Joined!");
 		TaskManager taskManager = bot.getTaskManager();
 		taskManager.registerTask(new FallTask(bot));
 		taskManager.registerTask(new ChopTreesTask(bot));
@@ -98,9 +34,7 @@ public class DarkBotMC implements EventListener {
 		taskManager.registerTask(new BuildingTask(bot));
 		taskManager.registerTask(new AvoidDeathTask(bot));
 		taskManager.registerTask(new DestroyingTask(bot));
-		bot.getEventManager().registerListener(this);
 
-		commandManager = new BasicCommandManager(this);
 		commandManager.register(new AttackAllCommand(this));
 		commandManager.register(new AttackCommand(this));
 		commandManager.register(new BuildCommand(this));
@@ -127,81 +61,6 @@ public class DarkBotMC implements EventListener {
 		commandManager.register(new SwitchCommand(this));
 		commandManager.register(new ToolCommand(this));
 		commandManager.register(new WalkCommand(this));
-	}
-
-	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		Packet packet = event.getPacket();
-		switch(packet.getId()) {
-		case 0:
-			connectionHandler.sendPacket(new Packet0KeepAlive(new Random().nextInt()));
-			break;
-		case 3:
-			String message = ((Packet3Chat) packet).message;
-			message = Util.stripColors(message);
-			System.out.println("[" + bot.getSession().getUsername() + "] " + message);
-			String nocheat = "Please type '([^']*)' to continue sending messages/commands\\.";
-			Matcher nocheatMatcher = Pattern.compile(nocheat).matcher(message);
-			if(nocheatMatcher.matches()) {
-				try {
-					String captcha = nocheatMatcher.group(1);
-					connectionHandler.sendPacket(new Packet3Chat(captcha));
-				} catch(Exception exception) {
-					exception.printStackTrace();
-				}
-			} else if(message.startsWith("/uc ")) {
-				connectionHandler.sendPacket(new Packet3Chat(message));
-			} else if(message.contains(owner)) {
-				if(message.contains("has requested to teleport to you."))
-					bot.say("/tpaccept");
-			}
-			break;
-		case 8:
-			Packet8UpdateHealth updateHealth = (Packet8UpdateHealth) packet;
-			if(updateHealth.healthMP <= 0)
-				connectionHandler.sendPacket(new Packet205ClientCommand(1));
-			break;
-		case 9:
-			TaskManager taskManager = bot.getTaskManager();
-			taskManager.stopAll();
-			bot.setActivity(null);
-			break;
-		}
-	}
-
-	@EventHandler
-	public void onSpawn(SpawnEvent event) {
-		MainPlayerEntity player = event.getPlayer();
-		PlayerInventory inventory = player.getInventory();
-		inventory.setDelay(150);
-	}
-
-	@EventHandler
-	public void onDisconnect(DisconnectEvent event) {
-		System.out.println("[" + bot.getSession().getUsername() + "] Disconnected: " + event.getReason());
-		bot.getService().shutdownNow();
-	}
-
-	public void say(String message) {
-		for(Backend backend : backends)
-			backend.say(message);
-	}
-
-	public CommandManager getCommandManager() {
-		return commandManager;
-	}
-
-	public String getOwner() {
-		return owner;
-	}
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	public MinecraftBot getBot() {
-		return bot;
 	}
 
 	public static void main(String[] args) {
@@ -342,7 +201,7 @@ public class DarkBotMC implements EventListener {
 				while(true) {
 					String proxy = useProxy ? defaultProxy != null ? defaultProxy : socksProxies.get(random.nextInt(socksProxies.size())) : null;
 					try {
-						DarkBotMC bot = new DarkBotMC(DARK_BOT, server, session.getUsername(), session.getPassword(), session.getSessionId(), null, proxy, owner);
+						DarkBotMC bot = new DarkBotMC(generateData(server, session.getUsername(), session.getPassword(), session.getSessionId(), null, proxy), owner);
 						if(!bot.getBot().isConnected())
 							System.out.println("[" + session.getUsername() + "] Account failed");
 						while(bot.getBot().isConnected()) {
@@ -369,7 +228,7 @@ public class DarkBotMC implements EventListener {
 						name = Util.generateRandomString(10 + random.nextInt(6));
 					else
 						name = username;
-					DarkBotMC bot = new DarkBotMC(DARK_BOT, server, name, "", "", null, proxy, owner);
+					DarkBotMC bot = new DarkBotMC(generateData(server, name, "", "", null, proxy), owner);
 					while(bot.getBot().isConnected()) {
 						try {
 							Thread.sleep(1500);
@@ -458,5 +317,47 @@ public class DarkBotMC implements EventListener {
 		}
 		System.out.println("Loaded " + accounts.size() + " accounts.");
 		return accounts;
+	}
+
+	private static MinecraftBotData generateData(String server, String username, String password, String sessionId, String loginProxy, String proxy) {
+		MinecraftBotData.Builder builder = MinecraftBotData.builder();
+		if(proxy != null && !proxy.isEmpty()) {
+			int port = 80;
+			ProxyType type = ProxyType.SOCKS;
+			if(proxy.contains(":")) {
+				String[] parts = proxy.split(":");
+				proxy = parts[0];
+				port = Integer.parseInt(parts[1]);
+				if(parts.length > 2)
+					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
+			}
+			builder.withSocksProxy(new ProxyData(proxy, port, type));
+		}
+		if(loginProxy != null && !loginProxy.isEmpty()) {
+			int port = 80;
+			if(loginProxy.contains(":")) {
+				String[] parts = loginProxy.split(":");
+				loginProxy = parts[0];
+				port = Integer.parseInt(parts[1]);
+			}
+			builder.withHttpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
+		}
+		builder.withUsername(username);
+		if(sessionId != null)
+			builder.withSessionId(sessionId);
+		else
+			builder.withPassword(password);
+		if(server != null && !server.isEmpty()) {
+			int port = 25565;
+			if(server.contains(":")) {
+				String[] parts = server.split(":");
+				server = parts[0];
+				port = Integer.parseInt(parts[1]);
+			}
+			builder.withServer(server).withPort(port);
+		} else
+			throw new IllegalArgumentException("Unknown server!");
+
+		return builder.build();
 	}
 }

@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.DestroyingTask;
 
 public class DestroyCommand extends AbstractCommand {
 
-	public DestroyCommand(DarkBotMC bot) {
+	public DestroyCommand(MinecraftBotWrapper bot) {
 		super(bot, "destroy", "Break all blocks in a cuboid area",
 				"<x1> <y1> <z1> <x2> <y2> <z2>", "=[-]?[0-9]+( =[-]?[0-9]+){5}");
 	}

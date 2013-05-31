@@ -1,6 +1,6 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.WalkActivity;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
@@ -8,7 +8,7 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class WalkCommand extends AbstractCommand {
 
-	public WalkCommand(DarkBotMC bot) {
+	public WalkCommand(MinecraftBotWrapper bot) {
 		super(
 				bot,
 				"walk",

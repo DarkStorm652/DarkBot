@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class DropCommand extends AbstractCommand {
 
-	public DropCommand(DarkBotMC bot) {
+	public DropCommand(MinecraftBotWrapper bot) {
 		super(bot, "drop", "Drop an item in a slot", "<slot>", "[0-9]+");
 	}
 

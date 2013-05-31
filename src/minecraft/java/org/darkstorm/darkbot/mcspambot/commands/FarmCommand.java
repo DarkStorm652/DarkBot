@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.FarmingTask;
 
 public class FarmCommand extends AbstractCommand {
 
-	public FarmCommand(DarkBotMC bot) {
+	public FarmCommand(MinecraftBotWrapper bot) {
 		super(bot, "farm", "Activate the farming task");
 	}
 

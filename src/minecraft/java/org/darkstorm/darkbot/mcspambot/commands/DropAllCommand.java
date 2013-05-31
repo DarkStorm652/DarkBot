@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class DropAllCommand extends AbstractCommand {
 
-	public DropAllCommand(DarkBotMC bot) {
+	public DropAllCommand(MinecraftBotWrapper bot) {
 		super(bot, "dropall", "Drop all items in inventory");
 	}
 

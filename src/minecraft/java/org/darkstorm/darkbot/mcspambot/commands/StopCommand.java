@@ -1,10 +1,10 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 
 public class StopCommand extends AbstractCommand {
 
-	public StopCommand(DarkBotMC bot) {
+	public StopCommand(MinecraftBotWrapper bot) {
 		super(bot, "stop", "Stop all tasks and activities");
 	}
 

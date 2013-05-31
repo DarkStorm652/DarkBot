@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 
 public class CalcCommand extends AbstractCommand {
 
-	public CalcCommand(DarkBotMC bot) {
+	public CalcCommand(MinecraftBotWrapper bot) {
 		super(bot, "calc", "JavaScript interpreter", "<script>", ".*");
 	}
 

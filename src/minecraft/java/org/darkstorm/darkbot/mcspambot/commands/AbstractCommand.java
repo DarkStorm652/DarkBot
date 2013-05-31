@@ -1,20 +1,19 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 
 public abstract class AbstractCommand implements Command {
-	protected final DarkBotMC controller;
+	protected final MinecraftBotWrapper controller;
 	protected final MinecraftBot bot;
 
 	private final String name, description, optionDescription, optionRegex;
 
-	public AbstractCommand(DarkBotMC bot, String name, String description) {
+	public AbstractCommand(MinecraftBotWrapper bot, String name, String description) {
 		this(bot, name, description, "", "");
 	}
 
-	public AbstractCommand(DarkBotMC bot, String name, String description,
-			String optionDescription, String optionRegex) {
+	public AbstractCommand(MinecraftBotWrapper bot, String name, String description, String optionDescription, String optionRegex) {
 		controller = bot;
 		this.bot = bot.getBot();
 		this.name = name;
@@ -43,7 +42,7 @@ public abstract class AbstractCommand implements Command {
 		return optionRegex;
 	}
 
-	public DarkBotMC getBot() {
+	public MinecraftBotWrapper getBot() {
 		return controller;
 	}
 }

@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.ChopTreesTask;
 
 public class ChopCommand extends AbstractCommand {
 
-	public ChopCommand(DarkBotMC bot) {
+	public ChopCommand(MinecraftBotWrapper bot) {
 		super(bot, "chop", "Chop down nearby trees");
 	}
 

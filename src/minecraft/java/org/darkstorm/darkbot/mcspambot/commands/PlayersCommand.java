@@ -2,7 +2,7 @@ package org.darkstorm.darkbot.mcspambot.commands;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
@@ -11,7 +11,7 @@ import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet201PlayerInfo;
 public class PlayersCommand extends AbstractCommand implements EventListener {
 	private final List<String> users = new ArrayList<>();
 
-	public PlayersCommand(DarkBotMC bot) {
+	public PlayersCommand(MinecraftBotWrapper bot) {
 		super(bot, "players", "List all players on the server");
 	}
 

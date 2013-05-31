@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.MiningTask;
 
 public class MineCommand extends AbstractCommand {
 
-	public MineCommand(DarkBotMC bot) {
+	public MineCommand(MinecraftBotWrapper bot) {
 		super(bot, "mine", "Activate the mining task");
 	}
 

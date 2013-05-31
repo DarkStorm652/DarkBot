@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.HostileTask;
 
 public class AttackAllCommand extends AbstractCommand {
 
-	public AttackAllCommand(DarkBotMC bot) {
+	public AttackAllCommand(MinecraftBotWrapper bot) {
 		super(bot, "attackall", "Attack all nearby players and monsters");
 	}
 

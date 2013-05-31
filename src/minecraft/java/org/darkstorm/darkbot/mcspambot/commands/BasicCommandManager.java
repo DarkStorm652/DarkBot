@@ -3,14 +3,14 @@ package org.darkstorm.darkbot.mcspambot.commands;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 
 public class BasicCommandManager implements CommandManager {
-	private final DarkBotMC bot;
+	private final MinecraftBotWrapper bot;
 	private final List<Command> commands = new CopyOnWriteArrayList<>();
 
-	public BasicCommandManager(DarkBotMC bot) {
+	public BasicCommandManager(MinecraftBotWrapper bot) {
 		this.bot = bot;
 	}
 
@@ -18,15 +18,13 @@ public class BasicCommandManager implements CommandManager {
 	public void register(Command command) {
 		commands.add(command);
 		if(command instanceof EventListener)
-			bot.getBot().getEventManager()
-					.registerListener((EventListener) command);
+			bot.getBot().getEventManager().registerListener((EventListener) command);
 	}
 
 	@Override
 	public void unregister(Command command) {
 		if(command instanceof EventListener)
-			bot.getBot().getEventManager()
-					.unregisterListener((EventListener) command);
+			bot.getBot().getEventManager().unregisterListener((EventListener) command);
 		commands.remove(command);
 	}
 
@@ -116,7 +114,7 @@ public class BasicCommandManager implements CommandManager {
 		return commands.toArray(new Command[commands.size()]);
 	}
 
-	public DarkBotMC getBot() {
+	public MinecraftBotWrapper getBot() {
 		return bot;
 	}
 }

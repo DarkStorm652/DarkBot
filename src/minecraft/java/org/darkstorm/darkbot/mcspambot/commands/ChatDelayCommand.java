@@ -1,10 +1,10 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 
 public class ChatDelayCommand extends AbstractCommand {
 
-	public ChatDelayCommand(DarkBotMC bot) {
+	public ChatDelayCommand(MinecraftBotWrapper bot) {
 		super(bot, "chatdelay", "Change chat delay", "<delay>", "[0-9]+");
 	}
 

@@ -1,12 +1,12 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class StatusCommand extends AbstractCommand {
 
-	public StatusCommand(DarkBotMC bot) {
+	public StatusCommand(MinecraftBotWrapper bot) {
 		super(bot, "status", "Display bot state information");
 	}
 

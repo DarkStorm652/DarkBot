@@ -1,11 +1,11 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
-import org.darkstorm.darkbot.mcspambot.DarkBotMC;
+import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.WalkActivity;
 
 public class SetWalkCommand extends AbstractCommand {
 
-	public SetWalkCommand(DarkBotMC bot) {
+	public SetWalkCommand(MinecraftBotWrapper bot) {
 		super(bot, "walksettings", "Change walk settings",
 				"<speed> [jump-factor [fall-factor [liquid-factor]]]",
 				"[-]?[0-9]+(\\.[0-9]+)?" + "( [-]?[0-9]+(\\.[0-9]+)?"
