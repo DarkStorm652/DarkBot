@@ -49,6 +49,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		commandManager.register(new FarmCommand(this));
 		commandManager.register(new FishCommand(this));
 		commandManager.register(new FollowCommand(this));
+        commandManager.register(new HelpCommand(this));
 		commandManager.register(new InteractCommand(this));
 		commandManager.register(new MineCommand(this));
 		commandManager.register(new OwnerCommand(this));
