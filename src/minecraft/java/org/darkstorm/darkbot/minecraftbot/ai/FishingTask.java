@@ -8,7 +8,7 @@ import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet28EntityVelocity;
 import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
@@ -90,8 +90,9 @@ public class FishingTask implements Task, EventListener {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return;
-		if(player.getDistanceToSquared(closest.getX(), closest.getY() + 1, closest.getZ()) < 25) {
-			player.face(closest.getX(), closest.getY() + 1, closest.getZ());
+		WorldLocation target = new WorldLocation(closest.offset(0, 1, 0));
+		if(player.getDistanceToSquared(target) < 25) {
+			player.face(target);
 			ConnectionHandler connectionHandler = bot.getConnectionHandler();
 			connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
 			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));

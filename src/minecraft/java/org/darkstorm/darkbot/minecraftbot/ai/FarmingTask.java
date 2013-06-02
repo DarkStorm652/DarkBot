@@ -110,11 +110,12 @@ public class FarmingTask implements Task, EventListener {
 				if(freeSpace == -1) {
 					if(currentChest != null) {
 						fullChests.add(currentChest);
+						placeBlockAt(currentChest.offset(0, 1, 0));
 						currentChest = null;
 					}
 					chest.close();
 					System.out.println("Closed chest, no spaces!!!");
-					ticksWait = 4;
+					ticksWait = 16;
 					return;
 				}
 				for(int i = 0; i < 36; i++) {
@@ -139,20 +140,30 @@ public class FarmingTask implements Task, EventListener {
 						continue;
 					chest.selectItemAt(index);
 				}
+				freeSpace = -1;
+				for(int i = 0; i < chest.getSize(); i++)
+					if(chest.getItemAt(i) == null)
+						freeSpace = i;
+				if(freeSpace == -1 && currentChest != null) {
+					fullChests.add(currentChest);
+					placeBlockAt(currentChest.offset(0, 1, 0));
+					currentChest = null;
+				}
 				chest.close();
+				currentChest = null;
 				System.out.println("Closed chest!!!");
-				ticksWait = 4;
+				ticksWait = 16;
 				return;
 			} else {
 				BlockLocation[] chests = getBlocks(54, 32);
 				chestLoop: for(BlockLocation chest : chests) {
-					if(!fullChests.contains(chest)) {
+					if(!fullChests.contains(chest) && !isChestCovered(chest)) {
 						BlockLocation[] surrounding = new BlockLocation[] { chest.offset(0, 1, 0), chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
 						BlockLocation closestWalk = null;
 						int closestDistance = Integer.MAX_VALUE;
 						int face = 0;
 						for(BlockLocation walk : surrounding) {
-							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid())
+							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
 								continue;
 							int distance = ourLocation.getDistanceToSquared(walk);
 							if(distance < closestDistance) {
@@ -314,6 +325,27 @@ public class FarmingTask implements Task, EventListener {
 			}
 		}
 		return closest;
+	}
+
+	private boolean isChestCovered(BlockLocation chest) {
+		if(checkChest(chest))
+			return true;
+		BlockLocation[] surrounding = new BlockLocation[] { chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
+		for(BlockLocation otherChest : surrounding)
+			if(bot.getWorld().getBlockIdAt(otherChest) == 54 && checkChest(otherChest))
+				return true;
+		return false;
+	}
+
+	private boolean checkChest(BlockLocation chest) {
+		int idAbove = bot.getWorld().getBlockIdAt(chest.offset(0, 1, 0));
+		if(!BlockType.getById(idAbove).isSolid())
+			return false;
+		BlockType[] noncovers = new BlockType[] { BlockType.CHEST, BlockType.ENDER_CHEST, BlockType.STEP, BlockType.BED_BLOCK, BlockType.ANVIL, BlockType.BREWING_STAND, BlockType.WOOD_STEP, BlockType.WOOD_STAIRS, BlockType.BRICK_STAIRS, BlockType.COBBLESTONE_STAIRS, BlockType.NETHER_BRICK_STAIRS, BlockType.SANDSTONE_STAIRS, BlockType.SMOOTH_STAIRS };
+		for(BlockType type : noncovers)
+			if(idAbove == type.getId())
+				return false;
+		return true;
 	}
 
 	@Override
@@ -499,6 +531,31 @@ public class FarmingTask implements Task, EventListener {
 		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, 0));
 		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, 0));
 		currentlyBreaking = location;
+	}
+
+	private boolean placeBlockAt(BlockLocation location) {
+		MainPlayerEntity player = bot.getPlayer();
+		if(player == null)
+			return false;
+		PlayerInventory inventory = player.getInventory();
+		int slot = -1;
+		for(int i = 0; i < 36; i++) {
+			ItemStack item = inventory.getItemAt(i);
+			if(item == null)
+				continue;
+			int id = item.getId();
+			if(id == 1 || id == 3 || id == 4) {
+				slot = i;
+				break;
+			}
+		}
+		if(slot == -1)
+			return false;
+		if(!player.switchHeldItems(slot))
+			return false;
+		if(player.placeBlock(location))
+			return true;
+		return false;
 	}
 
 	private void placeAt(BlockLocation location) {

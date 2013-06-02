@@ -150,6 +150,46 @@ public class MainPlayerEntity extends PlayerEntity {
 		}
 	}
 
+	public void face(BlockLocation target) {
+		face(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
+	}
+
+	public void face(BlockLocation target, int face) {
+		BlockLocation offset = getOffsetBlock(target, face);
+		if(offset == null) {
+			face(target);
+			return;
+		}
+		double x = offset.getX() + ((target.getX() - offset.getX()) / 2.0D) + 0.5;
+		double y = offset.getY() + ((target.getY() - offset.getY()) / 2.0D);
+		double z = offset.getZ() + ((target.getZ() - offset.getZ()) / 2.0D) + 0.5;
+		face(x, y, z);
+	}
+
+	private BlockLocation getOffsetBlock(BlockLocation location, int face) {
+		int x = location.getX(), y = location.getY(), z = location.getZ();
+		switch(face) {
+		case 0:
+			return new BlockLocation(x, y + 1, z);
+		case 1:
+			return new BlockLocation(x, y - 1, z);
+		case 2:
+			return new BlockLocation(x, y, z + 1);
+		case 3:
+			return new BlockLocation(x, y, z - 1);
+		case 4:
+			return new BlockLocation(x + 1, y, z);
+		case 5:
+			return new BlockLocation(x - 1, y, z);
+		default:
+			return null;
+		}
+	}
+
+	public void face(WorldLocation target) {
+		face(target.getX(), target.getY(), target.getZ());
+	}
+
 	public void face(double x, double y, double z) {
 		yaw = getRotationX(x, y, z);
 		pitch = getRotationY(x, y, z);
