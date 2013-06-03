@@ -54,6 +54,9 @@ public class FarmingTask implements Task, EventListener {
 
 	private int[] farmedIds = new int[] { 372, 295, 296, 338, 361, 362, 86, 360 };
 
+	private BlockLocation endpoint1, endpoint2;
+	private boolean region = true;
+
 	public FarmingTask(final MinecraftBot bot) {
 		this.bot = bot;
 		bot.getEventManager().registerListener(this);
@@ -66,6 +69,14 @@ public class FarmingTask implements Task, EventListener {
 
 	@Override
 	public synchronized boolean start(String... options) {
+		if(options.length > 0) {
+			endpoint1 = new BlockLocation(Integer.parseInt(options[0]), Integer.parseInt(options[1]), Integer.parseInt(options[2]));
+			endpoint2 = new BlockLocation(Integer.parseInt(options[3]), Integer.parseInt(options[4]), Integer.parseInt(options[5]));
+			region = true;
+		} else {
+			endpoint1 = endpoint2 = null;
+			region = false;
+		}
 		running = true;
 		return true;
 	}
@@ -210,7 +221,7 @@ public class FarmingTask implements Task, EventListener {
 			}
 		}
 
-		BlockLocation closest = getClosestFarmable();
+		BlockLocation closest = getClosestFarmable(32);
 		if(closest == null) {
 			if(itemCheckWait > 0) {
 				itemCheckWait--;
@@ -366,7 +377,7 @@ public class FarmingTask implements Task, EventListener {
 		}
 	}
 
-	private BlockLocation getClosestFarmable() {
+	private BlockLocation getClosestFarmable(int radius) {
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
 		if(player == null || world == null)
@@ -375,12 +386,11 @@ public class FarmingTask implements Task, EventListener {
 		boolean hasNetherwarts = inventory.contains(372), hasSeeds = inventory.contains(295), hasHoe = inventory.contains(HOES);
 		// boolean hasReeds = inventory.contains(338);
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
-		int radius = 32;
 		List<BlockLocation> closest = new ArrayList<>();
 		int closestDistance = Integer.MAX_VALUE, actualFarmType = 0;
-		for(int x = -radius; x < radius; x++) {
-			for(int y = -radius / 2; y < radius / 2; y++) {
-				for(int z = -radius; z < radius; z++) {
+		for(int x = region ? Math.min(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : -radius; x < (region ? Math.max(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : radius); x++) {
+			for(int y = region ? Math.min(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : -radius / 2; y < (region ? Math.max(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : radius / 2); y++) {
+				for(int z = region ? Math.min(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : -radius; z < (region ? Math.max(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : radius); z++) {
 					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					int distance = ourLocation.getDistanceToSquared(location);
 					if(distance <= closestDistance) {
@@ -463,9 +473,9 @@ public class FarmingTask implements Task, EventListener {
 			return new BlockLocation[0];
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		List<BlockLocation> blocks = new ArrayList<BlockLocation>();
-		for(int x = -radius; x < radius; x++) {
-			for(int y = -radius; y < radius; y++) {
-				for(int z = -radius; z < radius; z++) {
+		for(int x = region ? Math.min(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : -radius; x < (region ? Math.max(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : radius); x++) {
+			for(int y = region ? Math.min(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : -radius / 2; y < (region ? Math.max(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : radius / 2); y++) {
+				for(int z = region ? Math.min(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : -radius; z < (region ? Math.max(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : radius); z++) {
 					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					if(world.getBlockIdAt(location) == id)
 						blocks.add(location);
