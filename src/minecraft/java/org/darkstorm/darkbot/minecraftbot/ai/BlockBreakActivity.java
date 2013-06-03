@@ -19,8 +19,7 @@ public class BlockBreakActivity implements Activity {
 		this(bot, location, 10 * 20);
 	}
 
-	public BlockBreakActivity(MinecraftBot bot, BlockLocation location,
-			int timeout) {
+	public BlockBreakActivity(MinecraftBot bot, BlockLocation location, int timeout) {
 		this.location = location;
 		lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
@@ -32,17 +31,14 @@ public class BlockBreakActivity implements Activity {
 		int face = getBreakBlockFaceAt(location);
 		if(face == -1)
 			return;
-		player.face(x, y, z);
+		player.face(x + 0.5, y + 0.5, z + 0.5);
 		int idAbove = world.getBlockIdAt(x, y + 1, z);
 		if(idAbove == 12 || idAbove == 13)
 			wait = 30;
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		player.switchTools(BlockType.getById(world.getBlockIdAt(location))
-				.getToolType());
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
+		player.switchTools(BlockType.getById(world.getBlockIdAt(location)).getToolType());
+		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
 		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, face));
 		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, face));
 		this.timeout = timeout;
