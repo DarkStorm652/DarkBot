@@ -69,13 +69,6 @@ public final class BasicWorld implements World, EventListener {
 			entity.setPitch(spawnPacket.pitch);
 			entity.setWornItemAt(0, new BasicItemStack(spawnPacket.currentItem, 1, 0));
 			spawnEntity(entity);
-		} else if(packet instanceof Packet21PickupSpawn) {
-			Packet21PickupSpawn spawnPacket = (Packet21PickupSpawn) packet;
-			ItemEntity entity = new ItemEntity(this, spawnPacket.entityId, spawnPacket.item);
-			entity.setX(spawnPacket.xPosition / 32D);
-			entity.setY(spawnPacket.yPosition / 32D);
-			entity.setZ(spawnPacket.zPosition / 32D);
-			spawnEntity(entity);
 		} else if(packet instanceof Packet22Collect) {
 			Entity entity = getEntityById(((Packet22Collect) packet).collectedEntityId);
 			if(entity != null)

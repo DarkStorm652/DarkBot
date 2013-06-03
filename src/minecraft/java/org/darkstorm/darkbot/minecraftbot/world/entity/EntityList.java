@@ -27,6 +27,7 @@ public final class EntityList {
 
 		objectIds = new IntHashMap<Class<? extends Entity>>();
 		objectIds.put(1, BoatEntity.class);
+		objectIds.put(2, ItemEntity.class);
 		objectIds.put(10, MinecartEntity.class);
 		objectIds.put(11, StorageMinecartEntity.class);
 		objectIds.put(12, PoweredMinecartEntity.class);
