@@ -9,7 +9,9 @@ import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
 import org.darkstorm.darkbot.minecraftbot.events.world.ChunkLoadEvent;
+import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
 import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
+import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet130UpdateSign;
 import org.darkstorm.darkbot.minecraftbot.protocol.readable.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -226,6 +228,25 @@ public final class BasicWorld implements World, EventListener {
 			Packet56MapChunks chunkPacket = (Packet56MapChunks) packet;
 			for(int i = 0; i < chunkPacket.primaryBitmap.length; i++)
 				processChunk(chunkPacket.chunkX[i], chunkPacket.chunkZ[i], chunkPacket.chunkData[i], chunkPacket.primaryBitmap[i], chunkPacket.secondaryBitmap[i], chunkPacket.skylight, true);
+		} else if(packet instanceof Packet132TileEntityData) {
+			Packet132TileEntityData tileEntityPacket = (Packet132TileEntityData) packet;
+			BlockLocation location = new BlockLocation(tileEntityPacket.xPosition, tileEntityPacket.yPosition, tileEntityPacket.zPosition);
+			TileEntity entity;
+			Class<? extends TileEntity> entityClass = EntityList.getTileEntityClass(tileEntityPacket.actionType);
+			if(entityClass == null)
+				return;
+			try {
+				Constructor<? extends TileEntity> constructor = entityClass.getConstructor(NBTTagCompound.class);
+				entity = constructor.newInstance(tileEntityPacket.compound);
+			} catch(Exception exception) {
+				exception.printStackTrace();
+				return;
+			}
+			setTileEntityAt(entity, location);
+		} else if(packet instanceof Packet130UpdateSign) {
+			Packet130UpdateSign signPacket = (Packet130UpdateSign) packet;
+			BlockLocation location = new BlockLocation(signPacket.x, signPacket.y, signPacket.z);
+			setTileEntityAt(new SignTileEntity(location.getX(), location.getY(), location.getZ(), signPacket.text), location);
 		}
 	}
 
@@ -382,6 +403,37 @@ public final class BasicWorld implements World, EventListener {
 		if(chunk == null)
 			return;
 		chunk.setBlockMetadataAt(metadata, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+	}
+
+	@Override
+	public TileEntity getTileEntityAt(int x, int y, int z) {
+		return getTileEntityAt(new BlockLocation(x, y, z));
+	}
+
+	@Override
+	public TileEntity getTileEntityAt(BlockLocation blockLocation) {
+		ChunkLocation location = new ChunkLocation(blockLocation);
+		BlockLocation chunkBlockOffset = new BlockLocation(location);
+		Chunk chunk = getChunkAt(location);
+		if(chunk == null)
+			return null;
+		TileEntity tileEntity = chunk.getTileEntityAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		return tileEntity;
+	}
+
+	@Override
+	public void setTileEntityAt(TileEntity tileEntity, int x, int y, int z) {
+		setTileEntityAt(tileEntity, new BlockLocation(x, y, z));
+	}
+
+	@Override
+	public void setTileEntityAt(TileEntity tileEntity, BlockLocation blockLocation) {
+		ChunkLocation location = new ChunkLocation(blockLocation);
+		BlockLocation chunkBlockOffset = new BlockLocation(location);
+		Chunk chunk = getChunkAt(location);
+		if(chunk == null)
+			return;
+		chunk.setTileEntityAt(tileEntity, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
 	}
 
 	@Override

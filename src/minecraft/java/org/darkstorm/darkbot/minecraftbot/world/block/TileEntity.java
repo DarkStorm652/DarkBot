@@ -1,7 +1,15 @@
 package org.darkstorm.darkbot.minecraftbot.world.block;
 
-public final class TileEntity {
-	private final int x, y, z;
+import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
+
+public abstract class TileEntity {
+	protected final int x, y, z;
+
+	public TileEntity(NBTTagCompound nbt) {
+		x = nbt.getInteger("x");
+		y = nbt.getInteger("y");
+		z = nbt.getInteger("z");
+	}
 
 	public TileEntity(int x, int y, int z) {
 		this.x = x;

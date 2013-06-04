@@ -28,6 +28,14 @@ public interface World {
 
 	public void setBlockMetadataAt(int metadata, BlockLocation location);
 
+	public TileEntity getTileEntityAt(int x, int y, int z);
+
+	public TileEntity getTileEntityAt(BlockLocation location);
+
+	public void setTileEntityAt(TileEntity tileEntity, int x, int y, int z);
+
+	public void setTileEntityAt(TileEntity tileEntity, BlockLocation location);
+
 	public Chunk getChunkAt(int x, int y, int z);
 
 	public Chunk getChunkAt(ChunkLocation location);

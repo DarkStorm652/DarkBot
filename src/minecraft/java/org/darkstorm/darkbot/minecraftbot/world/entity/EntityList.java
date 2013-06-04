@@ -1,10 +1,12 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
+import org.darkstorm.darkbot.minecraftbot.world.block.TileEntity;
 
 public final class EntityList {
 	private static final IntHashMap<Class<? extends LivingEntity>> livingIds;
 	private static final IntHashMap<Class<? extends Entity>> objectIds;
+	private static final IntHashMap<Class<? extends TileEntity>> tileIds;
 
 	static {
 		livingIds = new IntHashMap<Class<? extends LivingEntity>>();
@@ -37,6 +39,8 @@ public final class EntityList {
 		objectIds.put(66, WitherSkullEntity.class);
 		objectIds.put(71, ItemFrameEntity.class);
 		objectIds.put(90, FishingBobEntity.class);
+
+		tileIds = new IntHashMap<Class<? extends TileEntity>>();
 	}
 
 	private EntityList() {
@@ -48,5 +52,9 @@ public final class EntityList {
 
 	public static Class<? extends Entity> getObjectEntityClass(int id) {
 		return objectIds.get(id);
+	}
+
+	public static Class<? extends TileEntity> getTileEntityClass(int id) {
+		return tileIds.get(id);
 	}
 }
