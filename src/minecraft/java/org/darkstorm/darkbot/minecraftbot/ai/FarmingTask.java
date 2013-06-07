@@ -16,8 +16,14 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public class FarmingTask implements Task, EventListener {
+	public enum StorageAction {
+		STORE,
+		SELL
+	}
+
 	private static final boolean[] UNPLACEABLE = new boolean[256];
 	private static final int[] HOES;
+	private static final int[] FARMED_ITEMS;
 
 	static {
 		UNPLACEABLE[0] = true;
@@ -40,22 +46,19 @@ public class FarmingTask implements Task, EventListener {
 		UNPLACEABLE[107] = true;
 
 		HOES = new int[] { 290, 291, 292, 293, 294 };
+		FARMED_ITEMS = new int[] { 372, 295, 296, 338, 361, 362, 86, 360 };
 	}
 
 	private final MinecraftBot bot;
 
 	private boolean running = false;
-
 	private BlockLocation currentlyBreaking;
 	private int ticksSinceBreak, ticksWait, itemCheckWait;
-
 	private BlockLocation currentChest;
 	private List<BlockLocation> fullChests = new ArrayList<BlockLocation>();
-
-	private int[] farmedIds = new int[] { 372, 295, 296, 338, 361, 362, 86, 360 };
-
-	private BlockLocation endpoint1, endpoint2;
-	private boolean region = true;
+	private BlockArea region;
+	private StorageAction storageAction = StorageAction.STORE;
+	private boolean selling;
 
 	public FarmingTask(final MinecraftBot bot) {
 		this.bot = bot;
@@ -70,13 +73,11 @@ public class FarmingTask implements Task, EventListener {
 	@Override
 	public synchronized boolean start(String... options) {
 		if(options.length > 0) {
-			endpoint1 = new BlockLocation(Integer.parseInt(options[0]), Integer.parseInt(options[1]), Integer.parseInt(options[2]));
-			endpoint2 = new BlockLocation(Integer.parseInt(options[3]), Integer.parseInt(options[4]), Integer.parseInt(options[5]));
-			region = true;
-		} else {
-			endpoint1 = endpoint2 = null;
-			region = false;
-		}
+			BlockLocation endpoint1 = new BlockLocation(Integer.parseInt(options[0]), Integer.parseInt(options[1]), Integer.parseInt(options[2]));
+			BlockLocation endpoint2 = new BlockLocation(Integer.parseInt(options[3]), Integer.parseInt(options[4]), Integer.parseInt(options[5]));
+			region = new BlockArea(endpoint1, endpoint2);
+		} else
+			region = null;
 		running = true;
 		return true;
 	}
@@ -109,119 +110,199 @@ public class FarmingTask implements Task, EventListener {
 			return;
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		PlayerInventory inventory = player.getInventory();
-		if(!inventory.contains(0)) {
+		boolean store = !inventory.contains(0);
+		if(!store && storageAction.equals(StorageAction.SELL) && selling)
+			for(int id : FARMED_ITEMS)
+				if(inventory.getCount(id) >= 64)
+					store = true;
+		if(store) {
 			System.out.println("Inventory is full!!!");
-			if(player.getWindow() instanceof ChestInventory) {
-				System.out.println("Chest is open!!!");
-				ChestInventory chest = (ChestInventory) player.getWindow();
-				int freeSpace = -1;
-				for(int i = 0; i < chest.getSize(); i++)
-					if(chest.getItemAt(i) == null)
-						freeSpace = i;
-				if(freeSpace == -1) {
-					if(currentChest != null) {
+			if(storageAction.equals(StorageAction.STORE)) {
+				if(player.getWindow() instanceof ChestInventory) {
+					System.out.println("Chest is open!!!");
+					ChestInventory chest = (ChestInventory) player.getWindow();
+					int freeSpace = -1;
+					for(int i = 0; i < chest.getSize(); i++)
+						if(chest.getItemAt(i) == null)
+							freeSpace = i;
+					if(freeSpace == -1) {
+						if(currentChest != null) {
+							fullChests.add(currentChest);
+							placeBlockAt(currentChest.offset(0, 1, 0));
+							currentChest = null;
+						}
+						chest.close();
+						System.out.println("Closed chest, no spaces!!!");
+						ticksWait = 16;
+						return;
+					}
+					for(int i = 0; i < 36; i++) {
+						ItemStack item = chest.getItemAt(chest.getSize() + i);
+						if(item == null)
+							continue;
+						boolean found = false;
+						for(int id : FARMED_ITEMS)
+							if(id == item.getId())
+								found = true;
+						if(!found)
+							continue;
+						chest.selectItemAt(chest.getSize() + i);
+						int index = -1;
+						for(int j = 0; j < chest.getSize(); j++) {
+							if(chest.getItemAt(j) == null) {
+								index = j;
+								break;
+							}
+						}
+						if(index == -1)
+							continue;
+						chest.selectItemAt(index);
+					}
+					freeSpace = -1;
+					for(int i = 0; i < chest.getSize(); i++)
+						if(chest.getItemAt(i) == null)
+							freeSpace = i;
+					if(freeSpace == -1 && currentChest != null) {
 						fullChests.add(currentChest);
 						placeBlockAt(currentChest.offset(0, 1, 0));
 						currentChest = null;
 					}
 					chest.close();
-					System.out.println("Closed chest, no spaces!!!");
+					currentChest = null;
+					System.out.println("Closed chest!!!");
 					ticksWait = 16;
 					return;
-				}
-				for(int i = 0; i < 36; i++) {
-					ItemStack item = chest.getItemAt(chest.getSize() + i);
-					if(item == null)
-						continue;
-					boolean found = false;
-					for(int id : farmedIds)
-						if(id == item.getId())
-							found = true;
-					if(!found)
-						continue;
-					chest.selectItemAt(chest.getSize() + i);
-					int index = -1;
-					for(int j = 0; j < chest.getSize(); j++) {
-						if(chest.getItemAt(j) == null) {
-							index = j;
-							break;
+				} else {
+					BlockLocation[] chests = getBlocks(54, 32);
+					chestLoop: for(BlockLocation chest : chests) {
+						if(!fullChests.contains(chest) && !isChestCovered(chest)) {
+							BlockLocation[] surrounding = new BlockLocation[] { chest.offset(0, 1, 0), chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
+							BlockLocation closestWalk = null;
+							int closestDistance = Integer.MAX_VALUE;
+							int face = 0;
+							for(BlockLocation walk : surrounding) {
+								if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
+									continue;
+								int distance = ourLocation.getDistanceToSquared(walk);
+								if(distance < closestDistance) {
+									closestWalk = walk;
+									closestDistance = distance;
+									if(walk.getY() > chest.getY())
+										face = 1;
+									else if(walk.getX() > chest.getX())
+										face = 5;
+									else if(walk.getX() < chest.getX())
+										face = 4;
+									else if(walk.getZ() > chest.getZ())
+										face = 3;
+									else if(walk.getZ() < chest.getZ())
+										face = 2;
+									else
+										face = 0;
+								}
+							}
+							if(closestWalk == null)
+								continue chestLoop;
+							BlockLocation originalWalk = closestWalk;
+							BlockLocation closestWalkOffset = closestWalk.offset(0, -1, 0);
+							while(!BlockType.getById(world.getBlockIdAt(closestWalkOffset)).isSolid()) {
+								closestWalk = closestWalkOffset;
+								if(originalWalk.getY() - closestWalkOffset.getY() > 5)
+									continue chestLoop;
+								closestWalkOffset = closestWalkOffset.offset(0, -1, 0);
+							}
+
+							if(!ourLocation.equals(closestWalk)) {
+								System.out.println("Walking to chest!!!");
+								bot.setActivity(new WalkActivity(bot, closestWalk));
+								return;
+							}
+
+							System.out.println("Opening chest!!!");
+							placeAt(originalWalk, face);
+							currentChest = chest;
+							ticksWait = 80;
+							return;
 						}
 					}
-					if(index == -1)
+				}
+			} else if(storageAction.equals(StorageAction.SELL)) {
+				if(region != null ? region.contains(ourLocation) : getClosestFarmable(32) != null) {
+					bot.say("/spawn");
+					ticksWait = 200;
+					return;
+				}
+				selling = true;
+				BlockLocation[] signs = getBlocks(68, 32);
+				signLoop: for(BlockLocation sign : signs) {
+					TileEntity tile = world.getTileEntityAt(sign);
+					if(tile == null || !(tile instanceof SignTileEntity))
 						continue;
-					chest.selectItemAt(index);
-				}
-				freeSpace = -1;
-				for(int i = 0; i < chest.getSize(); i++)
-					if(chest.getItemAt(i) == null)
-						freeSpace = i;
-				if(freeSpace == -1 && currentChest != null) {
-					fullChests.add(currentChest);
-					placeBlockAt(currentChest.offset(0, 1, 0));
-					currentChest = null;
-				}
-				chest.close();
-				currentChest = null;
-				System.out.println("Closed chest!!!");
-				ticksWait = 16;
-				return;
-			} else {
-				BlockLocation[] chests = getBlocks(54, 32);
-				chestLoop: for(BlockLocation chest : chests) {
-					if(!fullChests.contains(chest) && !isChestCovered(chest)) {
-						BlockLocation[] surrounding = new BlockLocation[] { chest.offset(0, 1, 0), chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
-						BlockLocation closestWalk = null;
-						int closestDistance = Integer.MAX_VALUE;
-						int face = 0;
-						for(BlockLocation walk : surrounding) {
-							if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
-								continue;
-							int distance = ourLocation.getDistanceToSquared(walk);
-							if(distance < closestDistance) {
-								closestWalk = walk;
-								closestDistance = distance;
-								if(walk.getY() > chest.getY())
-									face = 1;
-								else if(walk.getX() > chest.getX())
-									face = 5;
-								else if(walk.getX() < chest.getX())
-									face = 4;
-								else if(walk.getZ() > chest.getZ())
-									face = 3;
-								else if(walk.getZ() < chest.getZ())
-									face = 2;
-								else
-									face = 0;
-							}
-						}
-						if(closestWalk == null)
-							continue chestLoop;
+					SignTileEntity signTile = (SignTileEntity) tile;
+					String[] text = signTile.getText();
+					boolean found = false;
+					if(text[0].contains("[Sell]"))
+						for(int id : FARMED_ITEMS)
+							if(text[2].equals(Integer.toString(id)) && inventory.contains(id))
+								found = true;
+					if(!found)
+						continue;
+
+					if(player.getDistanceTo(sign) > 3) {
+						BlockLocation closestWalk = sign;
 						BlockLocation originalWalk = closestWalk;
 						BlockLocation closestWalkOffset = closestWalk.offset(0, -1, 0);
 						while(!BlockType.getById(world.getBlockIdAt(closestWalkOffset)).isSolid()) {
 							closestWalk = closestWalkOffset;
 							if(originalWalk.getY() - closestWalkOffset.getY() > 5)
-								continue chestLoop;
+								continue signLoop;
 							closestWalkOffset = closestWalkOffset.offset(0, -1, 0);
 						}
-
-						if(!ourLocation.equals(closestWalk)) {
-							System.out.println("Walking to chest!!!");
-							bot.setActivity(new WalkActivity(bot, closestWalk));
-							return;
-						}
-
-						System.out.println("Opening chest!!!");
-						placeAt(originalWalk, face);
-						currentChest = chest;
-						ticksWait = 80;
+						player.walkTo(closestWalk);
+						System.out.println("Walking to sign @ " + sign);
 						return;
 					}
+					BlockLocation[] surrounding = new BlockLocation[] { sign.offset(0, 1, 0), sign.offset(-1, 0, 0), sign.offset(1, 0, 0), sign.offset(0, 0, -1), sign.offset(0, 0, 1), sign.offset(0, -1, 0) };
+					BlockLocation closestWalk = null;
+					int closestDistance = Integer.MAX_VALUE;
+					int face = 0;
+					for(BlockLocation walk : surrounding) {
+						if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
+							continue;
+						int distance = ourLocation.getDistanceToSquared(walk);
+						if(distance < closestDistance) {
+							closestWalk = walk;
+							closestDistance = distance;
+							if(walk.getY() > sign.getY())
+								face = 1;
+							else if(walk.getX() > sign.getX())
+								face = 5;
+							else if(walk.getX() < sign.getX())
+								face = 4;
+							else if(walk.getZ() > sign.getZ())
+								face = 3;
+							else if(walk.getZ() < sign.getZ())
+								face = 2;
+							else
+								face = 0;
+						}
+					}
+					if(closestWalk == null)
+						continue;
+					placeOn(sign, face);
+					ticksWait = 4;
+					return;
 				}
 			}
 		}
 
 		BlockLocation closest = getClosestFarmable(32);
+		if(region != null ? !region.contains(ourLocation) : closest == null) {
+			bot.say("/home");
+			ticksWait = 200;
+			return;
+		}
+
 		if(closest == null) {
 			if(itemCheckWait > 0) {
 				itemCheckWait--;
@@ -231,7 +312,7 @@ public class FarmingTask implements Task, EventListener {
 				itemCheckWait = 10;
 				return;
 			}
-			ItemEntity item = getClosestGroundItem(farmedIds);
+			ItemEntity item = getClosestGroundItem(FARMED_ITEMS);
 			if(item != null) {
 				System.out.println("Item: " + item.getItem() + " Location: " + item.getLocation());
 				bot.setActivity(new WalkActivity(bot, new BlockLocation(item.getLocation())));
@@ -388,9 +469,9 @@ public class FarmingTask implements Task, EventListener {
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		List<BlockLocation> closest = new ArrayList<>();
 		int closestDistance = Integer.MAX_VALUE, actualFarmType = 0;
-		for(int x = region ? Math.min(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : -radius; x < (region ? Math.max(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : radius); x++) {
-			for(int y = region ? Math.min(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : -radius / 2; y < (region ? Math.max(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : radius / 2); y++) {
-				for(int z = region ? Math.min(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : -radius; z < (region ? Math.max(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : radius); z++) {
+		for(int x = region != null ? region.getX() - ourLocation.getX() : -radius; x < (region != null ? region.getX() + region.getWidth() - ourLocation.getX() : radius); x++) {
+			for(int y = region != null ? region.getY() - ourLocation.getY() : -radius / 2; y < (region != null ? region.getY() + region.getHeight() - ourLocation.getY() : radius / 2); y++) {
+				for(int z = region != null ? region.getZ() - ourLocation.getZ() : -radius; z < (region != null ? region.getZ() + region.getLength() - ourLocation.getZ() : radius); z++) {
 					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					int distance = ourLocation.getDistanceToSquared(location);
 					if(distance <= closestDistance) {
@@ -473,9 +554,9 @@ public class FarmingTask implements Task, EventListener {
 			return new BlockLocation[0];
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		List<BlockLocation> blocks = new ArrayList<BlockLocation>();
-		for(int x = region ? Math.min(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : -radius; x < (region ? Math.max(endpoint1.getX(), endpoint2.getX()) - ourLocation.getX() : radius); x++) {
-			for(int y = region ? Math.min(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : -radius / 2; y < (region ? Math.max(endpoint1.getY(), endpoint2.getY()) - ourLocation.getY() : radius / 2); y++) {
-				for(int z = region ? Math.min(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : -radius; z < (region ? Math.max(endpoint1.getZ(), endpoint2.getZ()) - ourLocation.getZ() : radius); z++) {
+		for(int x = region != null ? region.getX() - ourLocation.getX() : -radius; x < (region != null ? region.getX() + region.getWidth() - ourLocation.getX() : radius); x++) {
+			for(int y = region != null ? region.getY() - ourLocation.getY() : -radius / 2; y < (region != null ? region.getY() + region.getHeight() - ourLocation.getY() : radius / 2); y++) {
+				for(int z = region != null ? region.getZ() - ourLocation.getZ() : -radius; z < (region != null ? region.getZ() + region.getLength() - ourLocation.getZ() : radius); z++) {
 					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
 					if(world.getBlockIdAt(location) == id)
 						blocks.add(location);
@@ -596,6 +677,30 @@ public class FarmingTask implements Task, EventListener {
 		ticksWait = 4;
 	}
 
+	private void placeOn(BlockLocation location, int face) {
+		MainPlayerEntity player = bot.getPlayer();
+		if(player == null)
+			return;
+		PlayerInventory inventory = player.getInventory();
+		int x = location.getX(), y = location.getY(), z = location.getZ();
+		location = getOffsetBlock(location, face);
+		if(location == null)
+			return;
+		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
+		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
+		ConnectionHandler connectionHandler = bot.getConnectionHandler();
+		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
+		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
+		Packet15Place placePacket = new Packet15Place();
+		placePacket.xPosition = x;
+		placePacket.yPosition = y;
+		placePacket.zPosition = z;
+		placePacket.direction = face;
+		placePacket.itemStack = inventory.getCurrentHeldItem();
+		connectionHandler.sendPacket(placePacket);
+		ticksWait = 4;
+	}
+
 	private int getPlacementBlockFaceAt(BlockLocation location) {
 		int x = location.getX(), y = location.getY(), z = location.getZ();
 		World world = bot.getWorld();
@@ -642,6 +747,14 @@ public class FarmingTask implements Task, EventListener {
 		return new BlockLocation(x, y, z);
 	}
 
+	public StorageAction getStorageAction() {
+		return storageAction;
+	}
+
+	public void setStorageAction(StorageAction storageAction) {
+		this.storageAction = storageAction;
+	}
+
 	@Override
 	public TaskPriority getPriority() {
 		return TaskPriority.NORMAL;
@@ -664,6 +777,6 @@ public class FarmingTask implements Task, EventListener {
 
 	@Override
 	public String getOptionDescription() {
-		return "";
+		return "[<x1> <y1> <z1> <x2> <y2> <z2>]";
 	}
 }
