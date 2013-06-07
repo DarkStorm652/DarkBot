@@ -296,7 +296,6 @@ public class FarmingTask implements Task, EventListener {
 				return;
 			}
 		}
-		selling = false;
 
 		BlockLocation closest = getClosestFarmable(32);
 		if(region != null ? !region.contains(ourLocation) : closest == null) {
@@ -304,6 +303,7 @@ public class FarmingTask implements Task, EventListener {
 			ticksWait = 200;
 			return;
 		}
+		selling = false;
 
 		if(closest == null) {
 			if(itemCheckWait > 0) {
