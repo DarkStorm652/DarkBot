@@ -36,7 +36,7 @@ public class PlayerInventory implements Inventory, EventListener {
 	}
 
 	@EventHandler
-	public synchronized void onPacketProcessed(PacketProcessEvent event) {
+	public synchronized void onPacketReceived(PacketReceivedEvent event) {
 		Packet packet = event.getPacket();
 		if(packet instanceof Packet106Transaction) {
 			Packet106Transaction transactionPacket = (Packet106Transaction) packet;

@@ -28,8 +28,7 @@ public class Connection {
 
 	public Connection(String host, int port, ProxyData proxy) {
 		if(proxy.getType().equals(ProxyType.HTTP))
-			throw new IllegalArgumentException(
-					"HTTP proxies are not usable for this purpose.");
+			throw new IllegalArgumentException("HTTP proxies are not usable for this purpose.");
 		this.host = host;
 		this.port = port;
 		this.proxy = proxy;
@@ -74,19 +73,16 @@ public class Connection {
 	}
 
 	public void connect() throws IOException {
-		if(isConnected() && !disconnect())
+		if(isConnected())
 			return;
 		if(proxy != null) {
 			switch(proxy.getType()) {
 			case SOCKS:
-				socket = new Socket(new Proxy(Proxy.Type.SOCKS,
-						new InetSocketAddress(proxy.getHostName(),
-								proxy.getPort())));
+				socket = new Socket(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy.getHostName(), proxy.getPort())));
 				break;
 			case HTTP_CONNECT:
 				try {
-					socket = proxyClient.tunnel(proxy.getHost(), new HttpHost(
-							host, port), proxyCredentials);
+					socket = proxyClient.tunnel(proxy.getHost(), new HttpHost(host, port), proxyCredentials);
 				} catch(HttpException exception) {
 					throw new IOException(exception);
 				}
@@ -108,23 +104,18 @@ public class Connection {
 		outputStream = new DataOutputStream(out);
 	}
 
-	public boolean disconnect() {
+	public void disconnect() {
 		if(isConnected()) {
 			try {
 				socket.close();
-			} catch(IOException e) {
-				return false;
-			}
+			} catch(IOException e) {}
+			socket = null;
 			inputStream = null;
 			outputStream = null;
 		}
-		return true;
 	}
 
 	public boolean isConnected() {
-		// System.out.println("Connected: " + socket.isConnected() +
-		// ", Closed: "
-		// + socket.isClosed());
 		return socket != null && socket.isConnected() && !socket.isClosed();
 	}
 
@@ -150,8 +141,7 @@ public class Connection {
 
 	public void setProxy(ProxyData proxy) {
 		if(proxy.getType().equals(ProxyType.HTTP))
-			throw new IllegalArgumentException(
-					"HTTP proxies are not usable for this purpose.");
+			throw new IllegalArgumentException("HTTP proxies are not usable for this purpose.");
 		this.proxy = proxy;
 	}
 

@@ -183,16 +183,17 @@ public class ConnectionHandler implements EventListener {
 		writeTask = service.submit(new WriteTask());
 	}
 
-	public synchronized boolean disconnect(String reason) {
+	public synchronized void disconnect(String reason) {
 		if(!connection.isConnected() && readTask == null && writeTask == null)
-			return true;
-		readTask.cancel(true);
-		writeTask.cancel(true);
+			return;
+		if(readTask != null)
+			readTask.cancel(true);
+		if(writeTask != null)
+			writeTask.cancel(true);
 		readTask = null;
 		writeTask = null;
-		boolean success = connection.disconnect();
+		connection.disconnect();
 		bot.getEventManager().sendEvent(new DisconnectEvent(reason));
-		return success;
 	}
 
 	public synchronized void update() {
@@ -249,14 +250,10 @@ public class ConnectionHandler implements EventListener {
 					synchronized(packetProcessQueue) {
 						packetProcessQueue.offer(packet);
 					}
-					// bot.getEventManager().sendEvent(
-					// new PacketReceivedEvent(packet));
+					bot.getEventManager().sendEvent(new PacketReceivedEvent(packet));
 				}
 			} catch(Throwable exception) {
-				// if(exception instanceof OutOfMemoryError)
-				exception.printStackTrace();
-				if(readTask != null && !readTask.isCancelled())
-					disconnect("Read error: " + exception);
+				disconnect("Read error: " + exception);
 			}
 		}
 	}
@@ -291,8 +288,7 @@ public class ConnectionHandler implements EventListener {
 					}
 				}
 			} catch(Throwable exception) {
-				if(writeTask != null && !writeTask.isCancelled())
-					disconnect("Write error: " + exception);
+				disconnect("Write error: " + exception);
 			}
 		}
 	}
