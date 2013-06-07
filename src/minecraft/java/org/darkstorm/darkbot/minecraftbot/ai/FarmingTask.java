@@ -554,6 +554,9 @@ public class FarmingTask implements Task, EventListener {
 		if(player == null || world == null)
 			return new BlockLocation[0];
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
+		BlockArea region = this.region;
+		if(region != null && !region.contains(ourLocation))
+			region = null;
 		List<BlockLocation> blocks = new ArrayList<BlockLocation>();
 		for(int x = region != null ? region.getX() - ourLocation.getX() : -radius; x < (region != null ? region.getX() + region.getWidth() - ourLocation.getX() : radius); x++) {
 			for(int y = region != null ? region.getY() - ourLocation.getY() : -radius / 2; y < (region != null ? region.getY() + region.getHeight() - ourLocation.getY() : radius / 2); y++) {
