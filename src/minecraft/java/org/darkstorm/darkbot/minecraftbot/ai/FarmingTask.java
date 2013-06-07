@@ -243,7 +243,7 @@ public class FarmingTask implements Task, EventListener {
 					boolean found = false;
 					if(text[0].contains("[Sell]"))
 						for(int id : FARMED_ITEMS)
-							if(text[2].equals(Integer.toString(id)) && inventory.contains(id))
+							if(text[2].equals(Integer.toString(id)) && inventory.getCount(id) >= 64)
 								found = true;
 					if(!found)
 						continue;
@@ -293,6 +293,7 @@ public class FarmingTask implements Task, EventListener {
 					ticksWait = 4;
 					return;
 				}
+				return;
 			}
 		}
 
