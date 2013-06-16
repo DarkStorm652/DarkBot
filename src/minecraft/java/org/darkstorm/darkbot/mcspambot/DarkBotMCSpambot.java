@@ -63,6 +63,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			bots.add(this);
 		}
 		addOwner(owner);
+		addBackend(new ChatBackend(this));
 
 		TaskManager taskManager = bot.getTaskManager();
 		taskManager.registerTask(new FallTask(bot));
