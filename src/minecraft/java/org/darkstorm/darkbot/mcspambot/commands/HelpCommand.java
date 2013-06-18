@@ -9,11 +9,11 @@ import org.darkstorm.darkbot.minecraftbot.util.Util;
  * @author Sayaad
  */
 public class HelpCommand extends AbstractCommand{
-	
+
 	public HelpCommand(DarkBotMC MCBot) {
 		super(MCBot, "help", "Displays OptionDescription and Description for all registered commands", "[command]", ".*");
 	}
-	
+
 	@Override
 	public void execute(String[] args) {
 		if(args.length == 0){
@@ -36,16 +36,16 @@ public class HelpCommand extends AbstractCommand{
 			System.out.print(newLine);
 			ArrayList<String> commands = new ArrayList<>();
 			for(Command c : getBot().getCommandManager().getCommands()){
-				commands.add(c.getName());
-				System.out.println((String.format("%-" + (commandName + 13) + "s%-" + (commandUsage + 14) + "s%s\n", "| " + c.getName()," | " + c.getOptionDescription(), " | " + c.getDescription())));
+				commands.add(" " + c.getName());
+				System.out.println((String.format("%-" + (commandName + 13) + "s%-" + (commandUsage + 14) + "s%s\n", "| !" + c.getName()," | " + c.getOptionDescription(), " | " + c.getDescription())));
 			}
 			System.out.println();
 			bot.say(Util.join(toArray(commands), ","));
 		}else for(Command c : getBot().getCommandManager().getCommands())
 				if(c.getName().equalsIgnoreCase(args[0]))
-					bot.say(c.getName() + " " + c.getOptionDescription() + " - " + c.getDescription());
+					bot.say("!" + c.getName() + " " + c.getOptionDescription() + " - " + c.getDescription());
 	}
-	
+
 	private String[] toArray(ArrayList<String> array){
 		String[] S = new String[array.size()];
 		int i = 0;
