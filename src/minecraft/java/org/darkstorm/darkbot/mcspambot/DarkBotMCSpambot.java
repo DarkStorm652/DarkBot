@@ -34,6 +34,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 	private static final List<DarkBotMCSpambot> bots = new ArrayList<DarkBotMCSpambot>();
 	private static final char[] msgChars = new char[] { 'a', 'e', 'i', 'o', 'u' };
 	private static final String[] spamList;
+	private static ArrayList<String> captchaList = new ArrayList<String>();
 
 	static {
 		List<String> spamlist = new ArrayList<String>();
@@ -114,6 +115,10 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
 				String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
 				bot.say(msg);
+			} for(String s : captchaList){
+				Matcher captchaMatcher = Pattern.compile(s).matcher(message);
+				if(captchaMatcher.matches())
+					bot.say(captchaMatcher.group(1));
 			}
 			break;
 		}
@@ -190,7 +195,8 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
-
+		OptionSpec<String> captchaListOption = parser.accepts("captcha-list", "File containing a list of chat baised captcha to bypass.").withRequiredArg().describedAs("file");
+		
 		OptionSet options;
 		try {
 			options = parser.parse(args);
@@ -221,6 +227,10 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		} else
 			accounts = null;
 
+		final List<String> captcha;
+		if(options.has(captchaListOption))
+			readCaptchaFile(options.valueOf(captchaListOption));
+		
 		final String server;
 		if(!options.has(serverOption)) {
 			System.out.println("Option 'server' required.");
@@ -643,6 +653,18 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			throw new IllegalArgumentException("Unknown server!");
 
 		return builder.build();
+	}
+	
+	private static void readCaptchaFile(String fileName) {
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+			String line;
+			while((line = reader.readLine()) != null)
+				captchaList.add(line);
+			reader.close();
+		} catch(Exception exception) {
+			throw new RuntimeException(exception);
+		}
 	}
 
 	private static final class MessageFormatter {
