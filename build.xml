@@ -1,4 +1,4 @@
-<project name="DarkBot" default="deploy" basedir=".">
+<project name="DarkBot" default="generate-protocols" basedir=".">
 	<target name="init">
 		<property name="outputDir" value="bin" />
 		<property name="protocolsDir" value="protocols" />
