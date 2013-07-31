@@ -64,7 +64,7 @@ public abstract class AbstractPacket implements Packet {
 	}
 
 	public static void writeNBTTagCompound(NBTTagCompound compound, DataOutputStream out) throws IOException {
-		if(compound == null) {
+		if(compound != null) {
 			byte[] data = CompressedStreamTools.compress(compound);
 			out.writeShort((short) data.length);
 			out.write(data);

@@ -7,7 +7,7 @@ import org.darkstorm.darkbot.minecraftbot.util.Util;
 
 public class LegacyAuthService implements AuthService {
 	private static final String LOGIN_URL = "https://login.minecraft.net/";
-	private static final String LOGIN_URL_PARAMETERS = "user=%s&password=%s&version=&d";
+	private static final String LOGIN_URL_PARAMETERS = "user=%s&password=%s&version=%d";
 	private static final int LOGIN_VERSION = 12;
 	private static final String SERVER_AUTH_URL = "http://session.minecraft.net/game/joinserver.jsp?user=%s&sessionId=%s&serverId=%s";
 

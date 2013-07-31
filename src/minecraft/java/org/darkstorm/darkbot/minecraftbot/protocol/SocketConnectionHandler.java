@@ -195,6 +195,7 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 					}
 				}
 			} catch(Throwable exception) {
+				exception.printStackTrace();
 				disconnect("Read error: " + exception);
 			}
 		}
@@ -227,6 +228,7 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 					}
 				}
 			} catch(Throwable exception) {
+				exception.printStackTrace();
 				disconnect("Write error: " + exception);
 			}
 		}
