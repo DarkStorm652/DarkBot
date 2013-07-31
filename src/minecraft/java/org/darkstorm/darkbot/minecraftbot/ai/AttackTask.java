@@ -1,10 +1,6 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet7UseEntity;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
@@ -89,11 +85,9 @@ public class AttackTask implements Task {
 				attackCooldown--;
 				return;
 			}
-			ConnectionHandler connectionHandler = bot.getConnectionHandler();
 			if(!bot.getTaskManager().getTaskFor(EatTask.class).isActive())
 				switchToBestSword();
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-			connectionHandler.sendPacket(new Packet7UseEntity(player.getId(), attackEntity.getId(), 1));
+			player.hit(attackEntity);
 			attackCooldown = 5;
 		}
 	}

@@ -1,10 +1,6 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet7UseEntity;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
@@ -64,19 +60,14 @@ public class DefendTask implements Task {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return;
-		player.face(attackEntity.getX(), attackEntity.getY() + 1.5,
-				attackEntity.getZ());
+		player.face(attackEntity.getX(), attackEntity.getY() + 1.5, attackEntity.getZ());
 		if(attackCooldown > 0) {
 			attackCooldown--;
 			return;
 		}
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		if(!bot.getTaskManager().getTaskFor(EatTask.class).isActive())
 			switchToBestSword();
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
-		connectionHandler.sendPacket(new Packet7UseEntity(player.getId(),
-				attackEntity.getId(), 1));
+		player.hit(attackEntity);
 		attackCooldown = 5;
 	}
 
@@ -127,8 +118,7 @@ public class DefendTask implements Task {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return false;
-		return attackEntity != null && !attackEntity.isDead()
-				&& attackEntity.getDistanceToSquared(player) < 16;
+		return attackEntity != null && !attackEntity.isDead() && attackEntity.getDistanceToSquared(player) < 16;
 	}
 
 	@Override

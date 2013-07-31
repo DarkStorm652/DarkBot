@@ -10,10 +10,8 @@ import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 
 public class SpamBot implements EventListener {
 	private final SpamBotControlsUI ui;
@@ -22,16 +20,14 @@ public class SpamBot implements EventListener {
 
 	private ActionManager manager;
 
-	private boolean awaitingSpawn = false, awaitingStatus = false,
-			awaitingInventory = false;
+	private int loadingState = 0;
 
 	public SpamBot(SpamBotControlsUI ui, SpamBotData data) {
 		this.ui = ui;
 		this.data = data;
 		data.lock();
 		manager = new BasicActionManager(bot);
-		manager.setActions(data.getActions().toArray(
-				new Action[data.getActions().size()]));
+		manager.setActions(data.getActions().toArray(new Action[data.getActions().size()]));
 		status("Waiting.");
 		progress(0, false);
 		connect();
@@ -39,8 +35,7 @@ public class SpamBot implements EventListener {
 
 	public void connect() {
 		MinecraftBotData.Builder builder = MinecraftBotData.builder();
-		builder.withUsername(data.username);
-		builder.withPassword(data.password);
+		builder.username(data.username).password(data.password);
 
 		String server = data.server;
 		int port = 25565;
@@ -49,36 +44,33 @@ public class SpamBot implements EventListener {
 			server = parts[0];
 			port = Integer.parseInt(parts[1]);
 		}
-		builder.withServer(server);
-		builder.withPort(port);
+		builder.server(server).port(port);
 
-		// if(data.proxy != null) {
-		// String proxy = data.proxy;
-		// int proxyPort;
-		// if(proxy.contains(":")) {
-		// String[] parts = proxy.split(":");
-		// proxy = parts[0];
-		// proxyPort = Integer.parseInt(parts[1]);
-		// } else
-		// throw new IllegalArgumentException("Invalid proxy");
-		// botData.proxy = proxy;
-		// botData.proxyPort = proxyPort;
-		// }
+		/*if(data.proxy != null) {
+			String proxy = data.proxy;
+			int proxyPort;
+			if(proxy.contains(":")) {
+				String[] parts = proxy.split(":");
+				proxy = parts[0];
+				proxyPort = Integer.parseInt(parts[1]);
+			} else
+				throw new IllegalArgumentException("Invalid proxy");
+			botData.proxy = proxy;
+			botData.proxyPort = proxyPort;
+		}*/
 		MinecraftBotData botData = builder.build();
 
 		status("Connecting...");
 		progress(true);
 		try {
-			bot = new MinecraftBot(DarkBotMC.getInstance().getDarkBot(),
-					botData);
+			bot = new MinecraftBot(DarkBotMC.getInstance().getDarkBot(), botData);
 		} catch(Exception exception) {
 			exception.printStackTrace();
 
 			Throwable cause = exception.getCause();
 			if(cause != null && cause instanceof AuthenticationException) {
-				// log("[BOT] Error: Invalid login (" +
-				// cause.getMessage()
-				// + ")");
+				// log("[BOT] Error: Invalid login (" + cause.getMessage() +
+				// ")");
 			} else {
 				status("red", "Unable to connect: " + exception.toString());
 			}
@@ -89,14 +81,13 @@ public class SpamBot implements EventListener {
 		progress(20, false);
 		status("yellow", "Logging in...");
 		bot.getEventManager().registerListener(SpamBot.this);
-		// TaskManager taskManager = bot.getTaskManager();
-		// for(Class<? extends Task> task : data.tasks) {
-		// try {
-		// Constructor<? extends Task> constructor = task
-		// .getConstructor(MinecraftBot.class);
-		// taskManager.registerTask(constructor.newInstance(bot));
-		// } catch(Exception exception) {}
-		// }
+		/*TaskManager taskManager = bot.getTaskManager();
+		for(Class<? extends Task> task : data.tasks) {
+			try {
+				Constructor<? extends Task> constructor = task.getConstructor(MinecraftBot.class);
+				taskManager.registerTask(constructor.newInstance(bot));
+			} catch(Exception exception) {}
+		}*/
 	}
 
 	public void disconnect() {
@@ -104,7 +95,7 @@ public class SpamBot implements EventListener {
 			bot.getConnectionHandler().disconnect("");
 			bot.getEventManager().unregisterListener(this);
 			bot = null;
-			awaitingSpawn = awaitingStatus = false;
+			loadingState = 0;
 			status("red", "Disconnected.");
 			progress(0, false);
 		}
@@ -117,50 +108,48 @@ public class SpamBot implements EventListener {
 	@EventHandler
 	public void onDisconnect(DisconnectEvent event) {
 		// String reason = event.getReason();
-		// log("[BOT] Disconnected"
-		// + (reason != null && reason.length() > 0 ? ": " + reason : "")
-		// + ".");
+		// log("[BOT] Disconnected" + (reason != null && reason.length() > 0 ?
+		// ": " + reason : "") + ".");
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		switch(packet.getId()) {
-		case 1:
-			awaitingSpawn = true;
-			status("yellow", "Loading...");
-			progress(40);
-			break;
-		case 3:
-			// Packet3Chat chatPacket = (Packet3Chat) packet;
-			// log("[CHAT] " + chatPacket.message);
-			break;
-		case 13:
-			if(awaitingSpawn) {
-				awaitingSpawn = false;
-				awaitingInventory = true;
-				progress(60);
-			}
-			break;
-		case 8:
-			if(((Packet8UpdateHealth) packet).healthMP <= 0)
-				bot.getConnectionHandler().sendPacket(
-						new Packet205ClientCommand(1));
-			// ui.updateStatus();
-			if(awaitingStatus) {
-				awaitingStatus = false;
-				status("green", "Connected.");
-				progress(100);
-			}
-			break;
-		case 104:
-			Packet104WindowItems itemsPacket = (Packet104WindowItems) packet;
-			if(awaitingInventory && itemsPacket.windowId == 0) {
-				awaitingInventory = false;
-				awaitingStatus = true;
-				progress(80);
-			}
+	public void onChatReceived(ChatReceivedEvent event) {
+		// log("[CHAT] " + event.getMessage());
+	}
+
+	@EventHandler
+	public void onLogin(LoginEvent event) {
+		status("yellow", "Loading...");
+		progress(40);
+		loadingState = 1;
+	}
+
+	@EventHandler
+	public void onTeleport(TeleportEvent event) {
+		if(loadingState == 1) {
+			progress(60);
+			loadingState = 2;
 		}
+	}
+
+	@EventHandler
+	public void onWindowUpdate(WindowUpdateEvent event) {
+		if(loadingState == 2 && event.getWindowId() == 0) {
+			loadingState = 3;
+			progress(80);
+		}
+	}
+
+	@EventHandler
+	public void onHealthUpdate(HealthUpdateEvent event) {
+		// ui.updateStatus();
+		if(loadingState == 3) {
+			loadingState = 4;
+			status("green", "Connected.");
+			progress(100);
+		}
+		if(event.getHealth() <= 0)
+			bot.getEventManager().sendEvent(new RequestRespawnEvent());
 	}
 
 	private void status(String color, String status) {

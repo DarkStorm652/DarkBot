@@ -3,6 +3,7 @@ package org.darkstorm.darkbot.mcspambot;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.List;
 import java.util.Queue;
@@ -10,20 +11,19 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
 
-import javax.naming.AuthenticationException;
 import javax.swing.*;
 import javax.swing.Timer;
 
 import joptsimple.*;
 
 import org.darkstorm.darkbot.mcspambot.commands.*;
-import org.darkstorm.darkbot.minecraftbot.*;
+import org.darkstorm.darkbot.minecraftbot.MinecraftBotData;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
+import org.darkstorm.darkbot.minecraftbot.auth.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
 import org.darkstorm.darkbot.minecraftbot.events.general.*;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChatReceivedEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -58,7 +58,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 	private Random random = new Random();
 	private int nextSkill, nextBot, nextMsgChar, nextSpamList, tickDelay = 100, nextMessage;
 
-	private DarkBotMCSpambot(MinecraftBotData data, String owner) {
+	private DarkBotMCSpambot(MinecraftBotData data, String owner) throws AuthenticationException, UnsupportedProtocolException {
 		super(data);
 		synchronized(bots) {
 			bots.add(this);
@@ -102,25 +102,20 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 
 	@Override
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		super.onPacketProcess(event);
-		Packet packet = event.getPacket();
-		switch(packet.getId()) {
-		case 3:
-			String message = ((Packet3Chat) packet).message;
-			message = Util.stripColors(message);
-			if(message.startsWith("Please register with \"/register")) {
-				String password = Util.generateRandomString(10 + random.nextInt(6));
-				bot.say("/register " + password + " " + password);
-			} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
-				String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
-				bot.say(msg);
-			} for(String s : captchaList){
-				Matcher captchaMatcher = Pattern.compile(s).matcher(message);
-				if(captchaMatcher.matches())
-					bot.say(captchaMatcher.group(1));
-			}
-			break;
+	public void onChatReceived(ChatReceivedEvent event) {
+		super.onChatReceived(event);
+		String message = Util.stripColors(event.getMessage());
+		if(message.startsWith("Please register with \"/register")) {
+			String password = Util.generateRandomString(10 + random.nextInt(6));
+			bot.say("/register " + password + " " + password);
+		} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
+			String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
+			bot.say(msg);
+		}
+		for(String s : captchaList) {
+			Matcher captchaMatcher = Pattern.compile(s).matcher(message);
+			if(captchaMatcher.matches())
+				bot.say(captchaMatcher.group(1));
 		}
 	}
 
@@ -165,7 +160,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			formatter.setVariable("rnd", Util.generateRandomString(15 + random.nextInt(6)));
 			formatter.setVariable("msg", Character.toString(msgChars[++nextMsgChar >= msgChars.length ? nextMsgChar = 0 : nextMsgChar]));
 			message = formatter.format(message);
-			connectionHandler.sendPacket(new Packet3Chat(message));
+			bot.say(message);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -191,6 +186,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
 		OptionSpec<Integer> loginDelayOption = parser.acceptsAll(Arrays.asList("d", "login-delay"), "Delay between bot joins, in milliseconds. 5000 is " + "recommended if not using socks proxies.").withRequiredArg().describedAs("delay").ofType(Integer.class);
 		OptionSpec<Integer> botAmountOption = parser.acceptsAll(Arrays.asList("b", "bot-amount"), "Amount of bots to join. Must be <= amount of accounts.").withRequiredArg().describedAs("amount").ofType(Integer.class);
+		OptionSpec<?> protocolsOption = parser.accepts("protocols", "List available protocols and exit.");
 
 		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
@@ -211,6 +207,13 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 
 		if(options.has("help")) {
 			printHelp(parser);
+			return;
+		}
+		if(options.has(protocolsOption)) {
+			System.out.println("Available protocols:");
+			for(ProtocolProvider provider : ProtocolProvider.getProviders())
+				System.out.println("\t" + provider.getMinecraftVersion() + " (" + provider.getSupportedVersion() + "): " + provider.getClass().getName());
+			System.out.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
 			return;
 		}
 
@@ -338,6 +341,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 					Random random = new Random();
 
 					if(!offline) {
+						AuthService authService = new LegacyAuthService();
 						boolean authenticated = false;
 						user: while(true) {
 							if(authenticated) {
@@ -365,20 +369,19 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 								}
 								loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));
 								try {
-									session = Util.retrieveSession(accountParts[0], accountParts[1], loginProxy);
+									session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, Proxy.Type.HTTP));
 									// addAccount(session);
 									sessionCount.incrementAndGet();
 									authenticated = true;
 									break;
+								} catch(IOException exception) {
+									System.err.println("[Bot" + botNumber + "] " + exception);
 								} catch(AuthenticationException exception) {
 									System.err.println("[Bot" + botNumber + "] " + exception);
-									if(!exception.getMessage().startsWith("Exception"))
-										// && !exception.getMessage().equals(
-										// "Too many failed logins"))
-										continue user;
+									continue user;
 								}
 							}
-							System.out.println("[" + session.getUsername() + "] Password: " + session.getPassword() + ", Session ID: " + session.getSessionId());
+							System.out.println("[" + session.getUsername() + "] " + session);
 							while(!joins.get()) {
 								synchronized(joins) {
 									try {
@@ -400,7 +403,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 							while(true) {
 								String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 								try {
-									DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, session.getUsername(), session.getPassword(), session.getSessionId(), null, proxy), owner);
+									DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, session.getUsername(), session.getPassword(), authService, session, null, proxy), owner);
 									while(bot.getBot().isConnected()) {
 										try {
 											Thread.sleep(500);
@@ -441,7 +444,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, username, "", "", null, proxy), owner);
+								DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, username, null, null, null, null, proxy), owner);
 								while(bot.getBot().isConnected()) {
 									try {
 										Thread.sleep(500);
@@ -613,7 +616,19 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		return accounts;
 	}
 
-	private static MinecraftBotData generateData(String server, String username, String password, String sessionId, String loginProxy, String proxy) {
+	private static Proxy toProxy(String proxyData, Proxy.Type type) {
+		if(proxyData == null)
+			return null;
+		int port = 80;
+		if(proxyData.contains(":")) {
+			String[] parts = proxyData.split(":");
+			proxyData = parts[0];
+			port = Integer.parseInt(parts[1]);
+		}
+		return new Proxy(type, new InetSocketAddress(proxyData, port));
+	}
+
+	private static MinecraftBotData generateData(String server, String username, String password, AuthService service, Session session, String loginProxy, String proxy) {
 		MinecraftBotData.Builder builder = MinecraftBotData.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
@@ -625,7 +640,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 				if(parts.length > 2)
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
-			builder.withSocksProxy(new ProxyData(proxy, port, type));
+			builder.socksProxy(new ProxyData(proxy, port, type));
 		}
 		if(loginProxy != null && !loginProxy.isEmpty()) {
 			int port = 80;
@@ -634,13 +649,13 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.withHttpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
+			builder.httpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
 		}
-		builder.withUsername(username);
-		if(sessionId != null)
-			builder.withSessionId(sessionId);
+		builder.username(username).authService(service);
+		if(session != null)
+			builder.session(session);
 		else
-			builder.withPassword(password);
+			builder.password(password);
 		if(server != null && !server.isEmpty()) {
 			int port = 25565;
 			if(server.contains(":")) {
@@ -648,7 +663,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 				server = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.withServer(server).withPort(port);
+			builder.server(server).port(port);
 		} else
 			throw new IllegalArgumentException("Unknown server!");
 

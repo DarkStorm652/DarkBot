@@ -1,8 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.events;
 
+import java.lang.reflect.*;
 import java.util.*;
-
-import java.lang.reflect.Method;
 
 final class EventSender {
 	private final Map<EventListener, List<Method>> handlers;
@@ -16,7 +15,7 @@ final class EventSender {
 	public synchronized void addHandler(EventListener listener, Method method) {
 		List<Method> methods = handlers.get(listener);
 		if(methods == null) {
-			methods = new ArrayList<Method>();
+			methods = new ArrayList<>();
 			handlers.put(listener, methods);
 		}
 		methods.add(method);
@@ -27,21 +26,23 @@ final class EventSender {
 	}
 
 	public synchronized List<EventListener> getListeners() {
-		return new ArrayList<EventListener>(handlers.keySet());
+		return Collections.unmodifiableList(new ArrayList<>(handlers.keySet()));
 	}
 
 	public synchronized void sendEvent(Event event) {
 		Class<?> eventClass = event.getClass();
-		if(!eventClass.isAssignableFrom(listenerEventClass))
+		if(!listenerEventClass.isAssignableFrom(eventClass))
 			return;
-		for(EventListener listener : new ArrayList<EventListener>(
-				handlers.keySet())) {
+		List<EventListener> listeners = new ArrayList<>(handlers.keySet());
+		for(EventListener listener : listeners) {
 			List<Method> methods = handlers.get(listener);
 			if(methods == null)
 				continue;
 			for(Method method : methods) {
 				try {
 					method.invoke(listener, event);
+				} catch(InvocationTargetException exception) {
+					exception.getCause().printStackTrace();
 				} catch(Throwable exception) {
 					exception.printStackTrace();
 				}

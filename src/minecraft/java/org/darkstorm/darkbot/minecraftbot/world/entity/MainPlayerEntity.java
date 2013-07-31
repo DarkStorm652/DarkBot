@@ -1,9 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
+import org.darkstorm.darkbot.minecraftbot.events.EventManager;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
@@ -144,8 +143,7 @@ public class MainPlayerEntity extends PlayerEntity {
 
 	public void closeWindow() {
 		if(window != null) {
-			ConnectionHandler handler = world.getBot().getConnectionHandler();
-			handler.sendPacket(new Packet101CloseWindow(window.getWindowId()));
+			window.close();
 			window = null;
 		}
 	}
@@ -218,9 +216,24 @@ public class MainPlayerEntity extends PlayerEntity {
 		return below == BlockType.WATER || below == BlockType.LAVA || below == BlockType.STATIONARY_WATER || below == BlockType.STATIONARY_LAVA || above == BlockType.WATER || above == BlockType.LAVA || above == BlockType.STATIONARY_WATER || above == BlockType.STATIONARY_LAVA;
 	}
 
+	@Override
+	public void setCrouching(boolean crouching) {
+		if(crouching != this.crouching) {
+			super.setCrouching(crouching);
+			world.getBot().getEventManager().sendEvent(new CrouchUpdateEvent(crouching));
+		}
+	}
+
+	@Override
+	public void setSprinting(boolean sprinting) {
+		if(sprinting != this.sprinting) {
+			super.setSprinting(sprinting);
+			world.getBot().getEventManager().sendEvent(new SprintUpdateEvent(sprinting));
+		}
+	}
+
 	public void swingArm() {
-		ConnectionHandler handler = world.getBot().getConnectionHandler();
-		handler.sendPacket(new Packet18Animation(getId(), Animation.SWING_ARM));
+		world.getBot().getEventManager().sendEvent(new ArmSwingEvent());
 	}
 
 	public boolean switchTools(ToolType tool) {
@@ -297,8 +310,29 @@ public class MainPlayerEntity extends PlayerEntity {
 		return true;
 	}
 
+	public void hit(Entity entity) {
+		EventManager eventManager = world.getBot().getEventManager();
+		eventManager.sendEvent(new ArmSwingEvent());
+		eventManager.sendEvent(new EntityHitEvent(entity));
+	}
+
+	public void use(Entity entity) {
+		EventManager eventManager = world.getBot().getEventManager();
+		eventManager.sendEvent(new ArmSwingEvent());
+		eventManager.sendEvent(new EntityUseEvent(entity));
+	}
+
 	public boolean placeBlock(BlockLocation location) {
 		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(), location);
+		if(activity.isActive()) {
+			world.getBot().setActivity(activity);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean placeBlock(BlockLocation location, int face) {
+		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(), location, (byte) face);
 		if(activity.isActive()) {
 			world.getBot().setActivity(activity);
 			return true;

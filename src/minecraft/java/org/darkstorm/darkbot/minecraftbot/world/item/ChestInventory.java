@@ -2,10 +2,8 @@ package org.darkstorm.darkbot.minecraftbot.world.item;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketSentEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet101CloseWindow;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet102WindowClick;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.WindowCloseEvent;
 
 public class ChestInventory implements Inventory {
 	private final MinecraftBot bot;
@@ -22,12 +20,9 @@ public class ChestInventory implements Inventory {
 	}
 
 	@EventHandler
-	public synchronized void onPacketSent(PacketSentEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet101CloseWindow
-				&& ((Packet101CloseWindow) packet).windowId == 0) {
+	public synchronized void onWindowClose(WindowCloseEvent event) {
+		if(id == event.getWindowId())
 			selectedItem = null;
-		}
 	}
 
 	@Override
@@ -37,8 +32,7 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized ItemStack getItemAt(int slot) {
-		return slot < items.length ? items[slot] : inventory[slot
-				- items.length];
+		return slot < items.length ? items[slot] : inventory[slot - items.length];
 	}
 
 	@Override
@@ -61,7 +55,7 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void selectItemAt(int slot, boolean leftClick) {
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
+		delay();
 		ItemStack item = getItemAt(slot);
 		ItemStack oldSelected = selectedItem;
 		if(leftClick) {
@@ -69,8 +63,7 @@ public class ChestInventory implements Inventory {
 				if(item != null) {
 					if(item.getId() == selectedItem.getId()) {
 						if(item.getStackSize() != 64) {
-							int newStackSize = item.getStackSize()
-									+ selectedItem.getStackSize();
+							int newStackSize = item.getStackSize() + selectedItem.getStackSize();
 							item.setStackSize(Math.min(64, newStackSize));
 							newStackSize -= 64;
 							if(newStackSize > 0)
@@ -97,8 +90,7 @@ public class ChestInventory implements Inventory {
 						if(item.getStackSize() != 64) {
 							item.setStackSize(item.getStackSize() + 1);
 							if(selectedItem.getStackSize() > 1)
-								selectedItem.setStackSize(selectedItem
-										.getStackSize() - 1);
+								selectedItem.setStackSize(selectedItem.getStackSize() - 1);
 							else
 								selectedItem = null;
 						}
@@ -111,8 +103,7 @@ public class ChestInventory implements Inventory {
 					newItem.setStackSize(1);
 					setItemAt(slot, newItem);
 					if(selectedItem.getStackSize() > 1)
-						selectedItem
-								.setStackSize(selectedItem.getStackSize() - 1);
+						selectedItem.setStackSize(selectedItem.getStackSize() - 1);
 					else
 						selectedItem = null;
 				}
@@ -124,17 +115,13 @@ public class ChestInventory implements Inventory {
 					int stackSize = item.getStackSize();
 					item.setStackSize(stackSize / 2);
 					ItemStack newSelectedItem = item.clone();
-					newSelectedItem.setStackSize(newSelectedItem.getStackSize()
-							+ (stackSize % 2));
+					newSelectedItem.setStackSize(newSelectedItem.getStackSize() + (stackSize % 2));
 					selectedItem = newSelectedItem;
 				}
 			}
 		}
-		delay();
-		System.out.println("Clicked at " + slot + " | left: " + leftClick
-				+ " item: " + item + " selected: " + oldSelected);
-		connectionHandler.sendPacket(new Packet102WindowClick(id, slot,
-				leftClick ? 0 : 1, false, item, (short) 0));
+		System.out.println("Clicked at " + slot + " | left: " + leftClick + " item: " + item + " selected: " + oldSelected);
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -151,6 +138,7 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void selectItemAtWithShift(int slot) {
+		delay();
 		ItemStack item = getItemAt(slot);
 		int rangeStart, rangeEnd;
 		if(item == null)
@@ -178,10 +166,7 @@ public class ChestInventory implements Inventory {
 		}
 		if(!slotFound)
 			return;
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(id, slot, 0,
-				true, item, (short) 0));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
 	}
 
 	@Override
@@ -191,17 +176,14 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void dropSelectedItem() {
-		selectedItem = null;
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(id, -999, 0,
-				true, null, (short) 0));
+		selectedItem = null;
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
 	}
 
 	@Override
 	public synchronized void close() {
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet101CloseWindow(id));
+		bot.getEventManager().sendEvent(new InventoryCloseEvent(this));
 	}
 
 	private void delay() {

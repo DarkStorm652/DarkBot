@@ -1,10 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.EventManager;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -35,12 +33,12 @@ public class BlockBreakActivity implements Activity {
 		int idAbove = world.getBlockIdAt(x, y + 1, z);
 		if(idAbove == 12 || idAbove == 13)
 			wait = 30;
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		player.switchTools(BlockType.getById(world.getBlockIdAt(location)).getToolType());
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, face));
-		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, face));
+		EventManager eventManager = bot.getEventManager();
+		eventManager.sendEvent(new PlayerRotateEvent(player));
+		eventManager.sendEvent(new ArmSwingEvent());
+		eventManager.sendEvent(new BlockBreakStartEvent(x, y, z, face));
+		eventManager.sendEvent(new BlockBreakCompleteEvent(x, y, z, face));
 		this.timeout = timeout;
 	}
 

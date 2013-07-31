@@ -3,13 +3,7 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.world.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -52,8 +46,7 @@ public class FarmingTask implements Task, EventListener {
 	private final MinecraftBot bot;
 
 	private boolean running = false;
-	private BlockLocation currentlyBreaking;
-	private int ticksSinceBreak, ticksWait, itemCheckWait;
+	private int ticksWait, itemCheckWait;
 	private BlockLocation currentChest;
 	private List<BlockLocation> fullChests = new ArrayList<BlockLocation>();
 	private BlockArea region;
@@ -89,13 +82,6 @@ public class FarmingTask implements Task, EventListener {
 
 	@Override
 	public synchronized void run() {
-		if(currentlyBreaking != null) {
-			ticksSinceBreak++;
-			if(ticksSinceBreak > 200)
-				currentlyBreaking = null;
-			return;
-		}
-		ticksSinceBreak = 0;
 		TaskManager taskManager = bot.getTaskManager();
 		EatTask eatTask = taskManager.getTaskFor(EatTask.class);
 		if(eatTask.isActive())
@@ -219,7 +205,7 @@ public class FarmingTask implements Task, EventListener {
 							}
 
 							System.out.println("Opening chest!!!");
-							placeAt(originalWalk, face);
+							player.placeBlock(originalWalk, face);
 							currentChest = chest;
 							ticksWait = 80;
 							return;
@@ -289,7 +275,7 @@ public class FarmingTask implements Task, EventListener {
 					}
 					if(closestWalk == null)
 						continue;
-					placeOn(sign, face);
+					player.placeBlock(getOffsetBlock(sign, face), face);
 					ticksWait = 4;
 					return;
 				}
@@ -359,7 +345,7 @@ public class FarmingTask implements Task, EventListener {
 				bot.setActivity(new WalkActivity(bot, walkTo));
 				return;
 			}
-			breakBlock(closest);
+			player.breakBlock(closest);
 		} else if(id == 88 || id == 60 || id == 3 || id == 104 || id == 105) {
 			if(id == 104 || id == 105) {
 				BlockLocation[] locations = new BlockLocation[] { closest.offset(-1, -1, 0), closest.offset(1, -1, 0), closest.offset(0, -1, -1), closest.offset(0, -1, -1) };
@@ -385,7 +371,7 @@ public class FarmingTask implements Task, EventListener {
 				bot.setActivity(new WalkActivity(bot, offset));
 				return;
 			}
-			placeAt(offset);
+			player.placeBlock(offset);
 			ticksWait = 5;
 		}
 	}
@@ -445,19 +431,6 @@ public class FarmingTask implements Task, EventListener {
 	@Override
 	public synchronized boolean isActive() {
 		return running;
-	}
-
-	@EventHandler
-	public synchronized void onBlockChange(BlockChangeEvent event) {
-		BlockLocation location = event.getLocation();
-		Block newBlock = event.getNewBlock();
-		if((event.getOldBlock() == null && newBlock == null) || (event.getOldBlock() != null && newBlock != null && event.getOldBlock().getId() == newBlock.getId()))
-			return;
-		if(newBlock == null || newBlock.getId() == 0) {
-			if(currentlyBreaking != null && currentlyBreaking.equals(location)) {
-				currentlyBreaking = null;
-			}
-		}
 	}
 
 	private BlockLocation getClosestFarmable(int radius) {
@@ -615,20 +588,6 @@ public class FarmingTask implements Task, EventListener {
 		return true;
 	}
 
-	private void breakBlock(BlockLocation location) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return;
-		player.face(x, y, z);
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, 0));
-		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, 0));
-		currentlyBreaking = location;
-	}
-
 	private boolean placeBlockAt(BlockLocation location) {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
@@ -652,77 +611,6 @@ public class FarmingTask implements Task, EventListener {
 		if(player.placeBlock(location))
 			return true;
 		return false;
-	}
-
-	private void placeAt(BlockLocation location) {
-		placeAt(location, getPlacementBlockFaceAt(location));
-	}
-
-	private void placeAt(BlockLocation location, int face) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return;
-		PlayerInventory inventory = player.getInventory();
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
-		location = getOffsetBlock(location, face);
-		if(location == null)
-			return;
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = x;
-		placePacket.yPosition = y;
-		placePacket.zPosition = z;
-		placePacket.direction = face;
-		placePacket.itemStack = inventory.getCurrentHeldItem();
-		connectionHandler.sendPacket(placePacket);
-		ticksWait = 4;
-	}
-
-	private void placeOn(BlockLocation location, int face) {
-		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
-			return;
-		PlayerInventory inventory = player.getInventory();
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		location = getOffsetBlock(location, face);
-		if(location == null)
-			return;
-		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
-		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = x;
-		placePacket.yPosition = y;
-		placePacket.zPosition = z;
-		placePacket.direction = face;
-		placePacket.itemStack = inventory.getCurrentHeldItem();
-		connectionHandler.sendPacket(placePacket);
-		ticksWait = 4;
-	}
-
-	private int getPlacementBlockFaceAt(BlockLocation location) {
-		int x = location.getX(), y = location.getY(), z = location.getZ();
-		World world = bot.getWorld();
-		if(!UNPLACEABLE[world.getBlockIdAt(x, y - 1, z)]) {
-			return 1;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y + 1, z)]) {
-			return 0;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x + 1, y, z)]) {
-			return 4;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z - 1)]) {
-			return 3;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x, y, z + 1)]) {
-			return 2;
-		} else if(!UNPLACEABLE[world.getBlockIdAt(x - 1, y, z)]) {
-			return 5;
-		} else
-			return -1;
 	}
 
 	private BlockLocation getOffsetBlock(BlockLocation location, int face) {

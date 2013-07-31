@@ -5,8 +5,7 @@ import java.util.*;
 import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet201PlayerInfo;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 
 public class PlayersCommand extends AbstractCommand implements EventListener {
 	private final List<String> users = new ArrayList<>();
@@ -17,7 +16,10 @@ public class PlayersCommand extends AbstractCommand implements EventListener {
 
 	@Override
 	public void execute(String[] args) {
-		String players = users.toString();
+		String players;
+		synchronized(users) {
+			players = users.toString();
+		}
 		players = players.substring(1, players.length() - 1);
 		List<String> lines = new ArrayList<String>();
 		String[] parts = players.split(", ");
@@ -40,20 +42,17 @@ public class PlayersCommand extends AbstractCommand implements EventListener {
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		if(event.getPacket().getId() != 201)
-			return;
-		Packet201PlayerInfo infoPacket = (Packet201PlayerInfo) event
-				.getPacket();
-		if(infoPacket.isConnected && !users.contains(infoPacket.playerName)) {
-			users.add(infoPacket.playerName);
-			if(infoPacket.ping == 1000) {
-				if(infoPacket.playerName.equalsIgnoreCase(bot.getSession()
-						.getUsername()))
-					return;
-			}
-		} else if(!infoPacket.isConnected
-				&& users.contains(infoPacket.playerName))
-			users.remove(infoPacket.playerName);
+	public void onPlayerListUpdate(PlayerListUpdateEvent event) {
+		synchronized(users) {
+			if(!users.contains(event.getPlayerName()))
+				users.add(event.getPlayerName());
+		}
+	}
+
+	@EventHandler
+	public void onPlayerListRemove(PlayerListRemoveEvent event) {
+		synchronized(users) {
+			users.remove(event.getPlayerName());
+		}
 	}
 }

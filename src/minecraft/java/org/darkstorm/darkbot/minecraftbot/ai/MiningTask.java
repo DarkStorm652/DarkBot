@@ -1,12 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.world.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -31,9 +26,8 @@ public class MiningTask implements Task, EventListener {
 	private EatTask eatTask;
 	private boolean running = false;
 
-	private BlockLocation currentlyBreaking, previous, nextTarget;
-	private int ticksSinceBreak, xStart = Integer.MAX_VALUE,
-			zStart = Integer.MAX_VALUE, zDirection, ticksWait, skipForward;
+	private BlockLocation previous, nextTarget;
+	private int xStart = Integer.MAX_VALUE, zStart = Integer.MAX_VALUE, zDirection, ticksWait, skipForward;
 	private BlockLocation lastLocation, lastPlacement;
 
 	public MiningTask(final MinecraftBot bot) {
@@ -57,22 +51,11 @@ public class MiningTask implements Task, EventListener {
 	@Override
 	public synchronized void stop() {
 		running = false;
-		currentlyBreaking = null;
 		nextTarget = null;
-		ticksSinceBreak = 0;
 	}
 
 	@Override
 	public synchronized void run() {
-		if(currentlyBreaking != null) {
-			ticksSinceBreak++;
-			if(ticksSinceBreak > 200) {
-				currentlyBreaking = null;
-				nextTarget = null;
-			}
-			return;
-		}
-		ticksSinceBreak = 0;
 		if(eatTask.isActive())
 			return;
 		if(ticksWait > 0) {
@@ -96,11 +79,8 @@ public class MiningTask implements Task, EventListener {
 		System.out.println("Mining!");
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		checkTorches(ourLocation);
-		if(BlockType.getById(
-				world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1,
-						ourLocation.getZ())).isSolid()) {
-			breakBlock(new BlockLocation(ourLocation.getX(),
-					ourLocation.getY() + 1, ourLocation.getZ()));
+		if(BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ())).isSolid()) {
+			breakBlock(new BlockLocation(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ()));
 			return;
 		} else if(BlockType.getById(world.getBlockIdAt(ourLocation)).isSolid()) {
 			breakBlock(ourLocation);
@@ -110,40 +90,32 @@ public class MiningTask implements Task, EventListener {
 		if(ourLocation.getY() < 11) {
 			skipForward = 0;
 			for(int offset = 1; offset < Math.max(11 - ourLocation.getY(), 3); offset++) {
-				newLocation = ourLocation.offset(offset == 1 ? -1 : 0,
-						offset == 1 ? 2 : offset - 1, 0);
+				newLocation = ourLocation.offset(offset == 1 ? -1 : 0, offset == 1 ? 2 : offset - 1, 0);
 				if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 					breakBlock(newLocation);
 					return;
 				}
 			}
-			int belowId = world.getBlockIdAt(newLocation.getX(),
-					newLocation.getY() - 1, newLocation.getZ());
-			if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10
-					|| belowId == 11)
+			int belowId = world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
+			if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10 || belowId == 11)
 				placeBlockAt(newLocation.offset(0, -1, 0));
-			player.face(newLocation.getX(), newLocation.getY() + 1,
-					newLocation.getZ());
+			player.face(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ());
 			bot.setActivity(new WalkActivity(bot, newLocation));
 		} else if(ourLocation.getY() > 11) {
 			if(skipForward == 0) {
 				for(int offset = 1; offset >= -1; offset--) {
-					newLocation = new BlockLocation(ourLocation.getX() - 1,
-							ourLocation.getY() + offset, ourLocation.getZ());
-					if(BlockType.getById(world.getBlockIdAt(newLocation))
-							.isSolid()) {
+					newLocation = new BlockLocation(ourLocation.getX() - 1, ourLocation.getY() + offset, ourLocation.getZ());
+					if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 						breakBlock(newLocation);
 						return;
 					}
 				}
 			} else {
-				bot.setActivity(new WalkActivity(bot, ourLocation.offset(-1, 0,
-						0)));
+				bot.setActivity(new WalkActivity(bot, ourLocation.offset(-1, 0, 0)));
 				skipForward = 0;
 				return;
 			}
-			int belowId = world.getBlockIdAt(newLocation.getX(),
-					newLocation.getY() - 1, newLocation.getZ());
+			int belowId = world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
 			BlockType belowType = BlockType.getById(belowId);
 			if(belowType == BlockType.AIR || !belowType.isSolid()) {
 				if(!belowType.isIndestructable() && belowType.isPlaceable()) {
@@ -154,9 +126,7 @@ public class MiningTask implements Task, EventListener {
 				if(!success) {
 					BlockLocation originalLocation = newLocation;
 					BlockLocation locationOffset = newLocation.offset(0, -1, 0);
-					while(!BlockType
-							.getById(world.getBlockIdAt(locationOffset))
-							.isSolid()) {
+					while(!BlockType.getById(world.getBlockIdAt(locationOffset)).isSolid()) {
 						newLocation = locationOffset;
 						if(originalLocation.getY() - locationOffset.getY() > 5) {
 							if(placeBlockAt(originalLocation))
@@ -170,8 +140,7 @@ public class MiningTask implements Task, EventListener {
 					return;
 				}
 			}
-			player.face(newLocation.getX(), newLocation.getY() + 1,
-					newLocation.getZ());
+			player.face(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ());
 			bot.setActivity(new WalkActivity(bot, newLocation));
 		} else {
 			skipForward = 0;
@@ -183,16 +152,12 @@ public class MiningTask implements Task, EventListener {
 				if(zStart != ourLocation.getZ()) {
 					int zOffset = ourLocation.getZ() - zStart;
 					if(Math.abs(zOffset) >= TUNNEL_LENGTH) {
-						if(zOffset > 0 && zDirection > 0 || zOffset < 0
-								&& zDirection < 0)
+						if(zOffset > 0 && zDirection > 0 || zOffset < 0 && zDirection < 0)
 							zDirection *= -1;
 					}
 					for(int offset = 1; offset >= 0; offset--) {
-						newLocation = new BlockLocation(ourLocation.getX(),
-								ourLocation.getY() + offset, ourLocation.getZ()
-										+ zDirection);
-						if(BlockType.getById(world.getBlockIdAt(newLocation))
-								.isSolid()) {
+						newLocation = new BlockLocation(ourLocation.getX(), ourLocation.getY() + offset, ourLocation.getZ() + zDirection);
+						if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 							breakBlock(newLocation);
 							return;
 						}
@@ -200,14 +165,9 @@ public class MiningTask implements Task, EventListener {
 					if(zStart != ourLocation.getZ() + zDirection) {
 						for(int zFactor = 2; zFactor >= 1; zFactor--) {
 							for(int offset = 0; offset <= 1; offset++) {
-								BlockLocation otherLocation = new BlockLocation(
-										ourLocation.getX(), ourLocation.getY()
-												+ offset, ourLocation.getZ()
-												+ zDirection * zFactor);
-								BlockType type = BlockType.getById(world
-										.getBlockIdAt(otherLocation));
-								if(type == BlockType.LAVA
-										|| type == BlockType.STATIONARY_LAVA) {
+								BlockLocation otherLocation = new BlockLocation(ourLocation.getX(), ourLocation.getY() + offset, ourLocation.getZ() + zDirection * zFactor);
+								BlockType type = BlockType.getById(world.getBlockIdAt(otherLocation));
+								if(type == BlockType.LAVA || type == BlockType.STATIONARY_LAVA) {
 									if(placeBlockAt(otherLocation))
 										return;
 								}
@@ -216,98 +176,46 @@ public class MiningTask implements Task, EventListener {
 						for(int xOffset = 1; xOffset >= -1; xOffset--) {
 							if(xOffset != 0) {
 								for(int offset = 1; offset >= 0; offset--) {
-									BlockLocation otherLocation = new BlockLocation(
-											ourLocation.getX() + xOffset,
-											ourLocation.getY() + offset,
-											ourLocation.getZ() + zDirection);
-									BlockType type = BlockType.getById(world
-											.getBlockIdAt(otherLocation));
-									if(type == BlockType.AIR
-											|| (!type.isSolid() && !type
-													.isPlaceable())) {
+									BlockLocation otherLocation = new BlockLocation(ourLocation.getX() + xOffset, ourLocation.getY() + offset, ourLocation.getZ() + zDirection);
+									BlockType type = BlockType.getById(world.getBlockIdAt(otherLocation));
+									if(type == BlockType.AIR || (!type.isSolid() && !type.isPlaceable())) {
 										if(placeBlockAt(otherLocation))
 											return;
 									}
 								}
 								continue;
 							}
-							BlockLocation otherLocation = new BlockLocation(
-									ourLocation.getX(), ourLocation.getY() + 2,
-									ourLocation.getZ() + zDirection);
-							BlockType type = BlockType.getById(world
-									.getBlockIdAt(otherLocation));
-							if(type == BlockType.AIR
-									|| (!type.isSolid() && !type.isPlaceable())) {
+							BlockLocation otherLocation = new BlockLocation(ourLocation.getX(), ourLocation.getY() + 2, ourLocation.getZ() + zDirection);
+							BlockType type = BlockType.getById(world.getBlockIdAt(otherLocation));
+							if(type == BlockType.AIR || (!type.isSolid() && !type.isPlaceable())) {
 								if(placeBlockAt(otherLocation))
 									return;
 							}
 						}
 					}
 				} else {
-					if(BlockType
-							.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY(),
-											ourLocation.getZ() + 1)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY() + 1,
-											ourLocation.getZ() + 1)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY(),
-											ourLocation.getZ() + 2)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY() + 1,
-											ourLocation.getZ() + 2)).isSolid())
+					if(BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY(), ourLocation.getZ() + 1)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ() + 1)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY(), ourLocation.getZ() + 2)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ() + 2)).isSolid())
 						zDirection = 1;
-					else if(BlockType
-							.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY(),
-											ourLocation.getZ() - 1)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY() + 1,
-											ourLocation.getZ() - 1)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY(),
-											ourLocation.getZ() - 2)).isSolid()
-							|| BlockType.getById(
-									world.getBlockIdAt(ourLocation.getX(),
-											ourLocation.getY() + 1,
-											ourLocation.getZ() - 2)).isSolid())
+					else if(BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY(), ourLocation.getZ() - 1)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ() - 1)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY(), ourLocation.getZ() - 2)).isSolid() || BlockType.getById(world.getBlockIdAt(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ() - 2)).isSolid())
 						zDirection = -1;
 					else {
 						for(int offset = 1; offset >= 0; offset--) {
-							newLocation = new BlockLocation(
-									ourLocation.getX() - 1, ourLocation.getY()
-											+ offset, ourLocation.getZ());
-							if(BlockType.getById(
-									world.getBlockIdAt(newLocation)).isSolid()) {
+							newLocation = new BlockLocation(ourLocation.getX() - 1, ourLocation.getY() + offset, ourLocation.getZ());
+							if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 								breakBlock(newLocation);
 								return;
 							}
 						}
-						int belowId = world.getBlockIdAt(newLocation.getX(),
-								newLocation.getY() - 1, newLocation.getZ());
-						if(belowId == 0 || belowId == 8 || belowId == 9
-								|| belowId == 10 || belowId == 11)
-							placeBlockAt(new BlockLocation(newLocation.getX(),
-									newLocation.getY() - 1, newLocation.getZ()));
-						player.face(newLocation.getX(), newLocation.getY() + 1,
-								newLocation.getZ());
+						int belowId = world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
+						if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10 || belowId == 11)
+							placeBlockAt(new BlockLocation(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ()));
+						player.face(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ());
 						bot.setActivity(new WalkActivity(bot, newLocation));
 						return;
 					}
 					for(int offset = 1; offset >= 0; offset--) {
-						newLocation = new BlockLocation(ourLocation.getX(),
-								ourLocation.getY() + offset, ourLocation.getZ()
-										+ zDirection);
-						if(BlockType.getById(world.getBlockIdAt(newLocation))
-								.isSolid()) {
+						newLocation = new BlockLocation(ourLocation.getX(), ourLocation.getY() + offset, ourLocation.getZ() + zDirection);
+						if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 							breakBlock(newLocation);
 							return;
 						}
@@ -315,23 +223,17 @@ public class MiningTask implements Task, EventListener {
 				}
 			} else {
 				for(int offset = 1; offset >= 0; offset--) {
-					newLocation = new BlockLocation(ourLocation.getX() - 1,
-							ourLocation.getY() + offset, ourLocation.getZ());
-					if(BlockType.getById(world.getBlockIdAt(newLocation))
-							.isSolid()) {
+					newLocation = new BlockLocation(ourLocation.getX() - 1, ourLocation.getY() + offset, ourLocation.getZ());
+					if(BlockType.getById(world.getBlockIdAt(newLocation)).isSolid()) {
 						breakBlock(newLocation);
 						return;
 					}
 				}
 			}
-			int belowId = world.getBlockIdAt(newLocation.getX(),
-					newLocation.getY() - 1, newLocation.getZ());
-			if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10
-					|| belowId == 11)
-				placeBlockAt(new BlockLocation(newLocation.getX(),
-						newLocation.getY() - 1, newLocation.getZ()));
-			player.face(newLocation.getX(), newLocation.getY() + 1,
-					newLocation.getZ());
+			int belowId = world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
+			if(belowId == 0 || belowId == 8 || belowId == 9 || belowId == 10 || belowId == 11)
+				placeBlockAt(new BlockLocation(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ()));
+			player.face(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ());
 			bot.setActivity(new WalkActivity(bot, newLocation));
 		}
 	}
@@ -339,22 +241,6 @@ public class MiningTask implements Task, EventListener {
 	@Override
 	public synchronized boolean isActive() {
 		return running;
-	}
-
-	@EventHandler
-	public synchronized void onBlockChange(BlockChangeEvent event) {
-		BlockLocation location = event.getLocation();
-		Block newBlock = event.getNewBlock();
-		if((event.getOldBlock() == null && newBlock == null)
-				|| (event.getOldBlock() != null && newBlock != null && event
-						.getOldBlock().getId() == newBlock.getId()))
-			return;
-		if(newBlock == null || newBlock.getId() == 0) {
-			if(currentlyBreaking != null && currentlyBreaking.equals(location)) {
-				currentlyBreaking = null;
-				System.out.println("No longer breaking.");
-			}
-		}
 	}
 
 	private void breakBlock(BlockLocation location) {
@@ -373,16 +259,7 @@ public class MiningTask implements Task, EventListener {
 			nextTarget = location;
 		} else if(nextTarget == null && previous != null)
 			nextTarget = checkSurrounding(previous);
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		player.switchTools(BlockType.getById(world.getBlockIdAt(location))
-				.getToolType());
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player
-				.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(),
-				Animation.SWING_ARM));
-		connectionHandler.sendPacket(new Packet14BlockDig(0, x, y, z, face));
-		connectionHandler.sendPacket(new Packet14BlockDig(2, x, y, z, face));
-		currentlyBreaking = location;
+		player.breakBlock(location);
 		previous = location;
 	}
 
@@ -481,11 +358,7 @@ public class MiningTask implements Task, EventListener {
 		MainPlayerEntity player = bot.getPlayer();
 		if(player == null)
 			return;
-		if(lastLocation == null
-				|| ((ourLocation.getX() == lastLocation.getX() || Math
-						.abs(ourLocation.getX() % 6) != 1) && (ourLocation
-						.getZ() == lastLocation.getZ() || Math.abs(ourLocation
-						.getZ() % 6) != 1))) {
+		if(lastLocation == null || ((ourLocation.getX() == lastLocation.getX() || Math.abs(ourLocation.getX() % 6) != 1) && (ourLocation.getZ() == lastLocation.getZ() || Math.abs(ourLocation.getZ() % 6) != 1))) {
 			lastLocation = ourLocation;
 			return;
 		}
@@ -539,8 +412,7 @@ public class MiningTask implements Task, EventListener {
 		if(!player.switchHeldItems(slot))
 			return;
 
-		player.placeBlock(new BlockLocation(ourLocation.getX(), ourLocation
-				.getY() + 1, ourLocation.getZ()));
+		player.placeBlock(new BlockLocation(ourLocation.getX(), ourLocation.getY() + 1, ourLocation.getZ()));
 	}
 
 	@Override

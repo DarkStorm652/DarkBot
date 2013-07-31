@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.mcspambot.commands;
 
 import org.darkstorm.darkbot.mcspambot.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet255KickDisconnect;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestDisconnectEvent;
 
 public class QuitCommand extends AbstractCommand {
 
@@ -12,7 +12,6 @@ public class QuitCommand extends AbstractCommand {
 	@Override
 	public void execute(String[] args) {
 		controller.say("Leaving!");
-		bot.getConnectionHandler().sendPacket(
-				new Packet255KickDisconnect("Quit"));
+		bot.getEventManager().sendEvent(new RequestDisconnectEvent("Quit"));
 	}
 }

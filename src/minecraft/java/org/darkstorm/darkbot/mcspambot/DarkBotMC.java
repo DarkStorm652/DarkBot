@@ -1,21 +1,22 @@
 package org.darkstorm.darkbot.mcspambot;
 
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.regex.*;
-
-import javax.naming.AuthenticationException;
 
 import joptsimple.*;
 
 import org.darkstorm.darkbot.mcspambot.commands.*;
 import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
+import org.darkstorm.darkbot.minecraftbot.auth.*;
+import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
 
 public class DarkBotMC extends MinecraftBotWrapper {
-	private DarkBotMC(MinecraftBotData data, String owner) {
+	private DarkBotMC(MinecraftBotData data, String owner) throws AuthenticationException, UnsupportedProtocolException {
 		super(data);
 		addOwner(owner);
 		addBackend(new ChatBackend(this));
@@ -49,7 +50,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		commandManager.register(new FarmCommand(this));
 		commandManager.register(new FishCommand(this));
 		commandManager.register(new FollowCommand(this));
-        commandManager.register(new HelpCommand(this));
+		commandManager.register(new HelpCommand(this));
 		commandManager.register(new InteractCommand(this));
 		commandManager.register(new MineCommand(this));
 		commandManager.register(new OwnerCommand(this));
@@ -75,6 +76,8 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		OptionSpec<String> passwordOption = parser.acceptsAll(Arrays.asList("p", "password"), "Bot password. Ignored in presence of 'offline' or " + "'account-list', or if 'username' is not supplied.").withRequiredArg().describedAs("password");
 		OptionSpec<?> offlineOption = parser.acceptsAll(Arrays.asList("O", "offline"), "Offline-mode. Ignores 'password' and 'account-list' (will " + "generate random usernames if 'username' is not supplied).");
 		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
+		OptionSpec<String> protocolOption = parser.accepts("protocol", "Protocol version to use. Can be either protocol number or Minecraft version.").withRequiredArg();
+		OptionSpec<?> protocolsOption = parser.accepts("protocols", "List available protocols and exit.");
 
 		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
@@ -94,6 +97,14 @@ public class DarkBotMC extends MinecraftBotWrapper {
 
 		if(options.has("help")) {
 			printHelp(parser);
+			return;
+		}
+		if(options.has(protocolsOption)) {
+			System.out.println("Available protocols:");
+			for(ProtocolProvider provider : ProtocolProvider.getProviders())
+				System.out.println("\t" + provider.getMinecraftVersion() + " (" + provider.getSupportedVersion() + "): " + provider.getClass().getName());
+			System.out.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
+			System.out.println("If no protocol is specified, it wil take the latest protocol version, assuming there are protocols listed above.");
 			return;
 		}
 
@@ -140,6 +151,27 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		} else
 			owner = options.valueOf(ownerOption);
 
+		final int protocol;
+		if(options.has(protocolOption)) {
+			String protocolString = options.valueOf(protocolOption);
+			int parsedProtocol;
+			try {
+				parsedProtocol = Integer.parseInt(protocolString);
+			} catch(NumberFormatException exception) {
+				ProtocolProvider foundProvider = null;
+				for(ProtocolProvider provider : ProtocolProvider.getProviders())
+					if(protocolString.equals(provider.getMinecraftVersion()))
+						foundProvider = provider;
+				if(foundProvider == null) {
+					System.out.println("No provider found for Minecraft version '" + protocolString + "'.");
+					return;
+				} else
+					parsedProtocol = foundProvider.getSupportedVersion();
+			}
+			protocol = parsedProtocol;
+		} else
+			protocol = MinecraftBot.LATEST_PROTOCOL;
+
 		final List<String> socksProxies;
 		final String defaultProxy;
 		if(options.has(socksProxyListOption)) {
@@ -168,6 +200,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		Random random = new Random();
 
 		if(!offline) {
+			AuthService authService = new LegacyAuthService();
 			user: do {
 				Session session = null;
 				String loginProxy;
@@ -185,24 +218,25 @@ public class DarkBotMC extends MinecraftBotWrapper {
 				while(true) {
 					loginProxy = username != null ? null : httpProxies.get(random.nextInt(httpProxies.size()));
 					try {
-						session = Util.retrieveSession(accountParts[0], accountParts[1], loginProxy);
+						session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, Proxy.Type.HTTP));
 						break;
+					} catch(IOException exception) {
+						System.err.println("[Bot] " + exception);
+						if(username != null)
+							break user;
 					} catch(AuthenticationException exception) {
 						System.err.println("[Bot] " + exception);
 						if(username != null)
 							break user;
-						if(!exception.getMessage().startsWith("Exception"))
-							// && !exception.getMessage().equals(
-							// "Too many failed logins"))
-							continue user;
+						continue user;
 					}
 				}
-				System.out.println("[" + session.getUsername() + "] Password: " + session.getPassword() + ", Session ID: " + session.getSessionId());
+				System.out.println("[" + session.getUsername() + "] " + session);
 
 				while(true) {
 					String proxy = useProxy ? defaultProxy != null ? defaultProxy : socksProxies.get(random.nextInt(socksProxies.size())) : null;
 					try {
-						DarkBotMC bot = new DarkBotMC(generateData(server, session.getUsername(), session.getPassword(), session.getSessionId(), null, proxy), owner);
+						DarkBotMC bot = new DarkBotMC(generateData(server, session.getUsername(), session.getPassword(), authService, session, protocol, null, proxy), owner);
 						if(!bot.getBot().isConnected())
 							System.out.println("[" + session.getUsername() + "] Account failed");
 						while(bot.getBot().isConnected()) {
@@ -229,7 +263,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 						name = Util.generateRandomString(10 + random.nextInt(6));
 					else
 						name = username;
-					DarkBotMC bot = new DarkBotMC(generateData(server, name, "", "", null, proxy), owner);
+					DarkBotMC bot = new DarkBotMC(generateData(server, name, null, null, null, protocol, null, proxy), owner);
 					while(bot.getBot().isConnected()) {
 						try {
 							Thread.sleep(1500);
@@ -320,7 +354,19 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		return accounts;
 	}
 
-	private static MinecraftBotData generateData(String server, String username, String password, String sessionId, String loginProxy, String proxy) {
+	private static Proxy toProxy(String proxyData, Proxy.Type type) {
+		if(proxyData == null)
+			return null;
+		int port = 80;
+		if(proxyData.contains(":")) {
+			String[] parts = proxyData.split(":");
+			proxyData = parts[0];
+			port = Integer.parseInt(parts[1]);
+		}
+		return new Proxy(type, new InetSocketAddress(proxyData, port));
+	}
+
+	private static MinecraftBotData generateData(String server, String username, String password, AuthService service, Session session, int protocol, String loginProxy, String proxy) {
 		MinecraftBotData.Builder builder = MinecraftBotData.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
@@ -332,7 +378,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 				if(parts.length > 2)
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
-			builder.withSocksProxy(new ProxyData(proxy, port, type));
+			builder.socksProxy(new ProxyData(proxy, port, type));
 		}
 		if(loginProxy != null && !loginProxy.isEmpty()) {
 			int port = 80;
@@ -341,13 +387,13 @@ public class DarkBotMC extends MinecraftBotWrapper {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.withHttpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
+			builder.httpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
 		}
-		builder.withUsername(username);
-		if(sessionId != null)
-			builder.withSessionId(sessionId);
+		builder.username(username).authService(service).protocol(protocol);
+		if(session != null)
+			builder.session(session);
 		else
-			builder.withPassword(password);
+			builder.password(password);
 		if(server != null && !server.isEmpty()) {
 			int port = 25565;
 			if(server.contains(":")) {
@@ -355,7 +401,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 				server = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.withServer(server).withPort(port);
+			builder.server(server).port(port);
 		} else
 			throw new IllegalArgumentException("Unknown server!");
 

@@ -14,9 +14,7 @@ import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChatReceivedEvent;
 
 public class IRCBackend implements Backend, EventListener {
 	private final MinecraftBotWrapper mcBot;
@@ -58,15 +56,11 @@ public class IRCBackend implements Backend, EventListener {
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet3Chat) {
-			Packet3Chat chatPacket = (Packet3Chat) packet;
-			ircBot.getMessageHandler().setFloodControlEnabled(false);
-			for(Channel channel : ircBot.getChannelHandler().getChannels())
-				ircBot.getMessageHandler().sendMessage(channel.getName(), "[CHAT] \u000F\u000300" + mcToIRCColors(chatPacket.message));
-			ircBot.getMessageHandler().setFloodControlEnabled(true);
-		}
+	public void onChatReceived(ChatReceivedEvent event) {
+		ircBot.getMessageHandler().setFloodControlEnabled(false);
+		for(Channel channel : ircBot.getChannelHandler().getChannels())
+			ircBot.getMessageHandler().sendMessage(channel.getName(), "[CHAT] \u000F\u000300" + mcToIRCColors(event.getMessage()));
+		ircBot.getMessageHandler().setFloodControlEnabled(true);
 	}
 
 	private String mcToIRCColors(String message) {

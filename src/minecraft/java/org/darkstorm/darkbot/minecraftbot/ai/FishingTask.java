@@ -2,12 +2,8 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet28EntityVelocity;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntityVelocityEvent;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -44,16 +40,7 @@ public class FishingTask implements Task, EventListener {
 				stop();
 				return;
 			}
-			MainPlayerEntity player = bot.getPlayer();
-			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-			Packet15Place placePacket = new Packet15Place();
-			placePacket.xPosition = -1;
-			placePacket.yPosition = -1;
-			placePacket.zPosition = -1;
-			placePacket.direction = 255;
-			placePacket.itemStack = player.getInventory().getCurrentHeldItem();
-			connectionHandler.sendPacket(placePacket);
+			useFishingRod();
 		}
 		fishing = false;
 	}
@@ -63,16 +50,7 @@ public class FishingTask implements Task, EventListener {
 		if(fishing) {
 			ticksFished++;
 			if(ticksFished > 2000) {
-				MainPlayerEntity player = bot.getPlayer();
-				ConnectionHandler connectionHandler = bot.getConnectionHandler();
-				connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-				Packet15Place placePacket = new Packet15Place();
-				placePacket.xPosition = -1;
-				placePacket.yPosition = -1;
-				placePacket.zPosition = -1;
-				placePacket.direction = 255;
-				placePacket.itemStack = player.getInventory().getCurrentHeldItem();
-				connectionHandler.sendPacket(placePacket);
+				useFishingRod();
 				fishing = false;
 			}
 			return;
@@ -93,18 +71,18 @@ public class FishingTask implements Task, EventListener {
 		WorldLocation target = new WorldLocation(closest.offset(0, 1, 0));
 		if(player.getDistanceToSquared(target) < 25) {
 			player.face(target);
-			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-			connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-			Packet15Place placePacket = new Packet15Place();
-			placePacket.xPosition = -1;
-			placePacket.yPosition = -1;
-			placePacket.zPosition = -1;
-			placePacket.direction = 255;
-			placePacket.itemStack = player.getInventory().getCurrentHeldItem();
-			connectionHandler.sendPacket(placePacket);
+			EventManager eventManager = bot.getEventManager();
+			eventManager.sendEvent(new PlayerRotateEvent(player));
+			useFishingRod();
 			fishing = true;
 		}
+	}
+
+	private void useFishingRod() {
+		MainPlayerEntity player = bot.getPlayer();
+		EventManager eventManager = bot.getEventManager();
+		eventManager.sendEvent(new ArmSwingEvent());
+		eventManager.sendEvent(new ItemUseEvent(player.getInventory().getCurrentHeldItem()));
 	}
 
 	@Override
@@ -138,36 +116,23 @@ public class FishingTask implements Task, EventListener {
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet28EntityVelocity) {
-			Packet28EntityVelocity velocityPacket = (Packet28EntityVelocity) packet;
-			World world = bot.getWorld();
-			if(world == null)
-				return;
-			Entity entity = world.getEntityById(velocityPacket.entityId);
-			if(entity == null || !(entity instanceof FishingBobEntity))
-				return;
-			System.out.println("Fishing bob velocity!");
-			if(velocityPacket.motionX == 0 && velocityPacket.motionY < 0 && velocityPacket.motionZ == 0) {
-				if(fishing) {
-					if(!switchToFishingRod()) {
-						stop();
-						return;
-					}
-					MainPlayerEntity player = bot.getPlayer();
-					ConnectionHandler connectionHandler = bot.getConnectionHandler();
-					connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-					Packet15Place placePacket = new Packet15Place();
-					placePacket.xPosition = -1;
-					placePacket.yPosition = -1;
-					placePacket.zPosition = -1;
-					placePacket.direction = 255;
-					placePacket.itemStack = player.getInventory().getCurrentHeldItem();
-					connectionHandler.sendPacket(placePacket);
+	public void onEntityVelocity(EntityVelocityEvent event) {
+		World world = bot.getWorld();
+		if(world == null)
+			return;
+		Entity entity = world.getEntityById(event.getEntityId());
+		if(entity == null || !(entity instanceof FishingBobEntity))
+			return;
+		System.out.println("Fishing bob velocity!");
+		if(event.getVelocityX() == 0 && event.getVelocityY() < 0 && event.getVelocityZ() == 0) {
+			if(fishing) {
+				if(!switchToFishingRod()) {
+					stop();
+					return;
 				}
-				fishing = false;
+				useFishingRod();
 			}
+			fishing = false;
 		}
 	}
 

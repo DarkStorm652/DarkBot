@@ -7,11 +7,10 @@ import java.security.cert.Certificate;
 import java.util.*;
 import java.util.jar.*;
 
-import javax.naming.AuthenticationException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.script.*;
 
-import org.darkstorm.darkbot.minecraftbot.Session;
+import org.darkstorm.darkbot.minecraftbot.auth.Session;
 
 public final class Util {
 	private static final ScriptEngine engine;
@@ -34,47 +33,7 @@ public final class Util {
 		}
 	}
 
-	public static Session retrieveSession(String username, String password,
-			String loginProxy) throws AuthenticationException {
-		Proxy proxy = null;
-		if(loginProxy != null) {
-			int port = 80;
-			if(loginProxy.contains(":")) {
-				String[] parts = loginProxy.split(":");
-				loginProxy = parts[0];
-				port = Integer.parseInt(parts[1]);
-			}
-			proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					loginProxy, port));
-		}
-		String result = login(username, password, proxy);
-		if(result.startsWith("Exception: ") || !result.contains(":"))
-			throw new AuthenticationException(result);
-		String[] values = result.split(":");
-		return new Session(values[2], password, values[3].replaceAll("[\n\r]",
-				""));
-	}
-
-	public static String login(String username, String password,
-			Proxy loginProxy) {
-		try {
-			String parameters = "user=" + URLEncoder.encode(username, "UTF-8")
-					+ "&password=" + URLEncoder.encode(password, "UTF-8")
-					+ "&version=" + 12;
-			String result = post("https://login.minecraft.net/", parameters,
-					loginProxy);
-			if(result == null)
-				return "Unable to connect";
-			if(!result.contains(":"))
-				return result.trim();
-			return result;
-		} catch(Exception exception) {
-			return "Exception: " + exception.toString();
-		}
-	}
-
-	public static String post(String targetURL, String urlParameters,
-			Proxy proxy) throws IOException {
+	public static String post(String targetURL, String urlParameters, Proxy proxy) throws IOException {
 		HttpsURLConnection connection = null;
 		try {
 			URL url = new URL(targetURL);
@@ -83,11 +42,9 @@ public final class Util {
 			else
 				connection = (HttpsURLConnection) url.openConnection();
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type",
-					"application/x-www-form-urlencoded");
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-			connection.setRequestProperty("Content-Length",
-					Integer.toString(urlParameters.getBytes().length));
+			connection.setRequestProperty("Content-Length", Integer.toString(urlParameters.getBytes().length));
 			connection.setRequestProperty("Content-Language", "en-US");
 
 			connection.setUseCaches(false);
@@ -101,8 +58,7 @@ public final class Util {
 			Certificate[] certs = connection.getServerCertificates();
 
 			byte[] bytes = new byte[294];
-			DataInputStream dis = new DataInputStream(
-					Session.class.getResourceAsStream("/minecraft.key"));
+			DataInputStream dis = new DataInputStream(Session.class.getResourceAsStream("/minecraft.key"));
 			dis.readFully(bytes);
 			dis.close();
 
@@ -110,31 +66,22 @@ public final class Util {
 			PublicKey pk = c.getPublicKey();
 			byte[] data = pk.getEncoded();
 
-			for(int i = 0; i < data.length; i++) {
-				if(data[i] == bytes[i])
-					continue;
-				throw new RuntimeException("Public key mismatch");
+			for(int i = 0; i < data.length; i++)
+				if(data[i] != bytes[i])
+					throw new RuntimeException("Public key mismatch");
+
+			try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
+				out.writeBytes(urlParameters);
+				out.flush();
 			}
 
-			DataOutputStream wr = new DataOutputStream(
-					connection.getOutputStream());
-			wr.writeBytes(urlParameters);
-			wr.flush();
-			wr.close();
-
-			InputStream is = connection.getInputStream();
-			BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-
-			StringBuffer response = new StringBuffer();
-			String line;
-			while((line = rd.readLine()) != null) {
-				response.append(line);
-				response.append('\r');
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+				StringBuffer response = new StringBuffer();
+				String line;
+				while((line = reader.readLine()) != null)
+					response.append(line).append('\r');
+				return response.toString();
 			}
-			rd.close();
-
-			String str1 = response.toString();
-			return str1;
 		} finally {
 			if(connection != null)
 				connection.disconnect();
@@ -155,8 +102,7 @@ public final class Util {
 		return join(objects, separator, "");
 	}
 
-	public static String join(Object[] objects, String separator,
-			String finalSeparator) {
+	public static String join(Object[] objects, String separator, String finalSeparator) {
 		StringBuilder builder = new StringBuilder();
 		for(int i = 0; i < objects.length; i++) {
 			if(i != 0)
@@ -169,10 +115,8 @@ public final class Util {
 	}
 
 	@SuppressWarnings("resource")
-	public static List<Class<?>> getClassesInPackage(String packageName)
-			throws IOException {
-		ClassLoader classLoader = Thread.currentThread()
-				.getContextClassLoader();
+	public static List<Class<?>> getClassesInPackage(String packageName) throws IOException {
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		URL packageURL;
 
@@ -192,11 +136,9 @@ public final class Util {
 			jarEntries = jf.entries();
 			while(jarEntries.hasMoreElements()) {
 				entryName = jarEntries.nextElement().getName();
-				if(entryName.startsWith(packageName)
-						&& entryName.length() > packageName.length() + 5) {
+				if(entryName.startsWith(packageName) && entryName.length() > packageName.length() + 5) {
 					entryName = entryName.replace('/', '.');
-					entryName = entryName.substring(0,
-							entryName.lastIndexOf('.'));
+					entryName = entryName.substring(0, entryName.lastIndexOf('.'));
 					try {
 						classes.add(Class.forName(entryName));
 					} catch(ClassNotFoundException exception) {
@@ -231,10 +173,8 @@ public final class Util {
 	 * @throws IOException
 	 *             if IO error occurs
 	 */
-	private static Iterable<Class<?>> getClasses(String packageName)
-			throws ClassNotFoundException, IOException {
-		ClassLoader classLoader = Thread.currentThread()
-				.getContextClassLoader();
+	private static Iterable<Class<?>> getClasses(String packageName) throws ClassNotFoundException, IOException {
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		String path = packageName.replace('.', '/');
 		Enumeration<URL> resources = classLoader.getResources(path);
 		LinkedList<File> dirs = new LinkedList<File>();
@@ -262,8 +202,7 @@ public final class Util {
 	 * @throws ClassNotFoundException
 	 *             if class not found exception occurrs
 	 */
-	private static LinkedList<Class<?>> findClasses(File directory,
-			String packageName) throws ClassNotFoundException {
+	private static LinkedList<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
 		LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
 		if(!directory.exists()) {
 			return classes;
@@ -272,13 +211,9 @@ public final class Util {
 		if(files != null) {
 			for(File file : files) {
 				if(file.isDirectory()) {
-					classes.addAll(findClasses(file,
-							packageName + "." + file.getName()));
+					classes.addAll(findClasses(file, packageName + "." + file.getName()));
 				} else if(file.getName().endsWith(".class")) {
-					classes.add(Class.forName(packageName
-							+ '.'
-							+ file.getName().substring(0,
-									file.getName().length() - 6)));
+					classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 package org.darkstorm.darkbot.mcspambot;
 
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.*;
 
@@ -8,15 +8,13 @@ import org.darkstorm.darkbot.DarkBot;
 import org.darkstorm.darkbot.mcspambot.commands.*;
 import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.ai.TaskManager;
+import org.darkstorm.darkbot.minecraftbot.auth.AuthenticationException;
 import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.events.world.SpawnEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.Packet8UpdateHealth;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
+import org.darkstorm.darkbot.minecraftbot.protocol.UnsupportedProtocolException;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
@@ -30,7 +28,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	private final List<Backend> backends = new CopyOnWriteArrayList<>();
 	private final List<String> owners = new CopyOnWriteArrayList<>();
 
-	public MinecraftBotWrapper(MinecraftBotData data) {
+	public MinecraftBotWrapper(MinecraftBotData data) throws AuthenticationException, UnsupportedProtocolException {
 		System.out.println("[" + data.getUsername() + "] Connecting...");
 		bot = new MinecraftBot(darkbot, data);
 		System.out.println("[" + data.getUsername() + "] Joined!");
@@ -39,48 +37,40 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		Packet packet = event.getPacket();
-		switch(packet.getId()) {
-		case 0:
-			connectionHandler.sendPacket(new Packet0KeepAlive(new Random().nextInt()));
-			break;
-		case 3:
-			String message = ((Packet3Chat) packet).message;
-			message = Util.stripColors(message);
-			System.out.println("[" + bot.getSession().getUsername() + "] " + message);
-			String nocheat = "Please type '([^']*)' to continue sending messages/commands\\.";
-			Matcher nocheatMatcher = Pattern.compile(nocheat).matcher(message);
-			if(nocheatMatcher.matches()) {
-				try {
-					String captcha = nocheatMatcher.group(1);
-					connectionHandler.sendPacket(new Packet3Chat(captcha));
-				} catch(Exception exception) {
-					exception.printStackTrace();
-				}
-			} else if(message.startsWith("/uc ")) {
-				connectionHandler.sendPacket(new Packet3Chat(message));
-			} else if(message.contains("has requested to teleport to you.")) {
-				for(String owner : owners) {
-					if(message.contains(owner)) {
-						bot.say("/tpaccept");
-						break;
-					}
+	public void onChatReceived(ChatReceivedEvent event) {
+		String message = Util.stripColors(event.getMessage());
+		System.out.println("[" + bot.getSession().getUsername() + "] " + message);
+		String nocheat = "Please type '([^']*)' to continue sending messages/commands\\.";
+		Matcher nocheatMatcher = Pattern.compile(nocheat).matcher(message);
+		if(nocheatMatcher.matches()) {
+			try {
+				String captcha = nocheatMatcher.group(1);
+				bot.say(captcha);
+			} catch(Exception exception) {
+				exception.printStackTrace();
+			}
+		} else if(message.contains("has requested to teleport to you.")) {
+			for(String owner : owners) {
+				if(message.contains(owner)) {
+					bot.say("/tpaccept");
+					break;
 				}
 			}
-			break;
-		case 8:
-			Packet8UpdateHealth updateHealth = (Packet8UpdateHealth) packet;
-			if(updateHealth.healthMP <= 0)
-				connectionHandler.sendPacket(new Packet205ClientCommand(1));
-			break;
-		case 9:
-			TaskManager taskManager = bot.getTaskManager();
-			taskManager.stopAll();
-			bot.setActivity(null);
-			break;
-		}
+		} else if(message.startsWith("/uc "))
+			bot.say(message);
+	}
+
+	@EventHandler
+	public void onHealthUpdate(HealthUpdateEvent event) {
+		if(event.getHealth() <= 0)
+			bot.getEventManager().sendEvent(new RequestRespawnEvent());
+	}
+
+	@EventHandler
+	public void onRespawn(RespawnEvent event) {
+		TaskManager taskManager = bot.getTaskManager();
+		taskManager.stopAll();
+		bot.setActivity(null);
 	}
 
 	@EventHandler

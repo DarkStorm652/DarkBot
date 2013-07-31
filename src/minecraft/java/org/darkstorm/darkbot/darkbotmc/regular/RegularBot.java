@@ -13,11 +13,8 @@ import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet3Chat;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet205ClientCommand;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
 
@@ -28,8 +25,7 @@ public class RegularBot implements EventListener {
 	private final List<Command> commands;
 	private MinecraftBot bot;
 
-	private boolean awaitingSpawn = false, awaitingStatus = false,
-			awaitingInventory = false;
+	private int loadingState = 0;
 
 	public RegularBot(RegularBotControlsUI ui, RegularBotData data) {
 		this.ui = ui;
@@ -47,8 +43,7 @@ public class RegularBot implements EventListener {
 			@Override
 			public void run() {
 				MinecraftBotData.Builder builder = MinecraftBotData.builder();
-				builder.withUsername(data.username);
-				builder.withPassword(data.password);
+				builder.username(data.username).password(data.password);
 
 				String server = data.server;
 				int port = 25565;
@@ -57,8 +52,7 @@ public class RegularBot implements EventListener {
 					server = parts[0];
 					port = Integer.parseInt(parts[1]);
 				}
-				builder.withServer(server);
-				builder.withPort(port);
+				builder.server(server).port(port);
 
 				if(data.proxy != null) {
 					String proxy = data.proxy;
@@ -70,17 +64,15 @@ public class RegularBot implements EventListener {
 						proxyPort = Integer.parseInt(parts[1]);
 						if(parts.length > 2) {
 							try {
-								type = ProxyType.values()[Integer
-										.parseInt(parts[2])];
+								type = ProxyType.values()[Integer.parseInt(parts[2])];
 							} catch(NumberFormatException exception) {
 								type = ProxyType.valueOf(parts[2].toUpperCase());
 							}
 						}
 					} else
 						throw new IllegalArgumentException("Invalid proxy");
-					ProxyData data = new ProxyData(proxy, proxyPort,
-							type == null ? ProxyType.SOCKS : type);
-					builder.withSocksProxy(data);
+					ProxyData data = new ProxyData(proxy, proxyPort, type == null ? ProxyType.SOCKS : type);
+					builder.socksProxy(data);
 				}
 				MinecraftBotData botData = builder.build();
 
@@ -89,19 +81,15 @@ public class RegularBot implements EventListener {
 				status("Connecting...");
 				progress(true);
 				try {
-					bot = new MinecraftBot(
-							DarkBotMC.getInstance().getDarkBot(), botData);
+					bot = new MinecraftBot(DarkBotMC.getInstance().getDarkBot(), botData);
 				} catch(Exception exception) {
 					exception.printStackTrace();
 
 					Throwable cause = exception.getCause();
-					if(cause != null
-							&& cause instanceof AuthenticationException) {
-						log("[BOT] Error: Invalid login (" + cause.getMessage()
-								+ ")");
+					if(cause != null && cause instanceof AuthenticationException) {
+						log("[BOT] Error: Invalid login (" + cause.getMessage() + ")");
 					} else {
-						log("[BOT] Error: Unable to connect ("
-								+ exception.toString() + ")");
+						log("[BOT] Error: Unable to connect (" + exception.toString() + ")");
 					}
 					status("Waiting.");
 					progress(false);
@@ -113,8 +101,7 @@ public class RegularBot implements EventListener {
 				TaskManager taskManager = bot.getTaskManager();
 				for(Class<? extends Task> task : data.tasks) {
 					try {
-						Constructor<? extends Task> constructor = task
-								.getConstructor(MinecraftBot.class);
+						Constructor<? extends Task> constructor = task.getConstructor(MinecraftBot.class);
 						taskManager.registerTask(constructor.newInstance(bot));
 					} catch(Exception exception) {}
 				}
@@ -128,7 +115,7 @@ public class RegularBot implements EventListener {
 			bot.getConnectionHandler().disconnect("");
 			bot.getEventManager().unregisterListener(this);
 			bot = null;
-			awaitingSpawn = awaitingStatus = false;
+			loadingState = 0;
 			status("Waiting.");
 			progress(0, false);
 		}
@@ -137,50 +124,47 @@ public class RegularBot implements EventListener {
 	@EventHandler
 	public void onDisconnect(DisconnectEvent event) {
 		String reason = event.getReason();
-		log("[BOT] Disconnected"
-				+ (reason != null && reason.length() > 0 ? ": " + reason : "")
-				+ ".");
+		log("[BOT] Disconnected" + (reason != null && reason.length() > 0 ? ": " + reason : "") + ".");
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		switch(packet.getId()) {
-		case 1:
-			awaitingSpawn = true;
-			status("Loading...");
-			progress(40);
-			break;
-		case 3:
-			Packet3Chat chatPacket = (Packet3Chat) packet;
-			log("[CHAT] " + chatPacket.message);
-			break;
-		case 13:
-			if(awaitingSpawn) {
-				awaitingSpawn = false;
-				awaitingInventory = true;
-				progress(60);
-			}
-			break;
-		case 8:
-			if(((Packet8UpdateHealth) packet).healthMP <= 0)
-				bot.getConnectionHandler().sendPacket(
-						new Packet205ClientCommand(1));
-			ui.updateStatus();
-			if(awaitingStatus) {
-				awaitingStatus = false;
-				status("Connected.");
-				progress(100);
-			}
-			break;
-		case 104:
-			Packet104WindowItems itemsPacket = (Packet104WindowItems) packet;
-			if(awaitingInventory && itemsPacket.windowId == 0) {
-				awaitingInventory = false;
-				awaitingStatus = true;
-				progress(80);
-			}
+	public void onChatReceived(ChatReceivedEvent event) {
+		log("[CHAT] " + event.getMessage());
+	}
+
+	@EventHandler
+	public void onLogin(LoginEvent event) {
+		status("Loading...");
+		progress(40);
+		loadingState = 1;
+	}
+
+	@EventHandler
+	public void onTeleport(TeleportEvent event) {
+		if(loadingState == 1) {
+			progress(60);
+			loadingState = 2;
 		}
+	}
+
+	@EventHandler
+	public void onWindowUpdate(WindowUpdateEvent event) {
+		if(loadingState == 2 && event.getWindowId() == 0) {
+			loadingState = 3;
+			progress(80);
+		}
+	}
+
+	@EventHandler
+	public void onHealthUpdate(HealthUpdateEvent event) {
+		ui.updateStatus();
+		if(loadingState == 3) {
+			loadingState = 4;
+			status("Connected.");
+			progress(100);
+		}
+		if(event.getHealth() <= 0)
+			bot.getEventManager().sendEvent(new RequestRespawnEvent());
 	}
 
 	public void clearLog() {

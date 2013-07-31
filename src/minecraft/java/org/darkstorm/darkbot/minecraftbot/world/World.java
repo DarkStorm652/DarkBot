@@ -58,5 +58,9 @@ public interface World {
 
 	public PathSearchProvider getPathFinder();
 
+	public long getTime();
+
+	public long getAge();
+
 	public void destroy();
 }

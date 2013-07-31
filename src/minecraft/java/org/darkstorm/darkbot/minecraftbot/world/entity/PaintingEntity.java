@@ -1,9 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.Packet7UseEntity;
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.EntityHitEvent;
+import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.ArtType;
 
 public class PaintingEntity extends Entity {
@@ -56,9 +55,6 @@ public class PaintingEntity extends Entity {
 
 	public void breakPainting() {
 		MinecraftBot bot = world.getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		Packet7UseEntity useEntityPacket = new Packet7UseEntity(world.getBot()
-				.getPlayer().id, id, 1);
-		connectionHandler.sendPacket(useEntityPacket);
+		bot.getEventManager().sendEvent(new EntityHitEvent(this));
 	}
 }

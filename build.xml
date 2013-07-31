@@ -1,9 +1,13 @@
 <project name="DarkBot" default="deploy" basedir=".">
 	<target name="init">
 		<property name="outputDir" value="bin" />
+		<property name="protocolsDir" value="protocols" />
+		<property name="protocolsPackage" value="org.darkstorm.darkbot.minecraftbot.protocol" />
 		<property name="deployJar" value="DarkBot.jar" />
 		<property name="libraryDir" value="lib" />
 		<property name="tempDir" value="temp" />
+		<property name="mainClass" value="org.darkstorm.darkbot.Main" />
+		<property name="antContribPath" value="build/ant-contrib-1.0b3.jar" />
 	</target>
 
 	<target name="clean" depends="init">
@@ -20,9 +24,9 @@
 			<src path="src/minecraft/java" />
 			<src path="src/minecraft/resources" />
 			<classpath>
-				  <fileset dir="${libraryDir}">
-				    <include name="**/*.jar" />
-				  </fileset>
+				<fileset dir="${libraryDir}">
+					<include name="**/*.jar" />
+				</fileset>
 			</classpath>
 		</javac>
 		<copy todir="${outputDir}">
@@ -57,8 +61,48 @@
 			</fileset>
 		</copy>
 
-		<jar destfile="${deployJar}" basedir="${outputDir}" manifest="manifest.txt" includes="**/**" />
+		<echo message="Manifest-Version: 1.0${line.separator}Class-Path: .${line.separator}Main-Class: ${mainClass}" file="${outputDir}/manifest.txt" />
+		<jar destfile="${deployJar}" basedir="${outputDir}" manifest="${outputDir}/manifest.txt" excludes="manifest.txt" />
 		<jar destfile="${deployJar}" basedir="${tempDir}" includes="**/**" update="true" />
 		<delete dir="${tempDir}" />
+	</target>
+
+	<target name="generate-protocols" depends="deploy">
+		<taskdef resource="net/sf/antcontrib/antlib.xml">
+			<classpath>
+				<pathelement location="${antContribPath}" />
+			</classpath>
+		</taskdef>
+		<mkdir dir="${protocolsDir}" />
+		<javac encoding="UTF-8" destdir="${protocolsDir}" includeantruntime="false">
+			<src path="src/minecraft/protocols" />
+			<classpath>
+				<fileset file="${deployJar}" />
+				<fileset dir="${libraryDir}">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+		<propertyregex property="protocolsFolder" input="src.minecraft.protocols.${protocolsPackage}" global="true" regexp="\." replace="${file.separator}" />
+		<pathconvert property="files" pathsep=":">
+			<map from="${protocolsFolder}{$file.separator}" to="" />
+			<dirset dir="${protocolsFolder}">
+				<include name="*" />
+			</dirset>
+		</pathconvert>
+		<propertyregex property="protocolsFolder" override="true" input="${protocolsPackage}" global="true" regexp="\." replace="${file.separator}" />
+		<for list="${files}" delimiter=":" param="file">
+			<sequential>
+				<local name="protocolVersion" />
+				<basename property="protocolVersion" file="@{file}" />
+				<propertyregex property="protocolVersion" override="true" input="${protocolVersion}" regexp="v([0-9]+)" select="\1" />
+				<mkdir dir="${protocolsDir}/META-INF/services" />
+				<echo message="${protocolsPackage}.v${protocolVersion}.Protocol${protocolVersion}$$Provider" file="${protocolsDir}/META-INF/services/${protocolsPackage}.ProtocolProvider" />
+				<jar destfile="${protocolsDir}/v${protocolVersion}.jar" update="false" basedir="${protocolsDir}" includes="${protocolsFolder}/v${protocolVersion}/**/**,META-INF/**/**" />
+				<delete dir="${protocolsDir}/META-INF" />
+			</sequential>
+		</for>
+		<propertyregex property="protocolBase" input="${protocolsPackage}" regexp="^([a-zA-Z][a-zA-Z0-9]+).*" select="\1" />
+		<delete dir="${protocolsDir}/${protocolBase}" />
 	</target>
 </project>

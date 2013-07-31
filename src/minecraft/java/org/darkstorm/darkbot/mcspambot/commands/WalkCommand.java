@@ -9,19 +9,14 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 public class WalkCommand extends AbstractCommand {
 
 	public WalkCommand(MinecraftBotWrapper bot) {
-		super(
-				bot,
-				"walk",
-				"Walk to coordinates within the loaded world, with + to indicate relative movement",
-				"<[+]x> [y] <[+]z>", "[+]?[-]?[0-9]+ ([0-9]+ )?[+]?[-]?[0-9]+");
+		super(bot, "walk", "Walk to coordinates within the loaded world, with + to indicate relative movement", "<[+]x> [y] <[+]z>", "[+]?[-]?[0-9]+ ([0-9]+ )?[+]?[-]?[0-9]+");
 	}
 
 	@Override
 	public void execute(String[] args) {
 		MainPlayerEntity player = bot.getPlayer();
 		BlockLocation location = new BlockLocation(player.getLocation());
-		boolean relativeX = args[0].charAt(0) == '+', relativeZ = args[args.length - 1]
-				.charAt(0) == '+';
+		boolean relativeX = args[0].charAt(0) == '+', relativeZ = args[args.length - 1].charAt(0) == '+';
 		int x, y, z;
 
 		if(relativeX)
@@ -30,8 +25,7 @@ public class WalkCommand extends AbstractCommand {
 			x = Integer.parseInt(args[0]);
 
 		if(relativeZ)
-			z = location.getZ()
-					+ Integer.parseInt(args[args.length - 1].substring(1));
+			z = location.getZ() + Integer.parseInt(args[args.length - 1].substring(1));
 		else
 			z = Integer.parseInt(args[args.length - 1]);
 

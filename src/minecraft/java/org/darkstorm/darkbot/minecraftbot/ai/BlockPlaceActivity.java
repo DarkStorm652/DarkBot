@@ -1,26 +1,34 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.protocol.ConnectionHandler;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet18Animation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.EventManager;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class BlockPlaceActivity implements Activity {
+	public static final int DEFAULT_TIMEOUT = 100;
+
 	private final MinecraftBot bot;
 
 	private BlockLocation location;
 	private int lastId, ticksWait;
 
 	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location) {
-		this(bot, location, 5 * 20);
+		this(bot, location, DEFAULT_TIMEOUT);
 	}
 
 	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location, int timeout) {
+		this(bot, location, timeout, getPlacementBlockFaceAt(bot.getWorld(), location));
+	}
+
+	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location, byte face) {
+		this(bot, location, DEFAULT_TIMEOUT, face);
+	}
+
+	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location, int timeout, byte face) {
 		this.location = location;
 		lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
@@ -29,7 +37,6 @@ public class BlockPlaceActivity implements Activity {
 			return;
 		PlayerInventory inventory = player.getInventory();
 		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
-		int face = getPlacementBlockFaceAt(location);
 		System.out.println("Placing with face: " + face);
 		if(face == -1)
 			return;
@@ -38,16 +45,10 @@ public class BlockPlaceActivity implements Activity {
 			return;
 		int x = location.getX(), y = location.getY(), z = location.getZ();
 		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet12PlayerLook((float) player.getYaw(), (float) player.getPitch(), true));
-		connectionHandler.sendPacket(new Packet18Animation(player.getId(), Animation.SWING_ARM));
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = x;
-		placePacket.yPosition = y;
-		placePacket.zPosition = z;
-		placePacket.direction = face;
-		placePacket.itemStack = inventory.getCurrentHeldItem();
-		connectionHandler.sendPacket(placePacket);
+		EventManager eventManager = bot.getEventManager();
+		eventManager.sendEvent(new PlayerRotateEvent(player));
+		eventManager.sendEvent(new ArmSwingEvent());
+		eventManager.sendEvent(new BlockPlaceEvent(inventory.getCurrentHeldItem(), x, y, z, face));
 		ticksWait = timeout;
 	}
 
@@ -70,10 +71,9 @@ public class BlockPlaceActivity implements Activity {
 		ticksWait = 0;
 	}
 
-	private int getPlacementBlockFaceAt(BlockLocation location) {
+	private static byte getPlacementBlockFaceAt(World world, BlockLocation location) {
 		// Stack<Integer> blockFaces = new Stack<>();
 		int x = location.getX(), y = location.getY(), z = location.getZ();
-		World world = bot.getWorld();
 		if(isPlaceable(world.getBlockIdAt(x, y - 1, z)))
 			return 1;
 		else if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
@@ -155,7 +155,7 @@ public class BlockPlaceActivity implements Activity {
 			return -1;*/
 	}
 
-	private boolean isPlaceable(int id) {
+	private static boolean isPlaceable(int id) {
 		BlockType type = BlockType.getById(id);
 		return type.isPlaceable() && !type.isInteractable();
 	}

@@ -118,6 +118,7 @@ public class WalkActivity implements Activity {
 		} else if(thread != null && thread.isDone()) {
 			try {
 				nextStep = thread.get();
+				System.out.println("Path found, walking...");
 				ticksSinceStepChange = 0;
 			} catch(Exception exception) {
 				exception.printStackTrace();

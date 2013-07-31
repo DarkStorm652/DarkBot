@@ -4,10 +4,8 @@ import java.util.Arrays;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.io.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class PlayerInventory implements Inventory, EventListener {
@@ -27,27 +25,18 @@ public class PlayerInventory implements Inventory, EventListener {
 	}
 
 	@EventHandler
-	public synchronized void onPacketSent(PacketSentEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet101CloseWindow && ((Packet101CloseWindow) packet).windowId == 0) {
+	public synchronized void onWindowClose(WindowCloseEvent event) {
+		if(event.getWindowId() == 0) {
 			selectedItem = null;
 			Arrays.fill(crafting, null);
 		}
 	}
 
 	@EventHandler
-	public synchronized void onPacketReceived(PacketReceivedEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet106Transaction) {
-			Packet106Transaction transactionPacket = (Packet106Transaction) packet;
-			System.out.println("Transaction " + (transactionPacket.accepted ? "" : "not ") + "accepted");
-			if(!transactionPacket.accepted) {
-				selectedItem = null;
-				transactionPacket.accepted = true;
-				ConnectionHandler connectionHandler = player.getWorld().getBot().getConnectionHandler();
-				connectionHandler.sendPacket(transactionPacket);
-			}
-		}
+	public synchronized void onWindowTransactionComplete(WindowTransactionCompleteEvent event) {
+		System.out.println("Transaction " + event.getTransactionId() + " " + (event.isAccepted() ? "" : "not ") + "accepted");
+		if(!event.isAccepted())
+			selectedItem = null;
 	}
 
 	@Override
@@ -108,8 +97,8 @@ public class PlayerInventory implements Inventory, EventListener {
 	@Override
 	public synchronized void selectItemAt(int slot, boolean leftClick) {
 		// TODO Fix: not entirely accurate, not yet sure why
+		delay();
 		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		ItemStack item = getItemAt(slot);
 		armorSlotCheck: while(selectedItem != null) {
 			int id = selectedItem.getId();
@@ -134,8 +123,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				setItemAt(slot, selectedItem);
 				selectedItem = null;
 			}
-			delay();
-			connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), leftClick ? 0 : 1, false, item, (short) 0));
+			bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, (short) 0, item, false));
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -212,8 +200,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				}
 			}
 		}
-		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), leftClick ? 0 : 1, false, item, (short) 0));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, (short) 0, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -234,6 +221,7 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@Override
 	public synchronized void selectItemAtWithShift(int slot) {
+		delay();
 		// TODO Fix: not entirely accurate, not yet sure why either
 		ItemStack item = getItemAt(slot), originalItem = item;
 		int rangeStart, rangeEnd;
@@ -270,9 +258,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		if(!slotFound)
 			return;
 		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, getServerSlotFor(slot), 0, true, originalItem, (short) 0));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, (short) 0, originalItem, true));
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -319,18 +305,16 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@Override
 	public synchronized void dropSelectedItem() {
+		delay();
 		selectedItem = null;
 		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		delay();
-		connectionHandler.sendPacket(new Packet102WindowClick(0, -999, 0, true, null, (short) 0));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
 	}
 
 	@Override
 	public synchronized void close() {
 		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet101CloseWindow(0));
+		bot.getEventManager().sendEvent(new InventoryCloseEvent(this));
 	}
 
 	public synchronized int getCurrentHeldSlot() {
@@ -342,18 +326,25 @@ public class PlayerInventory implements Inventory, EventListener {
 	}
 
 	public synchronized void dropCurrentHeldItem() {
+		dropItem(false);
+	}
+
+	public synchronized void dropCurrentHeldItemStack() {
+		dropItem(true);
+	}
+
+	private void dropItem(boolean stack) {
 		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet14BlockDig(4, 0, 0, 0, 0));
+		bot.getEventManager().sendEvent(new HeldItemDropEvent(this, stack));
 	}
 
 	public void setCurrentHeldSlot(int currentHeldSlot) {
 		if(currentHeldSlot < 0 || currentHeldSlot >= 9)
 			throw new IllegalArgumentException();
-		MinecraftBot bot = player.getWorld().getBot();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		connectionHandler.sendPacket(new Packet16BlockItemSwitch(currentHeldSlot));
+		int oldSlot = this.currentHeldSlot;
 		this.currentHeldSlot = currentHeldSlot;
+		MinecraftBot bot = player.getWorld().getBot();
+		bot.getEventManager().sendEvent(new HeldItemChangeEvent(this, oldSlot, currentHeldSlot));
 	}
 
 	public MainPlayerEntity getPlayer() {

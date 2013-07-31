@@ -2,9 +2,8 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.writeable.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.client.ItemUseEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntityStopEatingEvent;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
@@ -12,8 +11,7 @@ public class EatTask implements Task {
 	private static final int[] FOOD_LIST;
 
 	static {
-		FOOD_LIST = new int[] { 260, 282, 297, 319, 320, 322, 349, 350, 357,
-				360, 363, 364, 365, 366, 367 };
+		FOOD_LIST = new int[] { 260, 282, 297, 319, 320, 322, 349, 350, 357, 360, 363, 364, 365, 366, 367 };
 	}
 
 	private final MinecraftBot bot;
@@ -36,8 +34,7 @@ public class EatTask implements Task {
 			lastHealth = 20;
 		if(lastHunger != player.getHunger() && player.getHunger() == 20)
 			lastHunger = 20;
-		if(player != null
-				&& (player.getHunger() < 20 && player.getHunger() != lastHunger))
+		if(player != null && (player.getHunger() < 20 && player.getHunger() != lastHunger))
 			for(int i = 0; i < FOOD_LIST.length; i++)
 				if(inventory.contains(FOOD_LIST[i]))
 					return true;
@@ -61,7 +58,6 @@ public class EatTask implements Task {
 	@Override
 	public void run() {
 		MainPlayerEntity player = bot.getPlayer();
-		ConnectionHandler connectionHandler = bot.getConnectionHandler();
 		PlayerInventory inventory = player.getInventory();
 		if(eatingTicks > 0) {
 			eatingTicks--;
@@ -84,35 +80,25 @@ public class EatTask implements Task {
 			stop();
 			return;
 		}
-		Packet15Place placePacket = new Packet15Place();
-		placePacket.xPosition = -1;
-		placePacket.yPosition = -1;
-		placePacket.zPosition = -1;
-		placePacket.direction = -1;
-		placePacket.itemStack = inventory.getItemAt(foodIndex);
-		connectionHandler.sendPacket(placePacket);
+		bot.getEventManager().sendEvent(new ItemUseEvent(inventory.getItemAt(foodIndex)));
 		eatingTicks = 32;
 		lastHealth = player.getHealth();
 		lastHunger = player.getHunger();
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet14BlockDig) {
-			Packet14BlockDig digPacket = (Packet14BlockDig) packet;
-			if(digPacket.status != 5)
-				return;
-			if(eatingTicks > 0) {
-				MainPlayerEntity player = bot.getPlayer();
-				PlayerInventory inventory = player.getInventory();
-				if(inventory.getCurrentHeldSlot() != lastSlot)
-					inventory.setCurrentHeldSlot(lastSlot);
-				eatingTicks = 0;
-			}
-			if(active)
-				stop();
+	public void onEntityStopEating(EntityStopEatingEvent event) {
+		if(event.getEntityId() != bot.getPlayer().getId())
+			return;
+		if(eatingTicks > 0) {
+			MainPlayerEntity player = bot.getPlayer();
+			PlayerInventory inventory = player.getInventory();
+			if(inventory.getCurrentHeldSlot() != lastSlot)
+				inventory.setCurrentHeldSlot(lastSlot);
+			eatingTicks = 0;
 		}
+		if(active)
+			stop();
 	}
 
 	private boolean isFood(int id) {

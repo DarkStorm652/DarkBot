@@ -1,21 +1,21 @@
 package org.darkstorm.darkbot.minecraftbot.world;
 
-import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.events.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.io.PacketProcessEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.VehicleSpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.world.ChunkLoadEvent;
 import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
-import org.darkstorm.darkbot.minecraftbot.protocol.bidirectional.Packet130UpdateSign;
-import org.darkstorm.darkbot.minecraftbot.protocol.readable.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
-import org.darkstorm.darkbot.minecraftbot.world.item.BasicItemStack;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.PathSearchProvider;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar.AStarPathSearchProvider;
 
@@ -28,6 +28,8 @@ public final class BasicWorld implements World, EventListener {
 	private final Map<ChunkLocation, Chunk> chunks;
 	private final List<Entity> entities;
 	private final PathSearchProvider pathFinder;
+
+	private long time, age;
 
 	public BasicWorld(MinecraftBot bot, WorldType type, Dimension dimension, Difficulty difficulty, int height) {
 		this.bot = bot;
@@ -43,264 +45,224 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
-	public void onPacketProcess(PacketProcessEvent event) {
-		Packet packet = event.getPacket();
-		if(packet instanceof Packet5PlayerInventory) {
-			Packet5PlayerInventory inventoryPacket = (Packet5PlayerInventory) packet;
-			Entity entity = getEntityById(inventoryPacket.entityID);
-			if(entity == null || !(entity instanceof LivingEntity))
-				return;
-			LivingEntity livingEntity = (LivingEntity) entity;
-			livingEntity.setWornItemAt(inventoryPacket.slot, inventoryPacket.item);
-		} else if(packet instanceof Packet8UpdateHealth) {
-			Packet8UpdateHealth updateHealthPacket = (Packet8UpdateHealth) packet;
-			MainPlayerEntity player = bot.getPlayer();
-			player.setHealth(updateHealthPacket.healthMP);
-			player.setHunger(updateHealthPacket.food);
-		} else if(packet instanceof Packet9Respawn) {
-			synchronized(chunks) {
-				chunks.clear();
-			}
-		} else if(packet instanceof Packet20NamedEntitySpawn) {
-			Packet20NamedEntitySpawn spawnPacket = (Packet20NamedEntitySpawn) packet;
-			PlayerEntity entity = new PlayerEntity(this, spawnPacket.entityId, spawnPacket.name);
-			entity.setX(spawnPacket.xPosition / 32D);
-			entity.setY(spawnPacket.yPosition / 32D);
-			entity.setZ(spawnPacket.zPosition / 32D);
-			entity.setYaw(spawnPacket.rotation);
-			entity.setPitch(spawnPacket.pitch);
-			entity.setWornItemAt(0, new BasicItemStack(spawnPacket.currentItem, 1, 0));
-			spawnEntity(entity);
-		} else if(packet instanceof Packet22Collect) {
-			Entity entity = getEntityById(((Packet22Collect) packet).collectedEntityId);
-			if(entity != null)
-				despawnEntity(entity);
-		} else if(packet instanceof Packet23VehicleSpawn) {
-			Packet23VehicleSpawn spawnPacket = (Packet23VehicleSpawn) packet;
-			Entity entity = null;
-			Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnPacket.type);
-			if(entityClass == null)
-				return;
-			try {
-				Constructor<? extends Entity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
-				entity = constructor.newInstance(this, spawnPacket.entityId);
-			} catch(Exception exception) {
-				exception.printStackTrace();
-				return;
-			}
-			entity.setX(spawnPacket.xPosition / 32D);
-			entity.setY(spawnPacket.yPosition / 32D);
-			entity.setZ(spawnPacket.zPosition / 32D);
-			entity.setYaw(0);
-			entity.setPitch(0);
-			spawnEntity(entity);
-		} else if(packet instanceof Packet24MobSpawn) {
-			Packet24MobSpawn mobSpawnPacket = (Packet24MobSpawn) packet;
-			LivingEntity entity = null;
-			Class<? extends LivingEntity> entityClass = EntityList.getLivingEntityClass(mobSpawnPacket.type);
-			if(entityClass == null)
-				return;
-			try {
-				Constructor<? extends LivingEntity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
-				entity = constructor.newInstance(this, mobSpawnPacket.entityId);
-			} catch(Exception exception) {
-				exception.printStackTrace();
-				return;
-			}
-			entity.setX(mobSpawnPacket.xPosition / 32D);
-			entity.setY(mobSpawnPacket.yPosition / 32D);
-			entity.setZ(mobSpawnPacket.zPosition / 32D);
-			entity.setYaw((mobSpawnPacket.yaw * 360) / 256F);
-			entity.setPitch((mobSpawnPacket.pitch * 360) / 256F);
-			entity.setHeadYaw((mobSpawnPacket.headYaw * 360) / 256F);
+	public void onPlayerEquipmentUpdate(PlayerEquipmentUpdateEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null || !(entity instanceof LivingEntity))
+			return;
+		LivingEntity livingEntity = (LivingEntity) entity;
+		livingEntity.setWornItemAt(event.getSlot(), event.getItem());
+	}
 
-			if(mobSpawnPacket.getMetadata() != null)
-				entity.updateMetadata(mobSpawnPacket.getMetadata());
-			spawnEntity(entity);
-		} else if(packet instanceof Packet25EntityPainting) {
-			Packet25EntityPainting paintingPacket = (Packet25EntityPainting) packet;
-			PaintingEntity entity = new PaintingEntity(this, paintingPacket.entityId, ArtType.getArtTypeByName(paintingPacket.title));
-			entity.setX(paintingPacket.xPosition);
-			entity.setY(paintingPacket.yPosition);
-			entity.setZ(paintingPacket.zPosition);
-			entity.setDirection(paintingPacket.direction);
-			spawnEntity(entity);
-		} else if(packet instanceof Packet26EntityExpOrb) {
+	@EventHandler
+	public void onTimeUpdate(TimeUpdateEvent event) {
+		time = event.getTime();
+		age = event.getWorldAge();
+	}
 
-		} else if(packet instanceof Packet29DestroyEntity) {
-			Packet29DestroyEntity destroyEntityPacket = (Packet29DestroyEntity) packet;
-			for(int id : destroyEntityPacket.entityIds) {
-				Entity entity = getEntityById(id);
-				if(entity != null) {
-					despawnEntity(entity);
-					entity.setDead(true);
-				}
-			}
-		} else if(packet instanceof Packet30Entity) {
-			Packet30Entity entityPacket = (Packet30Entity) packet;
-			Entity entity = getEntityById(entityPacket.entityId);
-			if(entity == null)
-				return;
-			entity.setX(entity.getX() + (entityPacket.xPosition / 32D));
-			entity.setY(entity.getY() + (entityPacket.yPosition / 32D));
-			entity.setZ(entity.getZ() + (entityPacket.zPosition / 32D));
-			if(packet instanceof Packet31RelEntityMove || packet instanceof Packet33RelEntityMoveLook) {
-				entity.setYaw((entityPacket.yaw * 360) / 256F);
-				entity.setPitch((entityPacket.pitch * 360) / 256F);
-			}
-		} else if(packet instanceof Packet34EntityTeleport) {
-			Packet34EntityTeleport teleportPacket = (Packet34EntityTeleport) packet;
-			Entity entity = getEntityById(teleportPacket.entityId);
-			if(entity == null)
-				return;
-			entity.setX(teleportPacket.xPosition / 32D);
-			entity.setY(teleportPacket.yPosition / 32D);
-			entity.setZ(teleportPacket.zPosition / 32D);
-			entity.setYaw((teleportPacket.yaw * 360) / 256F);
-			entity.setPitch((teleportPacket.pitch * 360) / 256F);
-		} else if(packet instanceof Packet35EntityHeadRotation) {
-			Packet35EntityHeadRotation headRotatePacket = (Packet35EntityHeadRotation) packet;
-			Entity entity = getEntityById(headRotatePacket.entityId);
-			if(entity == null || !(entity instanceof LivingEntity))
-				return;
-			((LivingEntity) entity).setHeadYaw((headRotatePacket.headRotationYaw * 360) / 256F);
-		} else if(packet instanceof Packet39AttachEntity) {
-			Packet39AttachEntity attachEntityPacket = (Packet39AttachEntity) packet;
-			Entity rider = getEntityById(attachEntityPacket.entityId);
-			if(rider == null)
-				return;
-			Entity riding = null;
-			if(attachEntityPacket.vehicleEntityId == -1) {
-				if(rider.getRiding() != null) {
-					rider.getRiding().setRider(null);
-					rider.setRiding(null);
-				}
-			} else {
-				riding = getEntityById(attachEntityPacket.vehicleEntityId);
-				if(riding == null)
-					return;
-				rider.setRiding(riding);
-				riding.setRider(rider);
-			}
-		} else if(packet instanceof Packet40EntityMetadata) {
-			Packet40EntityMetadata metadataPacket = (Packet40EntityMetadata) packet;
-			Entity entity = getEntityById(metadataPacket.entityId);
-			if(entity == null)
-				return;
-			entity.updateMetadata(metadataPacket.getMetadata());
-		} else if(packet instanceof Packet43Experience) {
-			Packet43Experience experiencePacket = (Packet43Experience) packet;
-			MainPlayerEntity player = bot.getPlayer();
-			player.setExperienceLevel(experiencePacket.experienceLevel);
-			player.setExperienceTotal(experiencePacket.experienceTotal);
-		} else if(packet instanceof Packet51MapChunk) {
-			if(bot.isMovementDisabled())
-				return;
-			Packet51MapChunk mapChunkPacket = (Packet51MapChunk) packet;
-			processChunk(mapChunkPacket.x, mapChunkPacket.z, mapChunkPacket.chunkData, mapChunkPacket.bitmask, mapChunkPacket.additionalBitmask, true, mapChunkPacket.biomes);
-		} else if(packet instanceof Packet52MultiBlockChange) {
-			Packet52MultiBlockChange multiBlockChangePacket = (Packet52MultiBlockChange) packet;
-			if(multiBlockChangePacket.metadataArray == null)
-				return;
-			DataInputStream datainputstream = new DataInputStream(new ByteArrayInputStream(multiBlockChangePacket.metadataArray));
-			try {
-				for(int i = 0; i < multiBlockChangePacket.size; i++) {
-					short word0 = datainputstream.readShort();
-					short word1 = datainputstream.readShort();
-					int id = (word1 & 0xfff) >> 4;
-					int metadata = word1 & 0xf;
-					int x = word0 >> 12 & 0xf;
-					int z = word0 >> 8 & 0xf;
-					int y = word0 & 0xff;
-					setBlockIdAt(id, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z);
-					setBlockMetadataAt(metadata, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z);
-				}
-			} catch(IOException exception) {
-				exception.printStackTrace();
-			}
-		} else if(packet instanceof Packet53BlockChange) {
-			Packet53BlockChange blockChangePacket = (Packet53BlockChange) packet;
-			setBlockIdAt(blockChangePacket.type, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition);
-			setBlockMetadataAt(blockChangePacket.metadata, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition);
-		} else if(packet instanceof Packet56MapChunks) {
-			if(bot.isMovementDisabled())
-				return;
-			Packet56MapChunks chunkPacket = (Packet56MapChunks) packet;
-			for(int i = 0; i < chunkPacket.primaryBitmap.length; i++)
-				processChunk(chunkPacket.chunkX[i], chunkPacket.chunkZ[i], chunkPacket.chunkData[i], chunkPacket.primaryBitmap[i], chunkPacket.secondaryBitmap[i], chunkPacket.skylight, true);
-		} else if(packet instanceof Packet132TileEntityData) {
-			Packet132TileEntityData tileEntityPacket = (Packet132TileEntityData) packet;
-			BlockLocation location = new BlockLocation(tileEntityPacket.xPosition, tileEntityPacket.yPosition, tileEntityPacket.zPosition);
-			TileEntity entity;
-			Class<? extends TileEntity> entityClass = EntityList.getTileEntityClass(tileEntityPacket.actionType);
-			if(entityClass == null)
-				return;
-			try {
-				Constructor<? extends TileEntity> constructor = entityClass.getConstructor(NBTTagCompound.class);
-				entity = constructor.newInstance(tileEntityPacket.compound);
-			} catch(Exception exception) {
-				exception.printStackTrace();
-				return;
-			}
-			setTileEntityAt(entity, location);
-		} else if(packet instanceof Packet130UpdateSign) {
-			Packet130UpdateSign signPacket = (Packet130UpdateSign) packet;
-			BlockLocation location = new BlockLocation(signPacket.x, signPacket.y, signPacket.z);
-			setTileEntityAt(new SignTileEntity(location.getX(), location.getY(), location.getZ(), signPacket.text), location);
+	@EventHandler
+	public void onRespawn(RespawnEvent event) {
+		synchronized(chunks) {
+			chunks.clear();
 		}
 	}
 
-	private void processChunk(int x, int z, byte[] data, int bitmask, int additionalBitmask, boolean addSkylight, boolean addBiomes) {
-		if(data == null)
+	@EventHandler
+	public void onPlayerSpawn(PlayerSpawnEvent event) {
+		RotatedSpawnLocation location = event.getLocation();
+		PlayerEntity entity = new PlayerEntity(this, event.getEntityId(), event.getPlayerName());
+		entity.setX(location.getX());
+		entity.setY(location.getY());
+		entity.setZ(location.getZ());
+		entity.setYaw(location.getYaw());
+		entity.setPitch(location.getPitch());
+		entity.setWornItemAt(0, event.getHeldItem());
+		if(event.getMetadata() != null)
+			entity.updateMetadata(event.getMetadata());
+		spawnEntity(entity);
+	}
+
+	@EventHandler
+	public void onEntityCollect(EntityCollectEvent event) {
+		Entity entity = getEntityById(event.getCollectedId());
+		if(entity != null)
+			despawnEntity(entity);
+	}
+
+	@EventHandler
+	public void onVehicleSpawn(VehicleSpawnEvent event) {
+		RotatedSpawnLocation spawnLocation = event.getLocation();
+		VehicleSpawnData spawnData = event.getSpawnData();
+		Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnData.getType());
+		if(entityClass == null)
 			return;
-		int chunksChanged = 0;
-		for(int i = 0; i < 16; i++)
-			if((bitmask & (1 << i)) != 0)
-				chunksChanged++;
-		if(chunksChanged == 0)
+		Entity entity;
+		try {
+			Constructor<? extends Entity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
+			entity = constructor.newInstance(this, event.getEntityId());
+		} catch(Exception exception) {
+			exception.printStackTrace();
 			return;
-		byte[] biomes = new byte[256];
-		synchronized(chunks) {
-			int i = 0;
-			for(int y = 0; y < 16; y++) {
-				if((bitmask & (1 << y)) == 0)
-					continue;
-				int dataIndex = i * 4096;
-				byte[] blocks = Arrays.copyOfRange(data, dataIndex, dataIndex + 4096);
-				dataIndex += ((chunksChanged - i) * 4096) + (i * 2048);
-				byte[] metadata = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
-				dataIndex += chunksChanged * 2048;
-				byte[] light = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
-				dataIndex += chunksChanged * 2048;
-				byte[] skylight = null;
-				if(addSkylight)
-					skylight = Arrays.copyOfRange(data, dataIndex, dataIndex + 2048);
-
-				byte[] perBlockMetadata = new byte[4096];
-				byte[] perBlockLight = new byte[4096];
-				byte[] perBlockSkylight = new byte[4096];
-
-				for(int j = 0; j < 2048; j++) {
-					int k = j * 2;
-					perBlockMetadata[k] = (byte) (metadata[j] & 0x0F);
-					perBlockLight[k] = (byte) (light[j] & 0x0F);
-					if(addSkylight)
-						perBlockSkylight[k] = (byte) (skylight[j] & 0x0F);
-					k++;
-					perBlockMetadata[k] = (byte) (metadata[j] >> 4);
-					perBlockLight[k] = (byte) (light[j] >> 4);
-					if(addSkylight)
-						perBlockSkylight[k] = (byte) (skylight[j] >> 4);
-				}
-
-				ChunkLocation newLocation = new ChunkLocation(x, y, z);
-				Chunk chunk = new Chunk(this, newLocation, blocks, perBlockMetadata, perBlockLight, perBlockSkylight, biomes);
-				chunks.put(newLocation, chunk);
-				bot.getEventManager().sendEvent(new ChunkLoadEvent(this, chunk));
-				i++;
-			}
-			System.arraycopy(data, data.length - 256, biomes, 0, 256);
 		}
+		entity.setX(spawnLocation.getX());
+		entity.setY(spawnLocation.getY());
+		entity.setZ(spawnLocation.getZ());
+		entity.setYaw(spawnLocation.getYaw());
+		entity.setPitch(spawnLocation.getPitch());
+		spawnEntity(entity);
+	}
+
+	@EventHandler
+	public void onLivingEntitySpawn(LivingEntitySpawnEvent event) {
+		LivingEntitySpawnData spawnData = event.getSpawnData();
+		LivingEntitySpawnLocation spawnLocation = event.getLocation();
+		Class<? extends LivingEntity> entityClass = EntityList.getLivingEntityClass(spawnData.getType());
+		if(entityClass == null)
+			return;
+		LivingEntity entity;
+		try {
+			Constructor<? extends LivingEntity> constructor = entityClass.getConstructor(World.class, Integer.TYPE);
+			entity = constructor.newInstance(this, event.getEntityId());
+		} catch(Exception exception) {
+			exception.printStackTrace();
+			return;
+		}
+		entity.setX(spawnLocation.getX());
+		entity.setY(spawnLocation.getY());
+		entity.setZ(spawnLocation.getZ());
+		entity.setYaw(spawnLocation.getYaw());
+		entity.setPitch(spawnLocation.getPitch());
+		entity.setHeadYaw(spawnLocation.getHeadYaw());
+
+		if(event.getMetadata() != null)
+			entity.updateMetadata(event.getMetadata());
+		spawnEntity(entity);
+	}
+
+	@EventHandler
+	public void onPaintingSpawn(PaintingSpawnEvent event) {
+		PaintingSpawnLocation spawnLocation = event.getLocation();
+		PaintingEntity entity = new PaintingEntity(this, event.getEntityId(), ArtType.getArtTypeByName(event.getTitle()));
+		entity.setX(spawnLocation.getX());
+		entity.setY(spawnLocation.getY());
+		entity.setZ(spawnLocation.getZ());
+		entity.setDirection(spawnLocation.getDirection());
+		spawnEntity(entity);
+	}
+
+	@EventHandler
+	public void onEntityDespawn(EntityDespawnEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity != null) {
+			despawnEntity(entity);
+			entity.setDead(true);
+		}
+	}
+
+	@EventHandler
+	public void onEntityMove(EntityMoveEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null)
+			return;
+		entity.setX(entity.getX() + event.getX());
+		entity.setY(entity.getY() + event.getY());
+		entity.setZ(entity.getZ() + event.getZ());
+	}
+
+	@EventHandler
+	public void onEntityRotate(EntityRotateEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null)
+			return;
+		entity.setYaw(event.getYaw());
+		entity.setPitch(event.getPitch());
+	}
+
+	@EventHandler
+	public void onEntityTeleport(EntityTeleportEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null)
+			return;
+		entity.setX(event.getX());
+		entity.setY(event.getY());
+		entity.setZ(event.getZ());
+		entity.setYaw(event.getYaw());
+		entity.setPitch(event.getPitch());
+	}
+
+	@EventHandler
+	public void onEntityHeadRotate(EntityHeadRotateEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null || !(entity instanceof LivingEntity))
+			return;
+		((LivingEntity) entity).setHeadYaw(event.getHeadYaw());
+	}
+
+	@EventHandler
+	public void onEntityMount(EntityMountEvent event) {
+		Entity rider = getEntityById(event.getEntityId());
+		Entity riding = getEntityById(event.getMountedEntityId());
+		if(rider == null || riding == null)
+			return;
+		rider.setRiding(riding);
+		riding.setRider(rider);
+	}
+
+	@EventHandler
+	public void onEntityDismount(EntityDismountEvent event) {
+		Entity rider = getEntityById(event.getEntityId());
+		if(rider == null)
+			return;
+		if(rider.getRiding() != null) {
+			rider.getRiding().setRider(null);
+			rider.setRiding(null);
+		}
+	}
+
+	@EventHandler
+	public void onEntityMetadataUpdate(EntityMetadataUpdateEvent event) {
+		Entity entity = getEntityById(event.getEntityId());
+		if(entity == null)
+			return;
+		entity.updateMetadata(event.getMetadata());
+	}
+
+	@EventHandler
+	public void onChunkLoad(org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChunkLoadEvent event) {
+		ChunkLocation location = new ChunkLocation(event.getX(), event.getY(), event.getZ());
+		Chunk chunk = new Chunk(this, location, event.getBlocks(), event.getMetadata(), event.getLight(), event.getSkylight(), event.getBiomes());
+		synchronized(chunks) {
+			chunks.put(location, chunk);
+		}
+		bot.getEventManager().sendEvent(new ChunkLoadEvent(this, chunk));
+	}
+
+	@EventHandler
+	public void onBlockChange(BlockChangeEvent event) {
+		setBlockIdAt(event.getId(), event.getX(), event.getY(), event.getZ());
+		setBlockMetadataAt(event.getMetadata(), event.getX(), event.getY(), event.getZ());
+	}
+
+	@EventHandler
+	public void onTileEntityUpdate(TileEntityUpdateEvent event) {
+		BlockLocation location = new BlockLocation(event.getX(), event.getY(), event.getZ());
+		Class<? extends TileEntity> entityClass = EntityList.getTileEntityClass(event.getType());
+		if(entityClass == null)
+			return;
+		TileEntity entity;
+		try {
+			Constructor<? extends TileEntity> constructor = entityClass.getConstructor(NBTTagCompound.class);
+			entity = constructor.newInstance(event.getCompound());
+		} catch(Exception exception) {
+			exception.printStackTrace();
+			return;
+		}
+		setTileEntityAt(entity, location);
+	}
+
+	@EventHandler
+	public void onSignUpdate(SignUpdateEvent event) {
+		BlockLocation location = new BlockLocation(event.getX(), event.getY(), event.getZ());
+		setTileEntityAt(new SignTileEntity(location.getX(), location.getY(), location.getZ(), event.getText()), location);
 	}
 
 	@Override
@@ -507,5 +469,15 @@ public final class BasicWorld implements World, EventListener {
 	@Override
 	public PathSearchProvider getPathFinder() {
 		return pathFinder;
+	}
+
+	@Override
+	public long getTime() {
+		return time;
+	}
+
+	@Override
+	public long getAge() {
+		return age;
 	}
 }
