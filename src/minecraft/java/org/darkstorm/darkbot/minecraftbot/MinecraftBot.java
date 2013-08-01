@@ -96,6 +96,7 @@ public class MinecraftBot extends Bot implements EventListener {
 	public void onLogin(LoginEvent event) {
 		setWorld(new BasicWorld(this, event.getWorldType(), event.getDimension(), event.getDifficulty(), event.getWorldHeight()));
 		player = new MainPlayerEntity(world, event.getPlayerId(), session.getUsername(), event.getGameMode());
+		world.spawnEntity(player);
 	}
 
 	@EventHandler
@@ -286,11 +287,13 @@ public class MinecraftBot extends Bot implements EventListener {
 		if(this.world != null)
 			this.world.destroy();
 		this.world = world;
-		if(player != null)
+		if(player != null) {
 			if(world != null)
 				player = new MainPlayerEntity(world, player.getId(), player.getName(), player.getGameMode());
 			else
 				player = null;
+			world.spawnEntity(player);
+		}
 	}
 
 	public Activity getActivity() {

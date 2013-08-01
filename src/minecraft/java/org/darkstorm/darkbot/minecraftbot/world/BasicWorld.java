@@ -9,9 +9,12 @@ import org.darkstorm.darkbot.minecraftbot.events.EventListener;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.VehicleSpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.BlockChangeEvent;
+import org.darkstorm.darkbot.minecraftbot.events.world.*;
 import org.darkstorm.darkbot.minecraftbot.events.world.ChunkLoadEvent;
 import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
@@ -89,9 +92,9 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
-	public void onVehicleSpawn(VehicleSpawnEvent event) {
+	public void onObjectEntitySpawn(ObjectEntitySpawnEvent event) {
 		RotatedSpawnLocation spawnLocation = event.getLocation();
-		VehicleSpawnData spawnData = event.getSpawnData();
+		ObjectSpawnData spawnData = event.getSpawnData();
 		Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnData.getType());
 		if(entityClass == null)
 			return;
@@ -108,6 +111,11 @@ public final class BasicWorld implements World, EventListener {
 		entity.setZ(spawnLocation.getZ());
 		entity.setYaw(spawnLocation.getYaw());
 		entity.setPitch(spawnLocation.getPitch());
+		if(entity instanceof ThrownEntity && event.getSpawnData() instanceof ThrownObjectSpawnData) {
+			Entity thrower = getEntityById(((ThrownObjectSpawnData) event.getSpawnData()).getThrowerId());
+			if(thrower != null)
+				((ThrownEntity) entity).setThrower(thrower);
+		}
 		spawnEntity(entity);
 	}
 
@@ -263,6 +271,14 @@ public final class BasicWorld implements World, EventListener {
 	public void onSignUpdate(SignUpdateEvent event) {
 		BlockLocation location = new BlockLocation(event.getX(), event.getY(), event.getZ());
 		setTileEntityAt(new SignTileEntity(location.getX(), location.getY(), location.getZ(), event.getText()), location);
+	}
+
+	@EventHandler
+	public void onEditTileEntity(EditTileEntityEvent event) {
+		TileEntity entity = getTileEntityAt(event.getX(), event.getY(), event.getZ());
+		if(entity != null)
+			if(entity instanceof SignTileEntity)
+				bot.getEventManager().sendEvent(new EditSignEvent(entity.getLocation()));
 	}
 
 	@Override

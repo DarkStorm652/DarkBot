@@ -17,6 +17,11 @@ public class SignTileEntity extends TileEntity {
 		this.text = text.clone();
 	}
 
+	public SignTileEntity(BlockLocation location, String[] text) {
+		super(location);
+		this.text = text.clone();
+	}
+
 	public String[] getText() {
 		return text.clone();
 	}

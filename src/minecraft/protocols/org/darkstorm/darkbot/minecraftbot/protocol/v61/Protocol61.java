@@ -17,14 +17,18 @@ import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntitySpawnEvent.SpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.ThrownVehicleSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.VehicleSpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.BlockChangeEvent;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChunkLoadEvent;
+import org.darkstorm.darkbot.minecraftbot.events.world.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.Packet19EntityAction.Action;
+import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
@@ -229,6 +233,13 @@ public final class Protocol61 extends AbstractProtocol implements EventListener 
 		packet.zOffset = event.getZOffset();
 		packet.itemStack = event.getItem();
 		handler.sendPacket(packet);
+		if(event.getItem() != null) {
+			EventManager eventManager = bot.getEventManager();
+			if(event.getItem().getId() == 323)
+				eventManager.sendEvent(new EditSignEvent(new BlockLocation(event.getX(), event.getY(), event.getZ())));
+			else if(event.getItem().getId() == 137)
+				eventManager.sendEvent(new EditCommandBlockEvent(new BlockLocation(event.getX(), event.getY(), event.getZ())));
+		}
 	}
 
 	@EventHandler
@@ -355,12 +366,12 @@ public final class Protocol61 extends AbstractProtocol implements EventListener 
 		case 23: {
 			Packet23VehicleSpawn spawnPacket = (Packet23VehicleSpawn) packet;
 			RotatedSpawnLocation location = new RotatedSpawnLocation(spawnPacket.xPosition / 32D, spawnPacket.yPosition / 32D, spawnPacket.zPosition / 32D, (spawnPacket.yaw * 360) / 256F, (spawnPacket.pitch * 360) / 256F);
-			VehicleSpawnData spawnData;
+			ObjectSpawnData spawnData;
 			if(spawnPacket.throwerEntityId != 0)
-				spawnData = new ThrownVehicleSpawnData(spawnPacket.type, spawnPacket.throwerEntityId, spawnPacket.speedX / 8000D, spawnPacket.speedY / 8000D, spawnPacket.speedZ / 8000D);
+				spawnData = new ThrownObjectSpawnData(spawnPacket.type, spawnPacket.throwerEntityId, spawnPacket.speedX / 8000D, spawnPacket.speedY / 8000D, spawnPacket.speedZ / 8000D);
 			else
-				spawnData = new VehicleSpawnData(spawnPacket.type);
-			eventManager.sendEvent(new VehicleSpawnEvent(spawnPacket.entityId, location, spawnData));
+				spawnData = new ObjectSpawnData(spawnPacket.type);
+			eventManager.sendEvent(new ObjectEntitySpawnEvent(spawnPacket.entityId, location, spawnData));
 			break;
 		}
 		case 24: {

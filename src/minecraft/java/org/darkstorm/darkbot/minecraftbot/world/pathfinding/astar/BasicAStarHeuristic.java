@@ -8,14 +8,11 @@ import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 
 public class BasicAStarHeuristic implements AStarHeuristic {
 	private static final WorldLocation[] surrounding = new WorldLocation[] {
-			// Middle slice (Y=0)
-			new WorldLocation(-1, 0, 1), new WorldLocation(0, 0, 1), new WorldLocation(1, 0, 1), new WorldLocation(-1, 0, 0), new WorldLocation(1, 0, 0), // (0,0,0)
-																																							// is
-																																							// self
-			new WorldLocation(-1, 0, -1), new WorldLocation(0, 0, -1), new WorldLocation(1, 0, -1),
-			// Bottom slice (Y=-1)
+			// middle y + 0
+			new WorldLocation(-1, 0, 1), new WorldLocation(0, 0, 1), new WorldLocation(1, 0, 1), new WorldLocation(-1, 0, 0), new WorldLocation(1, 0, 0), new WorldLocation(-1, 0, -1), new WorldLocation(0, 0, -1), new WorldLocation(1, 0, -1),
+			// bottom y - 1
 			new WorldLocation(-1, -1, 1), new WorldLocation(0, -1, 1), new WorldLocation(1, -1, 1), new WorldLocation(-1, -1, 0), new WorldLocation(0, -1, 0), new WorldLocation(1, -1, 0), new WorldLocation(-1, -1, -1), new WorldLocation(0, -1, -1), new WorldLocation(1, -1, -1),
-			// Top slice (Y=1)
+			// top y + 1
 			new WorldLocation(-1, 1, 1), new WorldLocation(0, 1, 1), new WorldLocation(1, 1, 1), new WorldLocation(-1, 1, 0), new WorldLocation(0, 1, 0), new WorldLocation(1, 1, 0), new WorldLocation(-1, 1, -1), new WorldLocation(0, 1, -1), new WorldLocation(1, 1, -1), };
 	private static final boolean[] emptyBlocks;
 

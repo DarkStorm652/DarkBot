@@ -121,7 +121,7 @@ public class FishingTask implements Task, EventListener {
 		if(world == null)
 			return;
 		Entity entity = world.getEntityById(event.getEntityId());
-		if(entity == null || !(entity instanceof FishingBobEntity))
+		if(entity == null || !(entity instanceof FishingBobEntity) || !(((FishingBobEntity) entity).getThrower() instanceof MainPlayerEntity))
 			return;
 		System.out.println("Fishing bob velocity!");
 		if(event.getVelocityX() == 0 && event.getVelocityY() < 0 && event.getVelocityZ() == 0) {

@@ -17,10 +17,10 @@ import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntitySpawnEvent.SpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
+import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.ThrownVehicleSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.VehicleSpawnEvent.VehicleSpawnData;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v74.packets.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v74.packets.Packet18Animation.Animation;
@@ -107,7 +107,7 @@ public final class Protocol74 extends AbstractProtocol implements EventListener 
 		register(Packet130UpdateSign.class);
 		register(Packet131MapData.class);
 		register(Packet132TileEntityData.class);
-		register(Packet133Unknown.class);
+		register(Packet133OpenTileEditor.class);
 		register(Packet200Statistic.class);
 		register(Packet201PlayerInfo.class);
 		register(Packet202PlayerAbilities.class);
@@ -368,12 +368,12 @@ public final class Protocol74 extends AbstractProtocol implements EventListener 
 		case 23: {
 			Packet23VehicleSpawn spawnPacket = (Packet23VehicleSpawn) packet;
 			RotatedSpawnLocation location = new RotatedSpawnLocation(spawnPacket.xPosition / 32D, spawnPacket.yPosition / 32D, spawnPacket.zPosition / 32D, (spawnPacket.yaw * 360) / 256F, (spawnPacket.pitch * 360) / 256F);
-			VehicleSpawnData spawnData;
+			ObjectSpawnData spawnData;
 			if(spawnPacket.throwerEntityId != 0)
-				spawnData = new ThrownVehicleSpawnData(spawnPacket.type, spawnPacket.throwerEntityId, spawnPacket.speedX / 8000D, spawnPacket.speedY / 8000D, spawnPacket.speedZ / 8000D);
+				spawnData = new ThrownObjectSpawnData(spawnPacket.type, spawnPacket.throwerEntityId, spawnPacket.speedX / 8000D, spawnPacket.speedY / 8000D, spawnPacket.speedZ / 8000D);
 			else
-				spawnData = new VehicleSpawnData(spawnPacket.type);
-			eventManager.sendEvent(new VehicleSpawnEvent(spawnPacket.entityId, location, spawnData));
+				spawnData = new ObjectSpawnData(spawnPacket.type);
+			eventManager.sendEvent(new ObjectEntitySpawnEvent(spawnPacket.entityId, location, spawnData));
 			break;
 		}
 		case 24: {
@@ -524,6 +524,11 @@ public final class Protocol74 extends AbstractProtocol implements EventListener 
 		case 130: {
 			Packet130UpdateSign signPacket = (Packet130UpdateSign) packet;
 			eventManager.sendEvent(new SignUpdateEvent(signPacket.x, signPacket.y, signPacket.z, signPacket.text));
+			break;
+		}
+		case 133: {
+			Packet133OpenTileEditor editPacket = (Packet133OpenTileEditor) packet;
+			eventManager.sendEvent(new EditTileEntityEvent(editPacket.x, editPacket.y, editPacket.z));
 			break;
 		}
 		case 201: {

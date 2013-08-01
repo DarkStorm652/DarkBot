@@ -82,6 +82,10 @@ public final class Util {
 					response.append(line).append('\r');
 				return response.toString();
 			}
+		} catch(IOException exception) {
+			throw exception;
+		} catch(Exception exception) {
+			throw new IOException("Error connecting", exception);
 		} finally {
 			if(connection != null)
 				connection.disconnect();
