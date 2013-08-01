@@ -326,6 +326,9 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 						} catch(InterruptedException exception) {}
 					}
 					while(true) {
+						try {
+							Thread.sleep(loginDelay);
+						} catch(InterruptedException exception) {}
 						synchronized(lockQueue) {
 							if(lockQueue.size() > 0) {
 								Runnable thread = lockQueue.poll();
@@ -336,9 +339,6 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 							} else
 								continue;
 						}
-						try {
-							Thread.sleep(loginDelay);
-						} catch(InterruptedException exception) {}
 						while(!sessions.get()) {
 							synchronized(sessions) {
 								try {
@@ -351,6 +351,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			});
 		}
 		final List<String> accountsInUse = new ArrayList<String>();
+		final Map<String, AtomicInteger> workingProxies = new HashMap<String, AtomicInteger>();
 		for(int i = 0; i < botAmount; i++) {
 			final int botNumber = i;
 			Runnable runnable = new Runnable() {
@@ -389,17 +390,40 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));
+								synchronized(workingProxies) {
+									Iterator<String> iterator = workingProxies.keySet().iterator();
+									if(iterator.hasNext())
+										loginProxy = iterator.next();
+									else
+										loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));;
+								}
 								try {
 									session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, Proxy.Type.HTTP));
 									// addAccount(session);
+									synchronized(workingProxies) {
+										AtomicInteger count = workingProxies.get(loginProxy);
+										if(count != null)
+											count.set(0);
+										else
+											workingProxies.put(loginProxy, new AtomicInteger());
+									}
 									sessionCount.incrementAndGet();
 									authenticated = true;
 									break;
 								} catch(IOException exception) {
-									System.err.println("[Bot" + botNumber + "] " + exception);
+									synchronized(workingProxies) {
+										workingProxies.remove(loginProxy);
+									}
+									System.err.println("[Bot" + botNumber + "] " + loginProxy + ": " + exception);
 								} catch(AuthenticationException exception) {
-									System.err.println("[Bot" + botNumber + "] " + exception);
+									if(exception.getMessage().contains("Too many failed logins")) {
+										synchronized(workingProxies) {
+											AtomicInteger count = workingProxies.get(loginProxy);
+											if(count != null && count.incrementAndGet() >= 5)
+												workingProxies.remove(loginProxy);
+										}
+									}
+									System.err.println("[Bot" + botNumber + "] " + loginProxy + ": " + exception);
 									continue user;
 								}
 							}
