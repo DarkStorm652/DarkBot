@@ -9,29 +9,14 @@ import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 public class BasicAStarHeuristic implements AStarHeuristic {
 	private static final WorldLocation[] surrounding = new WorldLocation[] {
 			// Middle slice (Y=0)
-			new WorldLocation(-1, 0, 1),
-			new WorldLocation(0, 0, 1),
-			new WorldLocation(1, 0, 1),
-			new WorldLocation(-1, 0, 0),
-			new WorldLocation(1, 0, 0), // (0,0,0) is self
-			new WorldLocation(-1, 0, -1),
-			new WorldLocation(0, 0, -1),
-			new WorldLocation(1, 0, -1),
+			new WorldLocation(-1, 0, 1), new WorldLocation(0, 0, 1), new WorldLocation(1, 0, 1), new WorldLocation(-1, 0, 0), new WorldLocation(1, 0, 0), // (0,0,0)
+																																							// is
+																																							// self
+			new WorldLocation(-1, 0, -1), new WorldLocation(0, 0, -1), new WorldLocation(1, 0, -1),
 			// Bottom slice (Y=-1)
-			new WorldLocation(-1, -1, 1), new WorldLocation(0, -1, 1),
-			new WorldLocation(1, -1, 1),
-			new WorldLocation(-1, -1, 0),
-			new WorldLocation(0, -1, 0),
-			new WorldLocation(1, -1, 0),
-			new WorldLocation(-1, -1, -1),
-			new WorldLocation(0, -1, -1),
-			new WorldLocation(1, -1, -1),
+			new WorldLocation(-1, -1, 1), new WorldLocation(0, -1, 1), new WorldLocation(1, -1, 1), new WorldLocation(-1, -1, 0), new WorldLocation(0, -1, 0), new WorldLocation(1, -1, 0), new WorldLocation(-1, -1, -1), new WorldLocation(0, -1, -1), new WorldLocation(1, -1, -1),
 			// Top slice (Y=1)
-			new WorldLocation(-1, 1, 1), new WorldLocation(0, 1, 1),
-			new WorldLocation(1, 1, 1), new WorldLocation(-1, 1, 0),
-			new WorldLocation(0, 1, 0), new WorldLocation(1, 1, 0),
-			new WorldLocation(-1, 1, -1), new WorldLocation(0, 1, -1),
-			new WorldLocation(1, 1, -1), };
+			new WorldLocation(-1, 1, 1), new WorldLocation(0, 1, 1), new WorldLocation(1, 1, 1), new WorldLocation(-1, 1, 0), new WorldLocation(0, 1, 0), new WorldLocation(1, 1, 0), new WorldLocation(-1, 1, -1), new WorldLocation(0, 1, -1), new WorldLocation(1, 1, -1), };
 	private static final boolean[] emptyBlocks;
 
 	static {
@@ -51,8 +36,7 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 	}
 
 	@Override
-	public WorldLocation[] getSurrounding(AStarPathSearch search,
-			WorldLocation location) {
+	public WorldLocation[] getSurrounding(AStarPathSearch search, WorldLocation location) {
 		WorldLocation[] locations = new WorldLocation[surrounding.length];
 		for(int i = 0; i < locations.length; i++)
 			locations[i] = location.offset(surrounding[i]);
@@ -60,18 +44,13 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 	}
 
 	@Override
-	public double calculateGScore(AStarPathSearch search, PathNode node,
-			boolean reverse) {
-		return node.isStart() ? 0 : node.getPrevious().getGScore()
-				+ node.getLocation().getDistanceToSquared(
-						node.getPrevious().getLocation());
+	public double calculateGScore(AStarPathSearch search, PathNode node, boolean reverse) {
+		return node.isStart() ? 0 : node.getPrevious().getGScore() + node.getLocation().getDistanceTo(node.getPrevious().getLocation());
 	}
 
 	@Override
-	public double calculateFScore(AStarPathSearch search, PathNode node,
-			boolean reverse) {
-		return node.getLocation().getDistanceToSquared(
-				reverse ? search.getStart() : search.getEnd());
+	public double calculateFScore(AStarPathSearch search, PathNode node, boolean reverse) {
+		return node.getLocation().getDistanceTo(reverse ? search.getStart() : search.getEnd());
 	}
 
 	@Override
@@ -91,13 +70,7 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 		valid &= lowerBlock != 11;
 		int currentLowerBlock = world.getBlockIdAt(x, y - 1, z);
 		if(emptyBlocks[currentLowerBlock])
-			valid &= (y2 < y && x2 == x && z2 == z)
-					|| ((isClimbableBlock(location) && isClimbableBlock(location2))
-							|| (!isClimbableBlock(location) && isClimbableBlock(location2)) || (isClimbableBlock(location)
-							&& !isClimbableBlock(location2) && (x2 == x
-							&& z2 == z ? true : !emptyBlocks[world
-							.getBlockIdAt(x2, y2 - 1, z2)])))
-					|| !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)];
+			valid &= (y2 < y && x2 == x && z2 == z) || ((isClimbableBlock(location) && isClimbableBlock(location2)) || (!isClimbableBlock(location) && isClimbableBlock(location2)) || (isClimbableBlock(location) && !isClimbableBlock(location2) && (x2 == x && z2 == z ? true : !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)]))) || !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)];
 		if(y != y2 && (x != x2 || z != z2))
 			return false;
 		if(x != x2 && z != z2) {
@@ -132,8 +105,7 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 			valid = false;
 		}
 		int nodeBlockUnder = world.getBlockIdAt(x2, y2 - 1, z2);
-		if(nodeBlockUnder == 85 || nodeBlockUnder == 107
-				|| nodeBlockUnder == 113)
+		if(nodeBlockUnder == 85 || nodeBlockUnder == 107 || nodeBlockUnder == 113)
 			valid = false;
 		return valid;
 	}
@@ -144,14 +116,7 @@ public class BasicAStarHeuristic implements AStarHeuristic {
 		if(id == 8 || id == 9 || id == 65)
 			return true;
 		if(id == 106) {
-			if(!isEmptyBlock(world.getBlockIdAt(location.getX(),
-					location.getY(), location.getZ() + 1))
-					|| !isEmptyBlock(world.getBlockIdAt(location.getX(),
-							location.getY(), location.getZ() - 1))
-					|| !isEmptyBlock(world.getBlockIdAt(location.getX() + 1,
-							location.getY(), location.getZ()))
-					|| !isEmptyBlock(world.getBlockIdAt(location.getX() - 1,
-							location.getY(), location.getZ())))
+			if(!isEmptyBlock(world.getBlockIdAt(location.getX(), location.getY(), location.getZ() + 1)) || !isEmptyBlock(world.getBlockIdAt(location.getX(), location.getY(), location.getZ() - 1)) || !isEmptyBlock(world.getBlockIdAt(location.getX() + 1, location.getY(), location.getZ())) || !isEmptyBlock(world.getBlockIdAt(location.getX() - 1, location.getY(), location.getZ())))
 				return true;
 		}
 		return false;
