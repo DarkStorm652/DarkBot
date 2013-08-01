@@ -40,7 +40,12 @@ final class EventSender {
 				continue;
 			for(Method method : methods) {
 				try {
+					boolean accessible = method.isAccessible();
+					if(!accessible)
+						method.setAccessible(true);
 					method.invoke(listener, event);
+					if(!accessible)
+						method.setAccessible(false);
 				} catch(InvocationTargetException exception) {
 					exception.getCause().printStackTrace();
 				} catch(Throwable exception) {
