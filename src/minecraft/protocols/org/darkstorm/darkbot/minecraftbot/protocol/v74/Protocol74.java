@@ -92,6 +92,7 @@ public final class Protocol74 extends AbstractProtocol implements EventListener 
 		register(Packet60Explosion.class);
 		register(Packet61DoorChange.class);
 		register(Packet62NamedSoundEffect.class);
+		register(Packet63Particle.class);
 		register(Packet70ChangeGameState.class);
 		register(Packet71Weather.class);
 		register(Packet100OpenWindow.class);

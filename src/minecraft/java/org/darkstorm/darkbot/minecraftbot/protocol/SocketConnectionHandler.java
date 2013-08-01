@@ -212,11 +212,17 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 				Thread.sleep(500);
 				while(isConnected()) {
 					WriteablePacket packet = null;
-					synchronized(packetWriteQueue) {
-						if(!packetWriteQueue.isEmpty())
-							packet = packetWriteQueue.poll();
-						else
-							packetWriteQueue.wait(500);
+					try {
+						synchronized(packetWriteQueue) {
+							if(!packetWriteQueue.isEmpty())
+								packet = packetWriteQueue.poll();
+							else
+								packetWriteQueue.wait(500);
+						}
+					} catch(InterruptedException exception) {
+						if(future == null || future.isCancelled())
+							break;
+						continue;
 					}
 					if(packet != null) {
 						DataOutputStream outputStream = connection.getOutputStream();
