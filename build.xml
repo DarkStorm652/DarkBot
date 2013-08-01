@@ -83,15 +83,15 @@
 				</fileset>
 			</classpath>
 		</javac>
-		<propertyregex property="protocolsFolder" input="src.minecraft.protocols.${protocolsPackage}" global="true" regexp="\." replace="${file.separator}" />
-		<pathconvert property="files" pathsep=":">
+		<propertyregex property="protocolsFolder" input="src.minecraft.protocols.${protocolsPackage}" global="true" regexp="\." replace="/" />
+		<pathconvert property="files" pathsep="${line.separator}">
 			<map from="${protocolsFolder}{$file.separator}" to="" />
 			<dirset dir="${protocolsFolder}">
 				<include name="*" />
 			</dirset>
 		</pathconvert>
-		<propertyregex property="protocolsFolder" override="true" input="${protocolsPackage}" global="true" regexp="\." replace="${file.separator}" />
-		<for list="${files}" delimiter=":" param="file">
+		<propertyregex property="protocolsFolder" override="true" input="${protocolsPackage}" global="true" regexp="\." replace="/" />
+		<for list="${files}" delimiter="${line.separator}" param="file">
 			<sequential>
 				<local name="protocolVersion" />
 				<basename property="protocolVersion" file="@{file}" />
