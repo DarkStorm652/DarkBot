@@ -17,7 +17,7 @@ import javax.swing.Timer;
 import joptsimple.*;
 
 import org.darkstorm.darkbot.mcspambot.commands.*;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBotData;
+import org.darkstorm.darkbot.minecraftbot.*;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
 import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
@@ -186,13 +186,14 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
 		OptionSpec<Integer> loginDelayOption = parser.acceptsAll(Arrays.asList("d", "login-delay"), "Delay between bot joins, in milliseconds. 5000 is " + "recommended if not using socks proxies.").withRequiredArg().describedAs("delay").ofType(Integer.class);
 		OptionSpec<Integer> botAmountOption = parser.acceptsAll(Arrays.asList("b", "bot-amount"), "Amount of bots to join. Must be <= amount of accounts.").withRequiredArg().describedAs("amount").ofType(Integer.class);
+		OptionSpec<String> protocolOption = parser.accepts("protocol", "Protocol version to use. Can be either protocol number or Minecraft version.").withRequiredArg();
 		OptionSpec<?> protocolsOption = parser.accepts("protocols", "List available protocols and exit.");
 
 		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> captchaListOption = parser.accepts("captcha-list", "File containing a list of chat baised captcha to bypass.").withRequiredArg().describedAs("file");
-		
+
 		OptionSet options;
 		try {
 			options = parser.parse(args);
@@ -233,7 +234,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		final List<String> captcha;
 		if(options.has(captchaListOption))
 			readCaptchaFile(options.valueOf(captchaListOption));
-		
+
 		final String server;
 		if(!options.has(serverOption)) {
 			System.out.println("Option 'server' required.");
@@ -249,6 +250,27 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			return;
 		} else
 			owner = options.valueOf(ownerOption);
+
+		final int protocol;
+		if(options.has(protocolOption)) {
+			String protocolString = options.valueOf(protocolOption);
+			int parsedProtocol;
+			try {
+				parsedProtocol = Integer.parseInt(protocolString);
+			} catch(NumberFormatException exception) {
+				ProtocolProvider foundProvider = null;
+				for(ProtocolProvider provider : ProtocolProvider.getProviders())
+					if(protocolString.equals(provider.getMinecraftVersion()))
+						foundProvider = provider;
+				if(foundProvider == null) {
+					System.out.println("No provider found for Minecraft version '" + protocolString + "'.");
+					return;
+				} else
+					parsedProtocol = foundProvider.getSupportedVersion();
+			}
+			protocol = parsedProtocol;
+		} else
+			protocol = MinecraftBot.LATEST_PROTOCOL;
 
 		final List<String> socksProxies;
 		if(options.has(socksProxyListOption))
@@ -403,7 +425,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 							while(true) {
 								String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 								try {
-									DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, session.getUsername(), session.getPassword(), authService, session, null, proxy), owner);
+									DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, session.getUsername(), session.getPassword(), authService, session, protocol, null, proxy), owner);
 									while(bot.getBot().isConnected()) {
 										try {
 											Thread.sleep(500);
@@ -444,7 +466,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, username, null, null, null, null, proxy), owner);
+								DarkBotMCSpambot bot = new DarkBotMCSpambot(generateData(server, username, null, null, null, protocol, null, proxy), owner);
 								while(bot.getBot().isConnected()) {
 									try {
 										Thread.sleep(500);
@@ -628,7 +650,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		return new Proxy(type, new InetSocketAddress(proxyData, port));
 	}
 
-	private static MinecraftBotData generateData(String server, String username, String password, AuthService service, Session session, String loginProxy, String proxy) {
+	private static MinecraftBotData generateData(String server, String username, String password, AuthService service, Session session, int protocol, String loginProxy, String proxy) {
 		MinecraftBotData.Builder builder = MinecraftBotData.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
@@ -651,7 +673,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 			}
 			builder.httpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
 		}
-		builder.username(username).authService(service);
+		builder.username(username).authService(service).protocol(protocol);
 		if(session != null)
 			builder.session(session);
 		else
@@ -669,7 +691,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 
 		return builder.build();
 	}
-	
+
 	private static void readCaptchaFile(String fileName) {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
