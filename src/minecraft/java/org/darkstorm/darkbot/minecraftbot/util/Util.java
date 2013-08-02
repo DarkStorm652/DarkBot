@@ -29,7 +29,8 @@ public final class Util {
 		try {
 			return engine.eval(javascript);
 		} catch(ScriptException exception) {
-			return null;
+			exception.printStackTrace();
+			return exception.toString();
 		}
 	}
 
