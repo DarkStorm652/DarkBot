@@ -121,7 +121,7 @@ public class MinecraftBot extends Bot implements EventListener {
 	@EventHandler
 	public void onHealthUpdate(HealthUpdateEvent event) {
 		player.setHealth(event.getHealth());
-		player.setHunger(event.getHealth());
+		player.setHunger(event.getHunger());
 	}
 
 	@EventHandler
