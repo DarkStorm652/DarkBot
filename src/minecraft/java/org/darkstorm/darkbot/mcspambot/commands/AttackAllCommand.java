@@ -14,10 +14,10 @@ public class AttackAllCommand extends AbstractCommand {
 		HostileTask task = bot.getTaskManager().getTaskFor(HostileTask.class);
 		if(task.isActive()) {
 			task.stop();
-			controller.say("No longer in hostile mode.");
+			controller.say("/r " + "No longer in hostile mode.");
 		} else {
 			task.start();
-			controller.say("Now in hostile mode!");
+			controller.say("/r " + "Now in hostile mode!");
 		}
 	}
 }

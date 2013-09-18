@@ -11,7 +11,7 @@ public class QuitCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		controller.say("Leaving!");
+		controller.say("/r " + "Leaving!");
 		bot.getEventManager().sendEvent(new RequestDisconnectEvent("Quit"));
 	}
 }

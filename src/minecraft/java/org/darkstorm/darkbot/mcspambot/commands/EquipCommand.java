@@ -78,8 +78,8 @@ public class EquipCommand extends AbstractCommand {
 		}
 		inventory.close();
 		if(changed)
-			controller.say("Equipped armor.");
+			controller.say("/r " + "Equipped armor.");
 		else
-			controller.say("Removed armor.");
+			controller.say("/r " + "Removed armor.");
 	}
 }
