@@ -10,7 +10,7 @@ public class ChatDelayCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		controller.say("Set chat delay!");
+		controller.say("/r " + "Set chat delay!");
 		bot.setMessageDelay(Integer.parseInt(args[0]));
 	}
 }

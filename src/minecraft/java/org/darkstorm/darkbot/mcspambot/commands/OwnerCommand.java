@@ -13,23 +13,23 @@ public class OwnerCommand extends AbstractCommand {
 		switch(args[0].toLowerCase()) {
 		case "add":
 			controller.addOwner(args[1]);
-			controller.say("Added owner " + args[1] + ".");
+			controller.say("/r " + "Added owner " + args[1] + ".");
 			break;
 		case "remove":
 			if(!controller.isOwner(args[1])) {
-				controller.say("No such owner " + args[1] + ".");
+				controller.say("/r " + "No such owner " + args[1] + ".");
 			} else if(controller.getOwners().length == 1) {
-				controller.say("Must have at least one owner.");
+				controller.say("/r " + "Must have at least one owner.");
 			} else {
 				controller.removeOwner(args[1]);
-				controller.say("Removed owner " + args[1]);
+				controller.say("/r " + "Removed owner " + args[1]);
 			}
 			break;
 		case "set":
 			for(String owner : controller.getOwners())
 				controller.removeOwner(owner);
 			controller.addOwner(args[1]);
-			controller.say("Set owner to " + args[1] + ".");
+			controller.say("/r " + "Set owner to " + args[1] + ".");
 		}
 	}
 }
