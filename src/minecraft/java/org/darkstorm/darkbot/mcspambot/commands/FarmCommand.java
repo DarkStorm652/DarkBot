@@ -22,6 +22,6 @@ public class FarmCommand extends AbstractCommand {
 			if(args[i].startsWith("="))
 				args[i] = args[i].substring(1);
 		task.start(args);
-		controller.say("/r " + "Now farming!");
+		controller.say("Now farming!");
 	}
 }

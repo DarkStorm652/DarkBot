@@ -21,12 +21,12 @@ public class AttackCommand extends AbstractCommand {
 					&& Util.stripColors(((PlayerEntity) entity).getName())
 							.equalsIgnoreCase(name)) {
 				attackTask.setAttackEntity(entity);
-				controller.say("/r " + "Attacking "
+				controller.say("Attacking "
 						+ Util.stripColors(((PlayerEntity) entity).getName())
 						+ "!");
 				return;
 			}
 		}
-		controller.say("/r " + "Player " + name + " not found.");
+		controller.say("Player " + name + " not found.");
 	}
 }

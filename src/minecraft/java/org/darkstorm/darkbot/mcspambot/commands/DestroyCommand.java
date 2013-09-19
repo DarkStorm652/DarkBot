@@ -15,6 +15,6 @@ public class DestroyCommand extends AbstractCommand {
 			if(args[i].startsWith("="))
 				args[i] = args[i].substring(1);
 		bot.getTaskManager().getTaskFor(DestroyingTask.class).start(args);
-		controller.say("/r " + "Now destroying!");
+		controller.say("Now destroying!");
 	}
 }

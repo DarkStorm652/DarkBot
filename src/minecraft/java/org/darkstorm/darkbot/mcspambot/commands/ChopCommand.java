@@ -12,6 +12,6 @@ public class ChopCommand extends AbstractCommand {
 	@Override
 	public void execute(String[] args) {
 		bot.getTaskManager().getTaskFor(ChopTreesTask.class).start();
-		controller.say("/r " + "Now chopping!");
+		controller.say("Now chopping!");
 	}
 }

@@ -23,7 +23,7 @@ public class ChatBackend implements Backend, EventListener {
 
 	@Override
 	public void say(String message) {
-		bot.getBot().say(message);
+		bot.getBot().say("/r " + message);
 	}
 
 	@Override

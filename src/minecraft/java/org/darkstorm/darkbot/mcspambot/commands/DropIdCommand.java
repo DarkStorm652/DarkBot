@@ -24,6 +24,6 @@ public class DropIdCommand extends AbstractCommand {
 			}
 		}
 		inventory.close();
-		controller.say("/r " + "Dropped all items of ID " + id + "!");
+		controller.say("Dropped all items of ID " + id + "!");
 	}
 }

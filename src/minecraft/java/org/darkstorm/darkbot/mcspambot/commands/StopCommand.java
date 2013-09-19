@@ -12,6 +12,6 @@ public class StopCommand extends AbstractCommand {
 	public void execute(String[] args) {
 		bot.getTaskManager().stopAll();
 		bot.setActivity(null);
-		controller.say("/r " + "Stopped all tasks.");
+		controller.say("Stopped all tasks.");
 	}
 }

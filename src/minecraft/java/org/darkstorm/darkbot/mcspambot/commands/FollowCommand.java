@@ -19,14 +19,14 @@ public class FollowCommand extends AbstractCommand {
 		for(Entity entity : bot.getWorld().getEntities()) {
 			if(entity instanceof PlayerEntity && isFollowable(args, ((PlayerEntity) entity).getName())) {
 				followTask.follow(entity);
-				controller.say("/r " + "Now following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
+				controller.say("Now following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
 				return;
 			}
 		}
 		if(args.length > 0)
-			controller.say("/r " + "Player " + args[0] + " not found.");
+			controller.say("Player " + args[0] + " not found.");
 		else
-			controller.say("/r " + "Owner not found.");
+			controller.say("Owner not found.");
 	}
 
 	private boolean isFollowable(String[] args, String name) {

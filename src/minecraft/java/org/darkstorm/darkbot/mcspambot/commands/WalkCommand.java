@@ -37,7 +37,7 @@ public class WalkCommand extends AbstractCommand {
 					break;
 			}
 			if(y <= 0) {
-				controller.say("/r " + "No appropriate walkable y value!");
+				controller.say("No appropriate walkable y value!");
 				return;
 			}
 		} else
@@ -45,6 +45,6 @@ public class WalkCommand extends AbstractCommand {
 
 		BlockLocation target = new BlockLocation(x, y, z);
 		bot.setActivity(new WalkActivity(bot, target));
-		controller.say("/r " + "Walking to (" + x + ", " + y + ", " + z + ").");
+		controller.say("Walking to (" + x + ", " + y + ", " + z + ").");
 	}
 }

@@ -15,6 +15,6 @@ public class BuildCommand extends AbstractCommand {
 			if(args[i].startsWith("="))
 				args[i] = args[i].substring(1);
 		bot.getTaskManager().getTaskFor(BuildingTask.class).start(args);
-		controller.say("/r " + "Now building!");
+		controller.say("Now building!");
 	}
 }

@@ -16,7 +16,7 @@ public class StatusCommand extends AbstractCommand {
 		if(player == null)
 			return;
 
-		controller.say("/r " + "Health: [" + player.getHealth() + "/20] Hunger: [" + player.getHunger() + "/20] Level " + player.getExperienceLevel() + " (" + player.getExperienceTotal() + " total exp.)");
+		controller.say("Health: [" + player.getHealth() + "/20] Hunger: [" + player.getHunger() + "/20] Level " + player.getExperienceLevel() + " (" + player.getExperienceTotal() + " total exp.)");
 		try {
 			StringBuilder activeTasks = new StringBuilder();
 			TaskManager manager = bot.getTaskManager();
@@ -27,7 +27,7 @@ public class StatusCommand extends AbstractCommand {
 					activeTasks.append(task.getClass().getSimpleName());
 				}
 			}
-			bot.say("/r " + "Active tasks: [" + activeTasks + "]");
+			bot.say("Active tasks: [" + activeTasks + "]");
 		} catch(Exception exception) {
 			exception.printStackTrace();
 		}

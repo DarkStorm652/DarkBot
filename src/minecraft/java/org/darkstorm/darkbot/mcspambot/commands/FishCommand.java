@@ -14,10 +14,10 @@ public class FishCommand extends AbstractCommand {
 		FishingTask task = bot.getTaskManager().getTaskFor(FishingTask.class);
 		if(task.isActive()) {
 			task.stop();
-			controller.say("/r " + "No longer fishing.");
+			controller.say("No longer fishing.");
 		} else {
 			task.start();
-			controller.say("/r " + "Now fishing!");
+			controller.say("Now fishing!");
 		}
 	}
 }
