@@ -108,6 +108,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 		if(message.startsWith("Please register with \"/register")) {
 			String password = Util.generateRandomString(10 + random.nextInt(6));
 			bot.say("/register " + password + " " + password);
+			bot.say("/register " + password);
 		} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
 			String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
 			bot.say(msg);
