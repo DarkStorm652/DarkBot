@@ -641,7 +641,7 @@ public class DarkBotMCSpambot extends MinecraftBotWrapper {
 	private static List<String> loadAccounts(String fileName) {
 		List<String> accounts = new ArrayList<String>();
 		try {
-			Pattern pattern = Pattern.compile("[\\w]{1,16}");
+			Pattern pattern = Pattern.compile("[a-zA-Z_0-9@\\.]{1,}");
 			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
 			String line;
 			while((line = reader.readLine()) != null) {
