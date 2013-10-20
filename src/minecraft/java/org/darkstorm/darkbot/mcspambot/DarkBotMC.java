@@ -35,6 +35,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		taskManager.registerTask(new BuildingTask(bot));
 		taskManager.registerTask(new AvoidDeathTask(bot));
 		taskManager.registerTask(new DestroyingTask(bot));
+		taskManager.registerTask(new DerpTask(bot));
 
 		commandManager.register(new AttackAllCommand(this));
 		commandManager.register(new AttackCommand(this));
@@ -63,6 +64,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 		commandManager.register(new SwitchCommand(this));
 		commandManager.register(new ToolCommand(this));
 		commandManager.register(new WalkCommand(this));
+		commandManager.register(new DerpCommand(this));
 	}
 
 	public static void main(String[] args) {
@@ -184,7 +186,6 @@ public class DarkBotMC extends MinecraftBotWrapper {
 			else
 				defaultProxy = null;
 		}
-		final boolean useProxy = defaultProxy != null || socksProxies != null;
 
 		final List<String> httpProxies;
 		if(options.has(httpProxyListOption))
@@ -234,7 +235,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 				System.out.println("[" + session.getUsername() + "] " + session);
 
 				while(true) {
-					String proxy = useProxy ? defaultProxy != null ? defaultProxy : socksProxies.get(random.nextInt(socksProxies.size())) : null;
+					String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : defaultProxy;
 					try {
 						DarkBotMC bot = new DarkBotMC(generateData(server, session.getUsername(), session.getPassword(), authService, session, protocol, null, proxy), owner);
 						if(!bot.getBot().isConnected())
@@ -256,7 +257,7 @@ public class DarkBotMC extends MinecraftBotWrapper {
 			} while(username == null);
 		} else {
 			while(true) {
-				String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
+				String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : defaultProxy;
 				try {
 					String name = "";
 					if(username == null)
