@@ -138,7 +138,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		Packet102WindowClick packet = new Packet102WindowClick();
 		packet.windowId = event.getInventory().getWindowId();
 		packet.slot = event.getSlot();
-		packet.button = event.getSlot();
+		packet.button = event.getButton();
 		packet.action = event.getTransactionId();
 		packet.item = event.getItem();
 		packet.shift = event.isShiftHeld();

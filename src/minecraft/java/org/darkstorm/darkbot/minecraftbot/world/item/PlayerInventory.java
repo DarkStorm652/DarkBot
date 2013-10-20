@@ -18,6 +18,7 @@ public class PlayerInventory implements Inventory, EventListener {
 	private ItemStack selectedItem = null;
 
 	private int delay = 0, currentHeldSlot = 0;
+	private short transactionId = 0;
 
 	public PlayerInventory(MainPlayerEntity player) {
 		this.player = player;
@@ -34,7 +35,6 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@EventHandler
 	public synchronized void onWindowTransactionComplete(WindowTransactionCompleteEvent event) {
-		System.out.println("Transaction " + event.getTransactionId() + " " + (event.isAccepted() ? "" : "not ") + "accepted");
 		if(!event.isAccepted())
 			selectedItem = null;
 	}
@@ -123,7 +123,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				setItemAt(slot, selectedItem);
 				selectedItem = null;
 			}
-			bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, (short) 0, item, false));
+			bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -200,7 +200,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				}
 			}
 		}
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, (short) 0, item, false));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -258,7 +258,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		if(!slotFound)
 			return;
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, (short) 0, originalItem, true));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, transactionId++, originalItem, true));
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -308,7 +308,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		delay();
 		selectedItem = null;
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
+		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, transactionId++, null, true));
 	}
 
 	@Override
