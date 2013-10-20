@@ -6,7 +6,7 @@
 		<property name="deployJar" value="DarkBot.jar" />
 		<property name="libraryDir" value="lib" />
 		<property name="tempDir" value="temp" />
-		<property name="mainClass" value="org.darkstorm.darkbot.Main" />
+		<property name="mainClass" value="org.darkstorm.darkbot.mcspambot.Main" />
 		<property name="antContribPath" value="build/ant-contrib-1.0b3.jar" />
 	</target>
 

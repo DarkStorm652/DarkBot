@@ -16,8 +16,7 @@ public final class DarkBotMC {
 	private final DarkBotMCUI ui;
 
 	static {
-		ResourceBundle resources = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.darkbotmc.dbmc");
+		ResourceBundle resources = ResourceBundle.getBundle("org.darkstorm.darkbot.darkbotmc.dbmc");
 		version = resources.getString("version");
 	}
 
@@ -49,6 +48,12 @@ public final class DarkBotMC {
 	}
 
 	public static void main(String[] args) {
+		if(args.length != 1 || !args[0].equals("--force")) {
+			System.err.println("The GUI is not complete and thus is not recommended.");
+			System.err.println("If you wish to proceed, run with `--force`.");
+			System.exit(1);
+			return;
+		}
 		new DarkBotMC();
 	}
 }
