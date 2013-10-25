@@ -49,7 +49,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 			} catch(Exception exception) {
 				exception.printStackTrace();
 			}
-		} else if(message.contains("has requested to teleport to you.")) {
+		} else if(message.contains("teleport to")) {
 			for(String owner : owners) {
 				if(message.contains(owner)) {
 					bot.say("/tpaccept");
