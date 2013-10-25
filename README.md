@@ -39,11 +39,17 @@ Video: [http://www.youtube.com/watch?v=8cACg\_XJsA8](http://www.youtube.com/watc
 ### To Run
 
 Open Terminal or Command Prompt  
-Switch to the directory with DarkBot.jar (`cd path/to/DarkBot.jar` with Terminal or `cd C:\path\to\DarkBot.jar` with Command Prompt)
+Switch to the directory with DarkBot.jar (`cd path/to/DarkBot` with Terminal or `cd C:\path\to\DarkBot` with Command Prompt)
 
-For CLI:
-> Print arguments with `java -cp DarkBot.jar org.darkstorm.darkbot.mcspambot.DarkBotMC --help`  
-> Use `java -cp DarkBot.jar org.darkstorm.darkbot.mcspambot.DarkBotMC <args>` where `<args>` consists of arguments from the list printed before (such as --username <username> or --server <server:port>)
+For CLI Bot:
+> Print arguments with `java -jar DarkBot.jar -t bot --help`  
+> Use `java -jar DarkBot.jar -t bot <args>` where `<args>` consists of arguments from the list printed before (such as --username <username> or --server <server:port>)
+   * If arguments keep getting printed, you are missing required arguments or have the wrong format
 
-For GUI:
-> Run 'java -cp DarkBot.jar org.darkstorm.darkbot.darkbotmc.DarkBotMC'
+For CLI Spambot:
+> Print arguments with `java -jar DarkBot.jar -t spambot --help`  
+> Use `java -jar DarkBot.jar -t spambot <args>` where `<args>` consists of arguments from the list printed before (such as --bot-amount <count> or --server <server:port>)
+   * If arguments keep getting printed, you are missing required arguments or have the wrong format
+
+For GUI (NOT RECOMMENDED, INCOMPLETE):
+> Run `java -jar DarkBot.jar -t gui --force`
