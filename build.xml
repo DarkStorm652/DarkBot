@@ -20,9 +20,7 @@
 		<mkdir dir="${outputDir}" />
 		<javac encoding="UTF-8" destdir="${outputDir}" includeantruntime="false">
 			<src path="src/main/java" />
-			<src path="src/irc/java" />
-			<src path="src/minecraft/java" />
-			<src path="src/minecraft/resources" />
+			<src path="src/main/resources" />
 			<classpath>
 				<fileset dir="${libraryDir}">
 					<include name="**/*.jar" />
@@ -33,13 +31,7 @@
 			<fileset dir="src/main/java">
 				<exclude name="**/*.java" />
 			</fileset>
-			<fileset dir="src/irc/java">
-				<exclude name="**/*.java" />
-			</fileset>
-			<fileset dir="src/minecraft/java">
-				<exclude name="**/*.java" />
-			</fileset>
-			<fileset dir="src/minecraft/resources">
+			<fileset dir="src/main/resources">
 				<exclude name="**/*.java" />
 			</fileset>
 		</copy>
@@ -75,7 +67,7 @@
 		</taskdef>
 		<mkdir dir="${protocolsDir}" />
 		<javac encoding="UTF-8" destdir="${protocolsDir}" includeantruntime="false">
-			<src path="src/minecraft/protocols" />
+			<src path="src/main/protocols" />
 			<classpath>
 				<fileset file="${deployJar}" />
 				<fileset dir="${libraryDir}">
