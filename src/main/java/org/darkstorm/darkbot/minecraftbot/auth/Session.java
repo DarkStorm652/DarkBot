@@ -23,7 +23,7 @@ public abstract class Session {
 	}
 
 	public boolean isValidForLogin() {
-		return StringUtils.isNotBlank(password);
+		return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
 	}
 
 	public abstract boolean isValidForAuthentication();
