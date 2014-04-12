@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -39,7 +39,7 @@ public class BuildingTask implements Task, EventListener {
 
 	public BuildingTask(final MinecraftBot bot) {
 		this.bot = bot;
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@Override

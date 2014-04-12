@@ -3,15 +3,17 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.world.ChunkLoadEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.world.ChunkLoadEvent;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class ChopTreesTask implements Task, EventListener {
-	private static final BlockLocation[] surrounding = new BlockLocation[] { new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1), new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0), new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1), new BlockLocation(0, 0, -1), new BlockLocation(1, 0, -1), };
+	private static final BlockLocation[] surrounding = new BlockLocation[] { new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1),
+			new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0), new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1), new BlockLocation(0, 0, -1),
+			new BlockLocation(1, 0, -1), };
 	private static final int LOG_ID = 17;
 
 	private final MinecraftBot bot;
@@ -32,7 +34,7 @@ public class ChopTreesTask implements Task, EventListener {
 				return Double.compare(distance1, distance2);
 			}
 		};
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@Override
@@ -87,7 +89,8 @@ public class ChopTreesTask implements Task, EventListener {
 			for(BlockLocation newLocation : sortedSurrounding) {
 				if(!BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY(), newLocation.getZ())).isSolid()) {
 					int yChange = 0;
-					while(!BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ())).isSolid() && newLocation.getY() >= 0 && yChange < 5) {
+					while(!BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ())).isSolid()
+							&& newLocation.getY() >= 0 && yChange < 5) {
 						newLocation = new BlockLocation(newLocation.getX(), newLocation.getY() - 1, newLocation.getZ());
 						yChange++;
 					}

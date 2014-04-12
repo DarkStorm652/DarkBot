@@ -1,9 +1,9 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.ItemUseEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntityStopEatingEvent;
+import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.ItemUseEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.EntityStopEatingEvent;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
@@ -80,7 +80,7 @@ public class EatTask implements Task {
 			stop();
 			return;
 		}
-		bot.getEventManager().sendEvent(new ItemUseEvent(inventory.getItemAt(foodIndex)));
+		bot.getEventBus().fire(new ItemUseEvent(inventory.getItemAt(foodIndex)));
 		eatingTicks = 32;
 		lastHealth = player.getHealth();
 		lastHunger = player.getHunger();

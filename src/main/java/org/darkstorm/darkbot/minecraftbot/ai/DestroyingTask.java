@@ -3,7 +3,7 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 import java.util.Arrays;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -22,7 +22,7 @@ public class DestroyingTask implements Task, EventListener {
 
 	public DestroyingTask(final MinecraftBot bot) {
 		this.bot = bot;
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@Override

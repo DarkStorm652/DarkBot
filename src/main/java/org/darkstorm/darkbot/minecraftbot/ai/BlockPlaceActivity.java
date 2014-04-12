@@ -1,8 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventManager;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventBus;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -45,10 +45,10 @@ public class BlockPlaceActivity implements Activity {
 			return;
 		int x = location.getX(), y = location.getY(), z = location.getZ();
 		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
-		EventManager eventManager = bot.getEventManager();
-		eventManager.sendEvent(new PlayerRotateEvent(player));
-		eventManager.sendEvent(new ArmSwingEvent());
-		eventManager.sendEvent(new BlockPlaceEvent(inventory.getCurrentHeldItem(), x, y, z, face));
+		EventBus eventBus = bot.getEventBus();
+		eventBus.fire(new PlayerRotateEvent(player));
+		eventBus.fire(new ArmSwingEvent());
+		eventBus.fire(new BlockPlaceEvent(inventory.getCurrentHeldItem(), x, y, z, face));
 		ticksWait = timeout;
 	}
 

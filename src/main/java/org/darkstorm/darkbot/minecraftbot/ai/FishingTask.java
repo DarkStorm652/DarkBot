@@ -1,9 +1,9 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntityVelocityEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.EntityVelocityEvent;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -18,7 +18,7 @@ public class FishingTask implements Task, EventListener {
 
 	public FishingTask(final MinecraftBot bot) {
 		this.bot = bot;
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@Override
@@ -71,8 +71,8 @@ public class FishingTask implements Task, EventListener {
 		WorldLocation target = new WorldLocation(closest.offset(0, 1, 0));
 		if(player.getDistanceToSquared(target) < 25) {
 			player.face(target);
-			EventManager eventManager = bot.getEventManager();
-			eventManager.sendEvent(new PlayerRotateEvent(player));
+			EventBus eventBus = bot.getEventBus();
+			eventBus.fire(new PlayerRotateEvent(player));
 			useFishingRod();
 			fishing = true;
 		}
@@ -80,9 +80,9 @@ public class FishingTask implements Task, EventListener {
 
 	private void useFishingRod() {
 		MainPlayerEntity player = bot.getPlayer();
-		EventManager eventManager = bot.getEventManager();
-		eventManager.sendEvent(new ArmSwingEvent());
-		eventManager.sendEvent(new ItemUseEvent(player.getInventory().getCurrentHeldItem()));
+		EventBus eventBus = bot.getEventBus();
+		eventBus.fire(new ArmSwingEvent());
+		eventBus.fire(new ItemUseEvent(player.getInventory().getCurrentHeldItem()));
 	}
 
 	@Override

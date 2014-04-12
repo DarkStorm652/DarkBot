@@ -130,6 +130,7 @@ public class WalkActivity implements Activity {
 		}
 		if(nextStep != null) {
 			MainPlayerEntity player = bot.getPlayer();
+			System.out.println(" -> Moving from " + player.getLocation() + " to " + nextStep);
 			if(nextStep.getNext() != null && player.getDistanceToSquared(nextStep.getNext().getLocation()) < 0.2) {
 				nextStep = nextStep.getNext();
 				ticksSinceStepChange = 0;

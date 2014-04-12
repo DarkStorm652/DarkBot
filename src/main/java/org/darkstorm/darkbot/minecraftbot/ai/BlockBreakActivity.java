@@ -1,8 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventManager;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventBus;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -34,11 +34,11 @@ public class BlockBreakActivity implements Activity {
 		if(idAbove == 12 || idAbove == 13)
 			wait = 30;
 		player.switchTools(BlockType.getById(world.getBlockIdAt(location)).getToolType());
-		EventManager eventManager = bot.getEventManager();
-		eventManager.sendEvent(new PlayerRotateEvent(player));
-		eventManager.sendEvent(new ArmSwingEvent());
-		eventManager.sendEvent(new BlockBreakStartEvent(x, y, z, face));
-		eventManager.sendEvent(new BlockBreakCompleteEvent(x, y, z, face));
+		EventBus eventBus = bot.getEventBus();
+		eventBus.fire(new PlayerRotateEvent(player));
+		eventBus.fire(new ArmSwingEvent());
+		eventBus.fire(new BlockBreakStartEvent(x, y, z, face));
+		eventBus.fire(new BlockBreakCompleteEvent(x, y, z, face));
 		this.timeout = timeout;
 	}
 
