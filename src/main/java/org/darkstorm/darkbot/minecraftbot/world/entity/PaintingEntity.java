@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.EntityHitEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.EntityHitEvent;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.ArtType;
 
@@ -55,6 +55,6 @@ public class PaintingEntity extends Entity {
 
 	public void breakPainting() {
 		MinecraftBot bot = world.getBot();
-		bot.getEventManager().sendEvent(new EntityHitEvent(this));
+		bot.getEventBus().fire(new EntityHitEvent(this));
 	}
 }

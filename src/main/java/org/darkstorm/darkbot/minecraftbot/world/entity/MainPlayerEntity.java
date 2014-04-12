@@ -1,8 +1,8 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventManager;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventBus;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
@@ -220,7 +220,7 @@ public class MainPlayerEntity extends PlayerEntity {
 	public void setCrouching(boolean crouching) {
 		if(crouching != this.crouching) {
 			super.setCrouching(crouching);
-			world.getBot().getEventManager().sendEvent(new CrouchUpdateEvent(crouching));
+			world.getBot().getEventBus().fire(new CrouchUpdateEvent(crouching));
 		}
 	}
 
@@ -228,12 +228,12 @@ public class MainPlayerEntity extends PlayerEntity {
 	public void setSprinting(boolean sprinting) {
 		if(sprinting != this.sprinting) {
 			super.setSprinting(sprinting);
-			world.getBot().getEventManager().sendEvent(new SprintUpdateEvent(sprinting));
+			world.getBot().getEventBus().fire(new SprintUpdateEvent(sprinting));
 		}
 	}
 
 	public void swingArm() {
-		world.getBot().getEventManager().sendEvent(new ArmSwingEvent());
+		world.getBot().getEventBus().fire(new ArmSwingEvent());
 	}
 
 	public boolean switchTools(ToolType tool) {
@@ -311,15 +311,15 @@ public class MainPlayerEntity extends PlayerEntity {
 	}
 
 	public void hit(Entity entity) {
-		EventManager eventManager = world.getBot().getEventManager();
-		eventManager.sendEvent(new ArmSwingEvent());
-		eventManager.sendEvent(new EntityHitEvent(entity));
+		EventBus eventBus = world.getBot().getEventBus();
+		eventBus.fire(new ArmSwingEvent());
+		eventBus.fire(new EntityHitEvent(entity));
 	}
 
 	public void use(Entity entity) {
-		EventManager eventManager = world.getBot().getEventManager();
-		eventManager.sendEvent(new ArmSwingEvent());
-		eventManager.sendEvent(new EntityUseEvent(entity));
+		EventBus eventBus = world.getBot().getEventBus();
+		eventBus.fire(new ArmSwingEvent());
+		eventBus.fire(new EntityUseEvent(entity));
 	}
 
 	public boolean placeBlock(BlockLocation location) {

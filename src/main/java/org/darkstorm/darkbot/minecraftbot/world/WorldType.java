@@ -3,7 +3,9 @@ package org.darkstorm.darkbot.minecraftbot.world;
 public enum WorldType {
 	DEFAULT("default"),
 	FLAT("flat"),
-	DEFAULT_1_1("default_1_1");
+	DEFAULT_1_1("default_1_1"),
+	LARGE_BIOMES("largeBiomes"),
+	AMPLIFIED("amplified");
 
 	private final String name;
 

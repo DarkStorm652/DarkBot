@@ -1,9 +1,9 @@
 package org.darkstorm.darkbot.minecraftbot.world.item;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.WindowCloseEvent;
+import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.WindowCloseEvent;
 
 public class ChestInventory implements Inventory {
 	private final MinecraftBot bot;
@@ -121,7 +121,7 @@ public class ChestInventory implements Inventory {
 			}
 		}
 		System.out.println("Clicked at " + slot + " | left: " + leftClick + " item: " + item + " selected: " + oldSelected);
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -166,7 +166,7 @@ public class ChestInventory implements Inventory {
 		}
 		if(!slotFound)
 			return;
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
 	}
 
 	@Override
@@ -178,12 +178,12 @@ public class ChestInventory implements Inventory {
 	public synchronized void dropSelectedItem() {
 		delay();
 		selectedItem = null;
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
 	}
 
 	@Override
 	public synchronized void close() {
-		bot.getEventManager().sendEvent(new InventoryCloseEvent(this));
+		bot.getEventBus().fire(new InventoryCloseEvent(this));
 	}
 
 	private void delay() {

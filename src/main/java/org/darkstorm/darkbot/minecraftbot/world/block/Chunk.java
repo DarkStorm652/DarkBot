@@ -2,8 +2,8 @@ package org.darkstorm.darkbot.minecraftbot.world.block;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.events.EventManager;
-import org.darkstorm.darkbot.minecraftbot.events.world.BlockChangeEvent;
+import org.darkstorm.darkbot.minecraftbot.event.EventBus;
+import org.darkstorm.darkbot.minecraftbot.event.world.BlockChangeEvent;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 
 public final class Chunk {
@@ -74,8 +74,8 @@ public final class Chunk {
 		Block oldBlock = blocks[index] != 0 ? new Block(world, this, location, blocks[index], metadata[index]) : null;
 		blocks[index] = (byte) id;
 		Block newBlock = id != 0 ? new Block(world, this, location, id, metadata[index]) : null;
-		EventManager eventManager = world.getBot().getEventManager();
-		eventManager.sendEvent(new BlockChangeEvent(world, location, oldBlock, newBlock));
+		EventBus eventBus = world.getBot().getEventBus();
+		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
 
 	public int getBlockMetadataAt(BlockLocation location) {
@@ -101,8 +101,8 @@ public final class Chunk {
 		Block oldBlock = new Block(world, this, location, blocks[index], this.metadata[index]);
 		this.metadata[index] = (byte) metadata;
 		Block newBlock = new Block(world, this, location, blocks[index], metadata);
-		EventManager eventManager = world.getBot().getEventManager();
-		eventManager.sendEvent(new BlockChangeEvent(world, location, oldBlock, newBlock));
+		EventBus eventBus = world.getBot().getEventBus();
+		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
 
 	public int getBlockLightAt(BlockLocation location) {

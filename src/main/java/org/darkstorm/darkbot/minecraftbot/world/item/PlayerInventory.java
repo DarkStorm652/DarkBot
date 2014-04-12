@@ -3,9 +3,9 @@ package org.darkstorm.darkbot.minecraftbot.world.item;
 import java.util.Arrays;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class PlayerInventory implements Inventory, EventListener {
@@ -22,7 +22,7 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	public PlayerInventory(MainPlayerEntity player) {
 		this.player = player;
-		player.getWorld().getBot().getEventManager().registerListener(this);
+		player.getWorld().getBot().getEventBus().register(this);
 	}
 
 	@EventHandler
@@ -31,6 +31,11 @@ public class PlayerInventory implements Inventory, EventListener {
 			selectedItem = null;
 			Arrays.fill(crafting, null);
 		}
+	}
+
+	@EventHandler
+	public void onChangeHeldItem(ChangeHeldItemEvent event) {
+		setCurrentHeldSlot(event.getSlot());
 	}
 
 	@EventHandler
@@ -123,7 +128,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				setItemAt(slot, selectedItem);
 				selectedItem = null;
 			}
-			bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+			bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -200,7 +205,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				}
 			}
 		}
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -258,7 +263,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		if(!slotFound)
 			return;
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, transactionId++, originalItem, true));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, transactionId++, originalItem, true));
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -308,13 +313,13 @@ public class PlayerInventory implements Inventory, EventListener {
 		delay();
 		selectedItem = null;
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new InventoryChangeEvent(this, -999, 0, transactionId++, null, true));
+		bot.getEventBus().fire(new InventoryChangeEvent(this, -999, 0, transactionId++, null, true));
 	}
 
 	@Override
 	public synchronized void close() {
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new InventoryCloseEvent(this));
+		bot.getEventBus().fire(new InventoryCloseEvent(this));
 	}
 
 	public synchronized int getCurrentHeldSlot() {
@@ -335,7 +340,7 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	private void dropItem(boolean stack) {
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new HeldItemDropEvent(this, stack));
+		bot.getEventBus().fire(new HeldItemDropEvent(this, stack));
 	}
 
 	public void setCurrentHeldSlot(int currentHeldSlot) {
@@ -344,7 +349,7 @@ public class PlayerInventory implements Inventory, EventListener {
 		int oldSlot = this.currentHeldSlot;
 		this.currentHeldSlot = currentHeldSlot;
 		MinecraftBot bot = player.getWorld().getBot();
-		bot.getEventManager().sendEvent(new HeldItemChangeEvent(this, oldSlot, currentHeldSlot));
+		bot.getEventBus().fire(new HeldItemChangeEvent(this, oldSlot, currentHeldSlot));
 	}
 
 	public MainPlayerEntity getPlayer() {
@@ -401,6 +406,6 @@ public class PlayerInventory implements Inventory, EventListener {
 	}
 
 	public void destroy() {
-		player.getWorld().getBot().getEventManager().unregisterListener(this);
+		player.getWorld().getBot().getEventBus().unregister(this);
 	}
 }

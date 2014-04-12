@@ -4,18 +4,18 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.events.world.*;
-import org.darkstorm.darkbot.minecraftbot.events.world.ChunkLoadEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.BlockChangeEvent;
+import org.darkstorm.darkbot.minecraftbot.event.world.*;
+import org.darkstorm.darkbot.minecraftbot.event.world.ChunkLoadEvent;
 import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
@@ -43,8 +43,8 @@ public final class BasicWorld implements World, EventListener {
 		chunks = new HashMap<ChunkLocation, Chunk>();
 		entities = new ArrayList<Entity>();
 		pathFinder = new AStarPathSearchProvider(this);
-		EventManager eventManager = bot.getEventManager();
-		eventManager.registerListener(this);
+		EventBus eventBus = bot.getEventBus();
+		eventBus.register(this);
 	}
 
 	@EventHandler
@@ -53,7 +53,7 @@ public final class BasicWorld implements World, EventListener {
 		if(entity == null || !(entity instanceof LivingEntity))
 			return;
 		LivingEntity livingEntity = (LivingEntity) entity;
-		livingEntity.setWornItemAt(event.getSlot(), event.getItem());
+		livingEntity.setWornItemAt(event.getSlot().getId(), event.getItem());
 	}
 
 	@EventHandler
@@ -235,13 +235,13 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
-	public void onChunkLoad(org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChunkLoadEvent event) {
+	public void onChunkLoad(org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChunkLoadEvent event) {
 		ChunkLocation location = new ChunkLocation(event.getX(), event.getY(), event.getZ());
 		Chunk chunk = new Chunk(this, location, event.getBlocks(), event.getMetadata(), event.getLight(), event.getSkylight(), event.getBiomes());
 		synchronized(chunks) {
 			chunks.put(location, chunk);
 		}
-		bot.getEventManager().sendEvent(new ChunkLoadEvent(this, chunk));
+		bot.getEventBus().fire(new ChunkLoadEvent(this, chunk));
 	}
 
 	@EventHandler
@@ -278,13 +278,13 @@ public final class BasicWorld implements World, EventListener {
 		TileEntity entity = getTileEntityAt(event.getX(), event.getY(), event.getZ());
 		if(entity != null)
 			if(entity instanceof SignTileEntity)
-				bot.getEventManager().sendEvent(new EditSignEvent(entity.getLocation()));
+				bot.getEventBus().fire(new EditSignEvent(entity.getLocation()));
 	}
 
 	@Override
 	public void destroy() {
-		EventManager eventManager = bot.getEventManager();
-		eventManager.unregisterListener(this);
+		EventBus eventBus = bot.getEventBus();
+		eventBus.unregister(this);
 		synchronized(entities) {
 			for(Entity entity : entities)
 				entity.setDead(true);
@@ -333,7 +333,8 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return 0;
-		int id = chunk.getBlockIdAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		int id = chunk.getBlockIdAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
+				- chunkBlockOffset.getZ());
 		return id;
 	}
 
@@ -349,7 +350,8 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return;
-		chunk.setBlockIdAt(id, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		chunk.setBlockIdAt(id, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
+				- chunkBlockOffset.getZ());
 	}
 
 	@Override
@@ -364,7 +366,9 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return 0;
-		int metadata = chunk.getBlockMetadataAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		int metadata = chunk.getBlockMetadataAt(blockLocation.getX() - chunkBlockOffset.getX(),
+												blockLocation.getY() - chunkBlockOffset.getY(),
+												blockLocation.getZ() - chunkBlockOffset.getZ());
 		return metadata;
 	}
 
@@ -380,7 +384,8 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return;
-		chunk.setBlockMetadataAt(metadata, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		chunk.setBlockMetadataAt(metadata, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
+				- chunkBlockOffset.getZ());
 	}
 
 	@Override
@@ -395,7 +400,9 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return null;
-		TileEntity tileEntity = chunk.getTileEntityAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		TileEntity tileEntity = chunk.getTileEntityAt(	blockLocation.getX() - chunkBlockOffset.getX(),
+														blockLocation.getY() - chunkBlockOffset.getY(),
+														blockLocation.getZ() - chunkBlockOffset.getZ());
 		return tileEntity;
 	}
 
@@ -411,7 +418,8 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(location);
 		if(chunk == null)
 			return;
-		chunk.setTileEntityAt(tileEntity, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ() - chunkBlockOffset.getZ());
+		chunk.setTileEntityAt(tileEntity, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
+				- chunkBlockOffset.getZ());
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.EntityUseEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.EntityUseEvent;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 
@@ -24,7 +24,7 @@ public class PigEntity extends PassiveEntity {
 		if(!saddled)
 			return;
 		MinecraftBot bot = world.getBot();
-		bot.getEventManager().sendEvent(new EntityUseEvent(this));
+		bot.getEventBus().fire(new EntityUseEvent(this));
 	}
 
 	@Override
