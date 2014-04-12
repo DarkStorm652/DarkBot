@@ -8,11 +8,11 @@ import org.darkstorm.darkbot.mcwrapper.backend.Backend;
 import org.darkstorm.darkbot.mcwrapper.commands.*;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.ai.TaskManager;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.events.world.SpawnEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.world.SpawnEvent;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
@@ -28,7 +28,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		this.bot = bot;
 
 		commandManager = new BasicCommandManager(this);
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@EventHandler
@@ -58,7 +58,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	@EventHandler
 	public void onHealthUpdate(HealthUpdateEvent event) {
 		if(event.getHealth() <= 0)
-			bot.getEventManager().sendEvent(new RequestRespawnEvent());
+			bot.getEventBus().fire(new RequestRespawnEvent());
 	}
 
 	@EventHandler

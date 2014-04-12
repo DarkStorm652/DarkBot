@@ -9,11 +9,11 @@ import javax.naming.AuthenticationException;
 import org.darkstorm.darkbot.mcwrapper.gui.regular.commands.*;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
 
@@ -71,7 +71,7 @@ public class RegularBot implements EventListener {
 					} else
 						throw new IllegalArgumentException("Invalid proxy");
 					ProxyData data = new ProxyData(proxy, proxyPort, type == null ? ProxyType.SOCKS : type);
-					builder.socksProxy(data);
+					builder.connectProxy(data);
 				}
 
 				clearLog();
@@ -95,7 +95,7 @@ public class RegularBot implements EventListener {
 				}
 				progress(20, false);
 				status("Logging in...");
-				bot.getEventManager().registerListener(RegularBot.this);
+				bot.getEventBus().register(RegularBot.this);
 				TaskManager taskManager = bot.getTaskManager();
 				for(Class<? extends Task> task : data.tasks) {
 					try {
@@ -111,7 +111,7 @@ public class RegularBot implements EventListener {
 		if(bot != null) {
 			System.out.println("Disconnected");
 			bot.getConnectionHandler().disconnect("");
-			bot.getEventManager().unregisterListener(this);
+			bot.getEventBus().unregister(this);
 			bot = null;
 			loadingState = 0;
 			status("Waiting.");
@@ -162,7 +162,7 @@ public class RegularBot implements EventListener {
 			progress(100);
 		}
 		if(event.getHealth() <= 0)
-			bot.getEventManager().sendEvent(new RequestRespawnEvent());
+			bot.getEventBus().fire(new RequestRespawnEvent());
 	}
 
 	public void clearLog() {

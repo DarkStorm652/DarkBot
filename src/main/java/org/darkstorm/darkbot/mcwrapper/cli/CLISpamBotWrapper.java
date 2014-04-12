@@ -3,7 +3,6 @@ package org.darkstorm.darkbot.mcwrapper.cli;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.*;
 import java.util.*;
 import java.util.List;
 import java.util.Queue;
@@ -22,9 +21,9 @@ import org.darkstorm.darkbot.mcwrapper.commands.*;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.events.general.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChatReceivedEvent;
+import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
+import org.darkstorm.darkbot.minecraftbot.event.general.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChatReceivedEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
@@ -214,7 +213,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		}
 		if(options.has(protocolsOption)) {
 			System.out.println("Available protocols:");
-			for(ProtocolProvider provider : ProtocolProvider.getProviders())
+			for(ProtocolProvider<?> provider : ProtocolProvider.getProviders())
 				System.out.println("\t" + provider.getMinecraftVersion() + " (" + provider.getSupportedVersion() + "): " + provider.getClass().getName());
 			System.out.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
 			return;
@@ -260,8 +259,8 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			try {
 				parsedProtocol = Integer.parseInt(protocolString);
 			} catch(NumberFormatException exception) {
-				ProtocolProvider foundProvider = null;
-				for(ProtocolProvider provider : ProtocolProvider.getProviders())
+				ProtocolProvider<?> foundProvider = null;
+				for(ProtocolProvider<?> provider : ProtocolProvider.getProviders())
 					if(protocolString.equals(provider.getMinecraftVersion()))
 						foundProvider = provider;
 				if(foundProvider == null) {
@@ -366,7 +365,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 					Random random = new Random();
 
 					if(!offline) {
-						AuthService authService = new LegacyAuthService();
+						AuthService<?> authService = new YggdrasilAuthService(MinecraftBot.CLIENT_TOKEN);
 						boolean authenticated = false;
 						user: while(true) {
 							if(authenticated) {
@@ -400,7 +399,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 										loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));;
 								}
 								try {
-									session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, Proxy.Type.HTTP));
+									session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, ProxyData.ProxyType.HTTP));
 									// addAccount(session);
 									synchronized(workingProxies) {
 										AtomicInteger count = workingProxies.get(loginProxy);
@@ -664,7 +663,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		return accounts;
 	}
 
-	private static Proxy toProxy(String proxyData, Proxy.Type type) {
+	private static ProxyData toProxy(String proxyData, ProxyData.ProxyType type) {
 		if(proxyData == null)
 			return null;
 		int port = 80;
@@ -673,10 +672,10 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			proxyData = parts[0];
 			port = Integer.parseInt(parts[1]);
 		}
-		return new Proxy(type, new InetSocketAddress(proxyData, port));
+		return new ProxyData(proxyData, port, type);
 	}
 
-	private static MinecraftBot createBot(String server, String username, String password, AuthService service, Session session, int protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, int protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
 		MinecraftBot.Builder builder = MinecraftBot.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
@@ -688,7 +687,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 				if(parts.length > 2)
 					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
 			}
-			builder.socksProxy(new ProxyData(proxy, port, type));
+			builder.connectProxy(new ProxyData(proxy, port, type));
 		}
 		if(loginProxy != null && !loginProxy.isEmpty()) {
 			int port = 80;
@@ -697,7 +696,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 				loginProxy = parts[0];
 				port = Integer.parseInt(parts[1]);
 			}
-			builder.httpProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
+			builder.loginProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
 		}
 		builder.username(username).authService(service).protocol(protocol);
 		if(session != null)

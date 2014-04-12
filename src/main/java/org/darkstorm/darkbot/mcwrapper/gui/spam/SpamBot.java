@@ -6,11 +6,11 @@ import javax.naming.AuthenticationException;
 
 import org.darkstorm.darkbot.mcwrapper.gui.spam.ActionProvider.Action;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
 
 public class SpamBot implements EventListener {
 	private final SpamBotControlsUI ui;
@@ -78,7 +78,7 @@ public class SpamBot implements EventListener {
 		}
 		progress(20, false);
 		status("yellow", "Logging in...");
-		bot.getEventManager().registerListener(SpamBot.this);
+		bot.getEventBus().register(SpamBot.this);
 		/*TaskManager taskManager = bot.getTaskManager();
 		for(Class<? extends Task> task : data.tasks) {
 			try {
@@ -91,7 +91,7 @@ public class SpamBot implements EventListener {
 	public void disconnect() {
 		if(bot != null) {
 			bot.getConnectionHandler().disconnect("");
-			bot.getEventManager().unregisterListener(this);
+			bot.getEventBus().unregister(this);
 			bot = null;
 			loadingState = 0;
 			status("red", "Disconnected.");
@@ -147,7 +147,7 @@ public class SpamBot implements EventListener {
 			progress(100);
 		}
 		if(event.getHealth() <= 0)
-			bot.getEventManager().sendEvent(new RequestRespawnEvent());
+			bot.getEventBus().fire(new RequestRespawnEvent());
 	}
 
 	private void status(String color, String status) {

@@ -3,8 +3,8 @@ package org.darkstorm.darkbot.mcwrapper.backend;
 import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
 import org.darkstorm.darkbot.mcwrapper.commands.CommandException;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ChatReceivedEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChatReceivedEvent;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
 
 public class ChatBackend implements Backend, EventListener {
@@ -19,7 +19,7 @@ public class ChatBackend implements Backend, EventListener {
 	@Override
 	public void enable() {
 		MinecraftBot mcbot = bot.getBot();
-		mcbot.getEventManager().registerListener(this);
+		mcbot.getEventBus().register(this);
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class ChatBackend implements Backend, EventListener {
 	@Override
 	public void disable() {
 		MinecraftBot mcbot = bot.getBot();
-		mcbot.getEventManager().unregisterListener(this);
+		mcbot.getEventBus().unregister(this);
 	}
 
 	@EventHandler

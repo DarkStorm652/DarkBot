@@ -3,9 +3,9 @@ package org.darkstorm.darkbot.mcwrapper.commands;
 import java.util.*;
 
 import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
 
 public class PlayersCommand extends AbstractCommand implements EventListener {
 	private final List<String> users = new ArrayList<>();

@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.mcwrapper.commands;
 
 import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.RequestDisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestDisconnectEvent;
 
 public class QuitCommand extends AbstractCommand {
 
@@ -12,6 +12,6 @@ public class QuitCommand extends AbstractCommand {
 	@Override
 	public void execute(String[] args) {
 		controller.say("Leaving!");
-		bot.getEventManager().sendEvent(new RequestDisconnectEvent("Quit"));
+		bot.getEventBus().fire(new RequestDisconnectEvent("Quit"));
 	}
 }

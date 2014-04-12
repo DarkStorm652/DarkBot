@@ -2,8 +2,8 @@ package org.darkstorm.darkbot.mcwrapper.commands;
 
 import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventManager;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventBus;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
@@ -19,13 +19,13 @@ public class InteractCommand extends AbstractCommand {
 		int y = Integer.parseInt(args[2]);
 		int z = Integer.parseInt(args[3]);
 		MainPlayerEntity player = bot.getPlayer();
-		EventManager eventManager = bot.getEventManager();
+		EventBus eventBus = bot.getEventBus();
 
 		if(args[0].equalsIgnoreCase("hit")) {
 			player.face(x, y, z);
-			eventManager.sendEvent(new PlayerRotateEvent(player));
-			eventManager.sendEvent(new ArmSwingEvent());
-			eventManager.sendEvent(new BlockBreakStartEvent(x, y, z, 0));
+			eventBus.fire(new PlayerRotateEvent(player));
+			eventBus.fire(new ArmSwingEvent());
+			eventBus.fire(new BlockBreakStartEvent(x, y, z, 0));
 		} else if(args[0].equalsIgnoreCase("break")) // Non-blocking
 			new BlockBreakActivity(bot, new BlockLocation(x, y, z));
 		else if(args[0].equalsIgnoreCase("use"))

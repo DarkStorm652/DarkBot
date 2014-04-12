@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
 
 public class BasicCommandManager implements CommandManager {
 	private final MinecraftBotWrapper bot;
@@ -18,13 +18,13 @@ public class BasicCommandManager implements CommandManager {
 	public void register(Command command) {
 		commands.add(command);
 		if(command instanceof EventListener)
-			bot.getBot().getEventManager().registerListener((EventListener) command);
+			bot.getBot().getEventBus().register((EventListener) command);
 	}
 
 	@Override
 	public void unregister(Command command) {
 		if(command instanceof EventListener)
-			bot.getBot().getEventManager().unregisterListener((EventListener) command);
+			bot.getBot().getEventBus().unregister((EventListener) command);
 		commands.remove(command);
 	}
 
