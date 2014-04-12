@@ -4,7 +4,7 @@ import java.io.*;
 
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
+import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
 
 public class Packet24MobSpawn extends AbstractPacket implements ReadablePacket {
 	public int entityId;
@@ -33,7 +33,7 @@ public class Packet24MobSpawn extends AbstractPacket implements ReadablePacket {
 		velocityY = in.readShort();
 		velocityZ = in.readShort();
 
-		metadata = DataWatcher.readWatchableObjects(in);
+		metadata = readWatchableObjects(in);
 	}
 
 	@Override

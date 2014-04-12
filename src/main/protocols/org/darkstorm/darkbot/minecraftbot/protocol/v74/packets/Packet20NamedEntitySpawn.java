@@ -4,10 +4,9 @@ import java.io.*;
 
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
+import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
 
-public class Packet20NamedEntitySpawn extends AbstractPacket implements
-		ReadablePacket {
+public class Packet20NamedEntitySpawn extends AbstractPacket implements ReadablePacket {
 	public int entityId;
 	public String name;
 
@@ -18,12 +17,12 @@ public class Packet20NamedEntitySpawn extends AbstractPacket implements
 	public byte pitch;
 
 	public int currentItem;
-	public DataWatcher metadata;
 	public IntHashMap<WatchableObject> data;
 
 	public Packet20NamedEntitySpawn() {
 	}
 
+	@Override
 	public void readData(DataInputStream in) throws IOException {
 		entityId = in.readInt();
 		name = readString(in, 16);
@@ -33,9 +32,10 @@ public class Packet20NamedEntitySpawn extends AbstractPacket implements
 		rotation = in.readByte();
 		pitch = in.readByte();
 		currentItem = in.readShort();
-		data = DataWatcher.readWatchableObjects(in);
+		data = readWatchableObjects(in);
 	}
 
+	@Override
 	public int getId() {
 		return 20;
 	}
