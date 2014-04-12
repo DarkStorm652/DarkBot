@@ -2,15 +2,11 @@ package org.darkstorm.darkbot.minecraftbot.util;
 
 import java.io.*;
 import java.net.*;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
+import java.security.*;
 import java.util.*;
 import java.util.jar.*;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.script.*;
-
-import org.darkstorm.darkbot.minecraftbot.auth.Session;
 
 public final class Util {
 	private static final ScriptEngine engine;
@@ -34,63 +30,51 @@ public final class Util {
 		}
 	}
 
-	public static String post(String targetURL, String urlParameters, Proxy proxy) throws IOException {
-		HttpsURLConnection connection = null;
+	public static UUID generateSystemUUID() {
+		return generateSystemUUID(null);
+	}
+
+	public static UUID generateSystemUUID(String extra) {
+		StringBuffer digestData = new StringBuffer();
+		digestData.append(System.getProperty("os.name"));
+		digestData.append(System.getProperty("os.version"));
+		digestData.append(System.getProperty("os.arch"));
+		digestData.append(System.getProperty("user.name"));
+		digestData.append(System.getProperty("user.home"));
+		digestData.append(System.getProperty("java.version"));
+		digestData.append(System.getProperty("java.home"));
+		if(extra != null)
+			digestData.append(extra);
+		return generateHashUUID(digestData.toString());
+	}
+
+	public static UUID generateHashUUID(String digestData) {
+		MessageDigest md5;
 		try {
-			URL url = new URL(targetURL);
-			if(proxy != null)
-				connection = (HttpsURLConnection) url.openConnection(proxy);
-			else
-				connection = (HttpsURLConnection) url.openConnection();
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-			connection.setRequestProperty("Content-Length", Integer.toString(urlParameters.getBytes().length));
-			connection.setRequestProperty("Content-Language", "en-US");
-
-			connection.setUseCaches(false);
-			connection.setDoInput(true);
-			connection.setDoOutput(true);
-			connection.setReadTimeout(3000);
-			connection.setConnectTimeout(3000);
-
-			connection.connect();
-
-			Certificate[] certs = connection.getServerCertificates();
-
-			byte[] bytes = new byte[294];
-			DataInputStream dis = new DataInputStream(Session.class.getResourceAsStream("/minecraft.key"));
-			dis.readFully(bytes);
-			dis.close();
-
-			Certificate c = certs[0];
-			PublicKey pk = c.getPublicKey();
-			byte[] data = pk.getEncoded();
-
-			for(int i = 0; i < data.length; i++)
-				if(data[i] != bytes[i])
-					throw new RuntimeException("Public key mismatch");
-
-			try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
-				out.writeBytes(urlParameters);
-				out.flush();
-			}
-
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-				StringBuffer response = new StringBuffer();
-				String line;
-				while((line = reader.readLine()) != null)
-					response.append(line).append('\r');
-				return response.toString();
-			}
-		} catch(IOException exception) {
-			throw exception;
-		} catch(Exception exception) {
-			throw new IOException("Error connecting", exception);
-		} finally {
-			if(connection != null)
-				connection.disconnect();
+			md5 = MessageDigest.getInstance("MD5");
+		} catch(NoSuchAlgorithmException exception) {
+			return UUID.randomUUID();
 		}
+
+		md5.update(digestData.getBytes());
+		byte[] data = md5.digest();
+
+		StringBuffer hash = new StringBuffer();
+		for(int i = 0; i < data.length; i++) {
+			byte b = data[i];
+
+			if((b & 0xF0) == 0)
+				hash.append(0);
+			hash.append(Integer.toHexString(b & 0xFF));
+		}
+
+		StringBuffer uuid = new StringBuffer();
+		uuid.append(hash.substring(0, 8)).append('-');
+		uuid.append(hash.substring(8, 12)).append('-');
+		uuid.append(hash.substring(12, 16)).append('-');
+		uuid.append(hash.substring(16, 20)).append('-');
+		uuid.append(hash.substring(20, 32));
+		return UUID.fromString(uuid.toString());
 	}
 
 	public static String stripColors(final String input) {

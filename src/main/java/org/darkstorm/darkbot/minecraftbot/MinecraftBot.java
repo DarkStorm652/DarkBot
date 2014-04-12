@@ -1,17 +1,17 @@
 package org.darkstorm.darkbot.minecraftbot;
 
 import java.io.IOException;
-import java.net.*;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.general.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.events.world.SpawnEvent;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.general.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.world.SpawnEvent;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 import org.darkstorm.darkbot.minecraftbot.world.*;
@@ -22,14 +22,15 @@ public class MinecraftBot implements EventListener {
 	public static final int DEFAULT_PORT = 25565;
 	public static final int LATEST_PROTOCOL = -1;
 	public static final int MAX_CHAT_LENGTH = 100;
+	public static final UUID CLIENT_TOKEN = Util.generateSystemUUID("CLIENT_TOKEN");
 
 	private final ExecutorService service;
-	private final EventManager eventManager;
+	private final EventBus eventBus;
 	private final TaskManager taskManager;
 	private final ConnectionHandler connectionHandler;
-	private final AuthService authService;
+	private final AuthService<?> authService;
 	private final Session session;
-	private final Proxy loginProxy;
+	private final ProxyData loginProxy, connectProxy;
 
 	private MainPlayerEntity player;
 	private World world;
@@ -39,33 +40,34 @@ public class MinecraftBot implements EventListener {
 	private long lastMessage;
 	private Activity activity;
 
-	private MinecraftBot(Builder builder) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private MinecraftBot(Builder builder) throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
 		service = Executors.newCachedThreadPool();
-		eventManager = new EventManager();
-		eventManager.registerListener(this);
+		eventBus = new ConcurrentReadWriteEventBus();
+		eventBus.register(this);
 		taskManager = new BasicTaskManager(this);
 
-		Protocol protocol;
+		Protocol<?> protocol;
 		if(builder.getProtocol() >= 0) {
-			ProtocolProvider provider = ProtocolProvider.getProvider(builder.getProtocol());
+			ProtocolProvider<?> provider = ProtocolProvider.getProvider(builder.getProtocol());
 			if(provider == null)
 				throw new UnsupportedProtocolException("No protocol support for v" + builder.getProtocol() + " found.");
 			protocol = provider.getProtocolInstance(this);
 		} else
 			protocol = ProtocolProvider.getLatestProvider().getProtocolInstance(this);
-		connectionHandler = new SocketConnectionHandler(this, protocol, builder.getServer(), builder.getPort(), builder.getSocksProxy());
+		connectionHandler = new SocketConnectionHandler(this, protocol, builder.getServer(), builder.getPort(), builder.getConnectProxy());
 
 		if(builder.getAuthService() != null)
 			authService = builder.getAuthService();
+		else if(protocol instanceof ProtocolX)
+			authService = new YggdrasilAuthService(CLIENT_TOKEN);
 		else
 			authService = new LegacyAuthService();
 
-		if(builder.getSession() != null && !authService.isValidSession(builder.getSession()))
-			throw new IllegalArgumentException("Wrong auth service for session");
-		if(builder.getHttpProxy() != null)
-			loginProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(builder.getHttpProxy().getHostName(), builder.getHttpProxy().getPort()));
-		else
-			loginProxy = null;
+		if(builder.getSession() != null)
+			authService.validateSession(builder.getSession());
+		loginProxy = builder.getLoginProxy();
+		connectProxy = builder.getConnectProxy();
 
 		if(StringUtils.isNotBlank(builder.getPassword()) && (builder.getSession() == null || !builder.getSession().isValidForAuthentication()))
 			session = authService.login(builder.getUsername(), builder.getPassword(), loginProxy);
@@ -76,7 +78,7 @@ public class MinecraftBot implements EventListener {
 
 		connectionHandler.connect();
 
-		eventManager.sendEvent(new HandshakeEvent(session, connectionHandler.getServer(), connectionHandler.getPort()));
+		eventBus.fire(new HandshakeEvent(session, connectionHandler.getServer(), connectionHandler.getPort()));
 		new TickHandler();
 	}
 
@@ -101,7 +103,7 @@ public class MinecraftBot implements EventListener {
 		player.setYaw(event.getYaw());
 		player.setPitch(event.getPitch());
 		if(!hasSpawned) {
-			eventManager.sendEvent(new SpawnEvent(player));
+			eventBus.fire(new SpawnEvent(player));
 			hasSpawned = true;
 		}
 	}
@@ -194,7 +196,7 @@ public class MinecraftBot implements EventListener {
 				updateMovement();
 		}
 
-		eventManager.sendEvent(new TickEvent());
+		eventBus.fire(new TickEvent());
 	}
 
 	public synchronized void updateMovement() {
@@ -212,7 +214,7 @@ public class MinecraftBot implements EventListener {
 			event = new PlayerRotateEvent(player, yaw, pitch, onGround);
 		else
 			event = new PlayerUpdateEvent(player, onGround);
-		eventManager.sendEvent(event);
+		eventBus.fire(event);
 
 		player.setLastX(player.getX());
 		player.setLastY(player.getY());
@@ -232,7 +234,7 @@ public class MinecraftBot implements EventListener {
 	@EventHandler
 	public synchronized void onDisconnect(DisconnectEvent event) {
 		service.shutdownNow();
-		eventManager.clearListeners();
+		eventBus.clearListeners();
 		hasSpawned = false;
 		player = null;
 		world = null;
@@ -247,7 +249,7 @@ public class MinecraftBot implements EventListener {
 				} catch(InterruptedException e) {}
 			}
 			String part = message.substring(0, MAX_CHAT_LENGTH);
-			eventManager.sendEvent(new ChatSentEvent(part));
+			eventBus.fire(new ChatSentEvent(part));
 			message = message.substring(part.length());
 			lastMessage = System.currentTimeMillis();
 		}
@@ -258,7 +260,7 @@ public class MinecraftBot implements EventListener {
 					Thread.sleep(messageDelay - elapsed);
 				} catch(InterruptedException e) {}
 			}
-			eventManager.sendEvent(new ChatSentEvent(message));
+			eventBus.fire(new ChatSentEvent(message));
 			lastMessage = System.currentTimeMillis();
 		}
 	}
@@ -306,8 +308,8 @@ public class MinecraftBot implements EventListener {
 		return service;
 	}
 
-	public EventManager getEventManager() {
-		return eventManager;
+	public EventBus getEventBus() {
+		return eventBus;
 	}
 
 	public TaskManager getTaskManager() {
@@ -318,8 +320,16 @@ public class MinecraftBot implements EventListener {
 		return connectionHandler;
 	}
 
-	public AuthService getAuthService() {
+	public AuthService<?> getAuthService() {
 		return authService;
+	}
+
+	public ProxyData getLoginProxy() {
+		return loginProxy;
+	}
+
+	public ProxyData getConnectProxy() {
+		return connectProxy;
 	}
 
 	public boolean isConnected() {
@@ -383,10 +393,10 @@ public class MinecraftBot implements EventListener {
 		private String username;
 		private String password;
 
-		private ProxyData httpProxy;
-		private ProxyData socksProxy;
+		private ProxyData loginProxy;
+		private ProxyData connectProxy;
 
-		private AuthService authService;
+		private AuthService<?> authService;
 		private Session session;
 
 		private Builder() {
@@ -417,17 +427,17 @@ public class MinecraftBot implements EventListener {
 			return this;
 		}
 
-		public synchronized Builder httpProxy(ProxyData httpProxy) {
-			this.httpProxy = httpProxy;
+		public synchronized Builder loginProxy(ProxyData loginProxy) {
+			this.loginProxy = loginProxy;
 			return this;
 		}
 
-		public synchronized Builder socksProxy(ProxyData socksProxy) {
-			this.socksProxy = socksProxy;
+		public synchronized Builder connectProxy(ProxyData connectProxy) {
+			this.connectProxy = connectProxy;
 			return this;
 		}
 
-		public synchronized Builder authService(AuthService authService) {
+		public synchronized Builder authService(AuthService<?> authService) {
 			this.authService = authService;
 			return this;
 		}
@@ -437,9 +447,7 @@ public class MinecraftBot implements EventListener {
 			return this;
 		}
 
-		public synchronized MinecraftBot build() throws AuthenticationException, UnsupportedProtocolException, IOException {
-			if(!isValid())
-				throw new IllegalStateException();
+		public synchronized MinecraftBot build() throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
 			return new MinecraftBot(this);
 		}
 
@@ -463,24 +471,20 @@ public class MinecraftBot implements EventListener {
 			return password;
 		}
 
-		public ProxyData getHttpProxy() {
-			return httpProxy;
+		public ProxyData getLoginProxy() {
+			return loginProxy;
 		}
 
-		public ProxyData getSocksProxy() {
-			return socksProxy;
+		public ProxyData getConnectProxy() {
+			return connectProxy;
 		}
 
-		public AuthService getAuthService() {
+		public AuthService<?> getAuthService() {
 			return authService;
 		}
 
 		public Session getSession() {
 			return session;
-		}
-
-		public boolean isValid() {
-			return username != null && !username.isEmpty() && server != null && !server.isEmpty() && port >= 0 && port < 65535;
 		}
 	}
 }

@@ -87,6 +87,7 @@ public class Connection {
 					throw new IOException(exception);
 				}
 				break;
+			default:
 			}
 		} else
 			socket = new Socket();
