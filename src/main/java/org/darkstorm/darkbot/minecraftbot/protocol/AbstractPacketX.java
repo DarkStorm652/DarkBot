@@ -1,34 +1,149 @@
 package org.darkstorm.darkbot.minecraftbot.protocol;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import org.darkstorm.darkbot.minecraftbot.nbt.*;
+import org.darkstorm.darkbot.minecraftbot.protocol.ProtocolX.State;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
-public abstract class AbstractPacket implements Packet {
-	public static String readString(DataInputStream in) throws IOException {
-		return readString(in, 32767);
+public abstract class AbstractPacketX implements PacketX {
+	private static final Charset UTF8 = Charset.forName("UTF-8");
+	private final int id;
+	private final State state;
+	private final Direction direction;
+
+	protected AbstractPacketX(int id, State state, Direction direction) {
+		this.id = id;
+		this.state = state;
+		this.direction = direction;
 	}
 
-	public static String readString(DataInputStream in, int maxSize) throws IOException {
-		int length = in.readShort();
-		if(length > maxSize)
-			throw new IOException("String too big");
-		char[] characters = new char[length];
-		for(int i = 0; i < length; i++)
-			characters[i] = in.readChar();
-		return new String(characters);
+	@Override
+	public int getId() {
+		return id;
+	}
+
+	@Override
+	public State getState() {
+		return state;
+	}
+
+	@Override
+	public Direction getDirection() {
+		return direction;
+	}
+
+	public static String readString(DataInputStream in) throws IOException {
+		int length = readVarInt(in);
+		byte[] data = new byte[length];
+		in.readFully(data);
+		return new String(data, UTF8);
 	}
 
 	public static void writeString(String string, DataOutputStream out) throws IOException {
-		if(string.length() > 32767)
-			throw new IOException("String too big");
-		out.writeShort(string.length());
-		out.writeChars(string);
+		writeVarInt(string.length(), out);
+		out.write(string.getBytes(UTF8));
+	}
+
+	public static int varIntLength(int varInt) {
+		int size = 0;
+		while(true) {
+			size++;
+			if((varInt & 0xFFFFFF80) == 0)
+				return size;
+			varInt >>>= 7;
+		}
+	}
+
+	public static int readVarInt(DataInputStream in) throws IOException {
+		int i = 0;
+		int j = 0;
+		while(true) {
+			int k = in.read();
+			if(k == -1)
+				throw new IOException("End of stream");
+
+			i |= (k & 0x7F) << j++ * 7;
+
+			if(j > 5)
+				throw new IOException("VarInt too big");
+
+			if((k & 0x80) != 128)
+				break;
+		}
+
+		return i;
+		/*int varInt = 0;
+		for(int i = 0; i < 5; i++) {
+			int b = in.read();
+			varInt |= (b & (i != 4 ? 0x7F : 0x0F)) << (i * 7);
+
+			if(i == 4 && (((b & 0x80) == 0x80) || ((b & 0x70) != 0)))
+				throw new IOException("VarInt too big");
+			if((b & 0x80) != 0x80)
+				break;
+		}
+		return varInt;*/
+	}
+
+	public static long readVarInt64(DataInputStream in) throws IOException {
+		long varInt = 0;
+		for(int i = 0; i < 10; i++) {
+			byte b = in.readByte();
+			varInt |= ((long) (b & (i != 9 ? 0x7F : 0x01))) << (i * 7);
+
+			if(i == 9 && (((b & 0x80) == 0x80) || ((b & 0x7E) != 0)))
+				throw new IOException("VarInt too big");
+			if((b & 0x80) != 0x80)
+				break;
+		}
+		return varInt;
+	}
+
+	public static void writeVarInt(int varInt, DataOutputStream out) throws IOException {
+		while(true) {
+			if((varInt & 0xFFFFFF80) == 0) {
+				out.write(varInt);
+				return;
+			}
+
+			out.write(varInt & 0x7F | 0x80);
+			varInt >>>= 7;
+		}
+		/*int length = 5;
+		for(int i = 4; i >= 0; i--)
+			if(((varInt >> (i * 7)) & (i != 4 ? 0x7F : 0x0F)) == 0)
+				length--;
+		for(int i = 0; i < length; i++)
+			out.write((i == length - 1 ? 0x00 : 0x80) | ((varInt >> (i * 7)) & (i != 4 ? 0x7F : 0x0F)));*/
+	}
+
+	public static void writeVarInt64(long varInt, DataOutputStream out) throws IOException {
+		int length = 10;
+		for(int i = 9; i >= 0; i--)
+			if(((varInt >> (i * 7)) & (i != 9 ? 0x7F : 0x01)) == 0)
+				length--;
+		for(int i = 0; i < length; i++)
+			out.writeByte((int) ((i == length - 1 ? 0x00 : 0x80) | ((varInt >> (i * 7)) & (i != 9 ? 0x7F : 0x01))));
+	}
+
+	public static byte[] readByteArray(DataInputStream in) throws IOException {
+		short length = in.readShort();
+		if(length < 0)
+			throw new IOException("Invalid array length");
+		byte[] data = new byte[length];
+		in.readFully(data);
+		return data;
+	}
+
+	public static void writeByteArray(byte[] data, DataOutputStream out) throws IOException {
+		out.writeShort(data.length);
+		out.write(data);
 	}
 
 	public static ItemStack readItemStack(DataInputStream in) throws IOException {
@@ -74,21 +189,6 @@ public abstract class AbstractPacket implements Packet {
 			out.write(data);
 		} else
 			out.writeShort(-1);
-	}
-
-	public static byte[] readByteArray(DataInputStream in) throws IOException {
-		short length = in.readShort();
-		if(length >= 0) {
-			byte[] read = new byte[length];
-			in.read(read);
-			return read;
-		} else
-			throw new IOException();
-	}
-
-	public static void writeByteArray(byte[] bytes, DataOutputStream out) throws IOException {
-		out.writeShort(bytes.length);
-		out.write(bytes);
 	}
 
 	public static void writeWatchableObjects(List<WatchableObject> objects, DataOutputStream out) throws IOException {
@@ -156,7 +256,7 @@ public abstract class AbstractPacket implements Packet {
 				watchableobject = new WatchableObject(i, j, Float.valueOf(in.readFloat()));
 				break;
 			case 4:
-				watchableobject = new WatchableObject(i, j, readString(in, 64));
+				watchableobject = new WatchableObject(i, j, readString(in));
 				break;
 			case 5:
 				watchableobject = new WatchableObject(i, j, readItemStack(in));

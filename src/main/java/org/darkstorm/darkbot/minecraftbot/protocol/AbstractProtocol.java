@@ -1,17 +1,20 @@
 package org.darkstorm.darkbot.minecraftbot.protocol;
 
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
 
-public abstract class AbstractProtocol implements Protocol {
+public abstract class AbstractProtocol implements Protocol<PacketHeader> {
 	private final int version;
+
 	private final IntHashMap<Class<? extends Packet>> packets;
 
 	public AbstractProtocol(int version) {
 		this.version = version;
-		packets = new IntHashMap<>(256);
+
+		packets = new IntHashMap<>(0xFF);
 	}
 
 	protected final void register(Class<? extends Packet> packetClass) {
@@ -36,14 +39,19 @@ public abstract class AbstractProtocol implements Protocol {
 	}
 
 	@Override
-	public int getVersion() {
-		return version;
+	public PacketHeader readHeader(DataInputStream in) throws IOException {
+		return new PacketHeader(in.readInt());
 	}
 
 	@Override
-	public Packet createPacket(int id) {
+	public PacketHeader createHeader(Packet packet, byte[] data) {
+		return new PacketHeader(packet.getId());
+	}
+
+	@Override
+	public Packet createPacket(PacketHeader header) {
 		try {
-			return packets.get(id).newInstance();
+			return packets.get(header.getId()).newInstance();
 		} catch(Exception exception) {
 			return null;
 		}
@@ -57,5 +65,10 @@ public abstract class AbstractProtocol implements Protocol {
 			if(packets.get(i) != null)
 				ids[length++] = i;
 		return Arrays.copyOfRange(ids, 0, length);
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 }

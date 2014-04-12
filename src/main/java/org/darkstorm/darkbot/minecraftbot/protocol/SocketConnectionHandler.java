@@ -4,23 +4,26 @@ import java.io.*;
 import java.security.Security;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.crypto.SecretKey;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.EventListener;
-import org.darkstorm.darkbot.minecraftbot.events.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.events.io.*;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
+import org.darkstorm.darkbot.minecraftbot.event.io.*;
 import org.darkstorm.darkbot.minecraftbot.util.*;
 
-public class SocketConnectionHandler implements ConnectionHandler, EventListener {
+public class SocketConnectionHandler<H extends PacketHeader> implements ConnectionHandler, EventListener {
 	private final MinecraftBot bot;
-	private final Protocol protocol;
+	private final Protocol<H> protocol;
 	private final Queue<ReadablePacket> packetProcessQueue;
 	private final Queue<WriteablePacket> packetWriteQueue;
 	private final Connection connection;
+
+	private final AtomicBoolean pauseReading, pauseWriting;
 
 	private ReadTask readTask;
 	private WriteTask writeTask;
@@ -28,20 +31,24 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 	private SecretKey sharedKey;
 	private boolean encrypting, decrypting;
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol protocol, String server, int port) {
+	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port) {
 		this(bot, protocol, server, port, null);
 	}
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol protocol, String server, int port, ProxyData socksProxy) {
+	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port, ProxyData socksProxy) {
 		this.bot = bot;
 		this.protocol = protocol;
 		packetProcessQueue = new ArrayDeque<ReadablePacket>();
 		packetWriteQueue = new ArrayDeque<WriteablePacket>();
+
+		pauseReading = new AtomicBoolean();
+		pauseWriting = new AtomicBoolean();
+
 		if(socksProxy != null)
 			connection = new Connection(server, port, socksProxy);
 		else
 			connection = new Connection(server, port);
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@EventHandler
@@ -84,7 +91,7 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 		sharedKey = null;
 		encrypting = decrypting = false;
 		connection.disconnect();
-		bot.getEventManager().sendEvent(new DisconnectEvent(reason));
+		bot.getEventBus().fire(new DisconnectEvent(reason));
 	}
 
 	@Override
@@ -96,13 +103,13 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 			packets = packetProcessQueue.toArray(new ReadablePacket[packetProcessQueue.size()]);
 			packetProcessQueue.clear();
 		}
-		EventManager eventManager = bot.getEventManager();
+		EventBus eventBus = bot.getEventBus();
 		for(ReadablePacket packet : packets)
-			eventManager.sendEvent(new PacketProcessEvent(packet));
+			eventBus.fire(new PacketProcessEvent(packet));
 	}
 
 	@Override
-	public Protocol getProtocol() {
+	public Protocol<?> getProtocol() {
 		return protocol;
 	}
 
@@ -144,14 +151,14 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 	}
 
 	@Override
-	public synchronized void enableEncryption() throws UnsupportedOperationException {
+	public synchronized void enableEncryption() {
 		if(!isConnected())
 			throw new IllegalStateException("Not connected");
 		if(encrypting)
 			throw new IllegalStateException("Already encrypting");
 		if(sharedKey == null)
 			throw new IllegalStateException("Shared key not set");
-		if(writeTask.thread == null || writeTask.thread != Thread.currentThread())
+		if(!pauseWriting.get() && (writeTask.thread == null || writeTask.thread != Thread.currentThread()))
 			throw new IllegalStateException("Must be called from write thread");
 		connection.setOutputStream(new DataOutputStream(EncryptionUtil.encryptOutputStream(connection.getOutputStream(), sharedKey)));
 		encrypting = true;
@@ -163,17 +170,70 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 	}
 
 	@Override
-	public synchronized void enableDecryption() throws UnsupportedOperationException {
+	public synchronized void enableDecryption() {
 		if(!isConnected())
 			throw new IllegalStateException("Not connected");
 		if(decrypting)
 			throw new IllegalStateException("Already decrypting");
 		if(sharedKey == null)
 			throw new IllegalStateException("Shared key not set");
-		if(readTask.thread == null || readTask.thread != Thread.currentThread())
+		if(!pauseReading.get() && (readTask.thread == null || readTask.thread != Thread.currentThread()))
 			throw new IllegalStateException("Must be called from read thread");
 		connection.setInputStream(new DataInputStream(EncryptionUtil.decryptInputStream(connection.getInputStream(), sharedKey)));
 		decrypting = true;
+	}
+
+	@Override
+	public boolean supportsPausing() {
+		return true;
+	}
+
+	@Override
+	public void pauseReading() {
+		synchronized(pauseReading) {
+			pauseReading.set(true);
+			pauseReading.notifyAll();
+		}
+	}
+
+	@Override
+	public void pauseWriting() {
+		synchronized(pauseWriting) {
+			pauseWriting.set(true);
+			pauseWriting.notifyAll();
+		}
+		synchronized(packetWriteQueue) {
+			packetWriteQueue.notifyAll();
+		}
+	}
+
+	@Override
+	public void resumeReading() {
+		synchronized(pauseReading) {
+			pauseReading.set(false);
+			pauseReading.notifyAll();
+		}
+	}
+
+	@Override
+	public void resumeWriting() {
+		synchronized(pauseWriting) {
+			pauseWriting.set(false);
+			pauseWriting.notifyAll();
+		}
+		synchronized(packetWriteQueue) {
+			packetWriteQueue.notifyAll();
+		}
+	}
+
+	@Override
+	public boolean isReadingPaused() {
+		return pauseReading.get();
+	}
+
+	@Override
+	public boolean isWritingPaused() {
+		return pauseWriting.get();
 	}
 
 	private final class ReadTask implements Runnable {
@@ -186,14 +246,55 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 			try {
 				Thread.sleep(500);
 				while(isConnected()) {
+					try {
+						synchronized(pauseReading) {
+							if(pauseReading.get()) {
+								pauseReading.wait(500);
+								continue;
+							}
+						}
+					} catch(InterruptedException exception) {
+						if(future == null || future.isCancelled())
+							break;
+						continue;
+					}
+
 					DataInputStream in = connection.getInputStream();
-					int id = in.read();
-					ReadablePacket packet = (ReadablePacket) protocol.createPacket(id);
+					final H header = protocol.readHeader(in);
+					if(header == null)
+						throw new IOException("Invalid header");
+					ReadablePacket packet = (ReadablePacket) protocol.createPacket(header);
 					if(packet == null || !(packet instanceof ReadablePacket))
-						throw new IOException("Bad packet, id " + id);
+						throw new IOException("Bad packet with header: " + header.toString());
+
+					if(header instanceof PacketLengthHeader) {
+						int length = ((PacketLengthHeader) header).getLength() - AbstractPacketX.varIntLength(header.getId());
+						final byte[] data = new byte[length];
+						in.readFully(data);
+
+						in = new DataInputStream(new ByteArrayInputStream(data) {
+							@Override
+							public synchronized int read() {
+								if(pos == count)
+									System.out.println("WARNING: Packet 0x" + Integer.toHexString(header.getId()).toUpperCase() + " read past length of "
+											+ data.length);
+								return super.read();
+							}
+
+							@Override
+							public void close() throws IOException {
+								if(pos != count)
+									System.out.println("WARNING: Packet 0x" + Integer.toHexString(header.getId()).toUpperCase() + " read less than "
+											+ data.length + " (" + pos + ")");
+							}
+						});
+					}
 					packet.readData(in);
 
-					bot.getEventManager().sendEvent(new PacketReceivedEvent(packet));
+					if(header instanceof PacketLengthHeader)
+						in.close();
+
+					bot.getEventBus().fire(new PacketReceivedEvent(packet));
 					synchronized(packetProcessQueue) {
 						packetProcessQueue.offer(packet);
 					}
@@ -217,6 +318,13 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 				while(isConnected()) {
 					WriteablePacket packet = null;
 					try {
+						synchronized(pauseWriting) {
+							if(pauseWriting.get()) {
+								pauseWriting.wait(500);
+								continue;
+							}
+						}
+
 						synchronized(packetWriteQueue) {
 							if(!packetWriteQueue.isEmpty())
 								packet = packetWriteQueue.poll();
@@ -229,12 +337,18 @@ public class SocketConnectionHandler implements ConnectionHandler, EventListener
 						continue;
 					}
 					if(packet != null) {
-						DataOutputStream outputStream = connection.getOutputStream();
-						outputStream.write(packet.getId());
-						packet.writeData(outputStream);
-						outputStream.flush();
+						ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+						packet.writeData(new DataOutputStream(byteOutputStream));
+						byte[] data = byteOutputStream.toByteArray();
 
-						bot.getEventManager().sendEvent(new PacketSentEvent(packet));
+						DataOutputStream out = connection.getOutputStream();
+						PacketHeader header = protocol.createHeader(packet, data);
+
+						header.write(out);
+						out.write(data);
+						out.flush();
+
+						bot.getEventBus().fire(new PacketSentEvent(packet));
 					}
 				}
 			} catch(Throwable exception) {

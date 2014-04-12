@@ -6,18 +6,19 @@ import java.util.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 
-public abstract class ProtocolProvider {
-	private static final List<ProtocolProvider> providers = loadProviders();
+public abstract class ProtocolProvider<T extends Protocol<?>> {
+	private static final List<ProtocolProvider<?>> providers = loadProviders();
 
-	private static final List<ProtocolProvider> loadProviders() {
-		List<ProtocolProvider> providers = new ArrayList<>();
+	private static final List<ProtocolProvider<?>> loadProviders() {
+		List<ProtocolProvider<?>> providers = new ArrayList<>();
 
 		URL[] urls = locateProtocolJars();
 		URLClassLoader classLoader = new URLClassLoader(urls);
+		@SuppressWarnings("rawtypes")
 		ServiceLoader<ProtocolProvider> providerLoader = ServiceLoader.load(ProtocolProvider.class, classLoader);
-		loop: for(ProtocolProvider provider : providerLoader) {
-			for(ProtocolProvider installed : providers)
-				if(provider.getSupportedVersion() == installed.getSupportedVersion())
+		loop: for(ProtocolProvider<?> provider : providerLoader) {
+			for(ProtocolProvider<?> installed : providers)
+				if(provider.getSupportedVersion() == installed.getSupportedVersion() && (provider instanceof ProtocolProviderX == installed instanceof ProtocolProviderX))
 					continue loop;
 			providers.add(provider);
 		}
@@ -39,16 +40,24 @@ public abstract class ProtocolProvider {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
-	public static final List<ProtocolProvider> getProviders() {
+	public static final List<ProtocolProvider<?>> getProviders() {
 		return providers;
 	}
 
-	public static final ProtocolProvider getProvider(int version) {
-		for(ProtocolProvider provider : providers)
-			if(version == provider.getSupportedVersion())
+	public static final ProtocolProvider<?> getProvider(int version) {
+		ProtocolProvider<?> provider = getProvider(version, true);
+		if(provider != null)
+			return provider;
+		return getProvider(version, false);
+	}
+
+	public static final ProtocolProvider<?> getProvider(int version, boolean x) {
+		for(ProtocolProvider<?> provider : providers)
+			if(version == provider.getSupportedVersion() && (x == provider instanceof ProtocolProviderX))
 				return provider;
 		try {
-			String className = "org.darkstorm.darkbot.minecraftbot.protocol.v" + version + ".Protocol" + version + "$Provider";
+			String className = ProtocolProvider.class.getPackage().getName() + ".v" + version + (x ? "x" : "") + ".Protocol" + version + (x ? "X" : "") + "$Provider";
+			@SuppressWarnings("rawtypes")
 			Class<? extends ProtocolProvider> providerClass = Class.forName(className).asSubclass(ProtocolProvider.class);
 			return providerClass.newInstance();
 		} catch(Throwable exception) {
@@ -56,15 +65,22 @@ public abstract class ProtocolProvider {
 		}
 	}
 
-	public static final ProtocolProvider getLatestProvider() {
-		ProtocolProvider latestProvider = null;
-		for(ProtocolProvider provider : providers)
-			if(latestProvider == null || provider.getSupportedVersion() > latestProvider.getSupportedVersion())
+	public static final ProtocolProvider<?> getLatestProvider() {
+		ProtocolProvider<?> provider = getLatestProvider(true);
+		if(provider != null)
+			return provider;
+		return getLatestProvider(false);
+	}
+
+	public static final ProtocolProvider<?> getLatestProvider(boolean x) {
+		ProtocolProvider<?> latestProvider = null;
+		for(ProtocolProvider<?> provider : providers)
+			if((x == provider instanceof ProtocolProviderX) && (latestProvider == null || provider.getSupportedVersion() > latestProvider.getSupportedVersion()))
 				latestProvider = provider;
 		return latestProvider;
 	}
 
-	public abstract Protocol getProtocolInstance(MinecraftBot bot);
+	public abstract T getProtocolInstance(MinecraftBot bot);
 
 	public abstract int getSupportedVersion();
 

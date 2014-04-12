@@ -23,6 +23,20 @@ public interface ConnectionHandler {
 
 	public boolean isDecrypting();
 
+	public boolean supportsPausing();
+
+	public void pauseReading() throws UnsupportedOperationException;
+
+	public void pauseWriting() throws UnsupportedOperationException;
+
+	public void resumeReading() throws UnsupportedOperationException;
+
+	public void resumeWriting() throws UnsupportedOperationException;
+
+	public boolean isReadingPaused();
+
+	public boolean isWritingPaused();
+
 	public void connect() throws IOException;
 
 	public void disconnect(String reason);
@@ -33,5 +47,5 @@ public interface ConnectionHandler {
 
 	public int getPort();
 
-	public Protocol getProtocol();
+	public Protocol<?> getProtocol();
 }
