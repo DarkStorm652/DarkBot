@@ -8,6 +8,7 @@ import java.util.*;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.darkstorm.darkbot.minecraftbot.auth.YggdrasilSession.Profile;
+import org.darkstorm.darkbot.minecraftbot.util.ProxyData;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
@@ -34,7 +35,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public YggdrasilSession login(String username, String password, Proxy proxy) throws AuthenticationException, IOException {
+	public YggdrasilSession login(String username, String password, ProxyData proxy) throws AuthenticationException, IOException {
 		JSONObject agent = new JSONObject();
 		agent.put("name", "Minecraft");
 		agent.put("version", LOGIN_VERSION);
@@ -61,7 +62,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 		logout(session, null);
 	}
 
-	public void logout(YggdrasilSession session, Proxy proxy) throws AuthenticationException, IOException {
+	public void logout(YggdrasilSession session, ProxyData proxy) throws AuthenticationException, IOException {
 		logout(session.getUsername(), session.getPassword(), proxy);
 	}
 
@@ -70,7 +71,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void logout(String username, String password, Proxy proxy) throws AuthenticationException, IOException {
+	public void logout(String username, String password, ProxyData proxy) throws AuthenticationException, IOException {
 		if(username == null || username.trim().isEmpty())
 			throw new IllegalArgumentException("Invalid username");
 		if(password == null || password.trim().isEmpty())
@@ -90,7 +91,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void validate(YggdrasilSession session, Proxy proxy) throws AuthenticationException, IOException {
+	public void validate(YggdrasilSession session, ProxyData proxy) throws AuthenticationException, IOException {
 		if(!session.isValidForAuthentication())
 			throw new IllegalArgumentException("Session must be usable for authentication to validate");
 
@@ -107,7 +108,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void invalidate(YggdrasilSession session, Proxy proxy) throws AuthenticationException, IOException {
+	public void invalidate(YggdrasilSession session, ProxyData proxy) throws AuthenticationException, IOException {
 		if(!session.isValidForAuthentication())
 			throw new IllegalArgumentException("Session must be usable for authentication to invalidate");
 		if(session.getClientToken() == null)
@@ -127,7 +128,7 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public YggdrasilSession refresh(YggdrasilSession session, Proxy proxy) throws AuthenticationException, IOException {
+	public YggdrasilSession refresh(YggdrasilSession session, ProxyData proxy) throws AuthenticationException, IOException {
 		if(!session.isValidForAuthentication())
 			throw new IllegalArgumentException("Session must be usable for authentication to refresh");
 		if(session.getClientToken() == null)
@@ -153,14 +154,14 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void authenticate(YggdrasilSession session, String serverId, Proxy proxy) throws AuthenticationException, IOException {
+	public void authenticate(YggdrasilSession session, String serverId, ProxyData proxy) throws AuthenticationException, IOException {
 		if(!session.isValidForAuthentication())
 			throw new IllegalArgumentException("Session must be usable for authentication to refresh");
 		if(session.getSelectedProfile() == null)
 			throw new IllegalArgumentException("Session must have selected profile");
 
 		JSONObject request = new JSONObject();
-		request.put("accessToken", session.getAccessToken());
+		request.put("accessToken", session.getAccessToken().toString(16));
 		request.put("selectedProfile", session.getSelectedProfile().getId());
 		request.put("serverId", serverId);
 
@@ -169,13 +170,14 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 			checkError(response);
 	}
 
-	private JSONObject post(String targetURL, JSONObject request, Proxy proxy) throws IOException {
+	private JSONObject post(String targetURL, JSONObject request, ProxyData proxy) throws IOException {
+		Proxy wrappedProxy = wrapProxy(proxy);
 		String requestValue = request.toJSONString();
 		HttpsURLConnection connection = null;
 		try {
 			URL url = new URL(targetURL);
-			if(proxy != null)
-				connection = (HttpsURLConnection) url.openConnection(proxy);
+			if(wrappedProxy != null)
+				connection = (HttpsURLConnection) url.openConnection(wrappedProxy);
 			else
 				connection = (HttpsURLConnection) url.openConnection();
 			connection.setRequestMethod("POST");
@@ -240,6 +242,12 @@ public class YggdrasilAuthService implements AuthService<YggdrasilSession> {
 			if(connection != null)
 				connection.disconnect();
 		}
+	}
+
+	private Proxy wrapProxy(ProxyData proxy) {
+		if(proxy == null || (proxy.getType() != ProxyData.ProxyType.HTTP && proxy.getType() != ProxyData.ProxyType.SOCKS))
+			return null;
+		return new Proxy(proxy.getType() == ProxyData.ProxyType.HTTP ? Proxy.Type.HTTP : Proxy.Type.SOCKS, new InetSocketAddress(proxy.getHostName(), proxy.getPort()));
 	}
 
 	private void checkError(JSONObject response) throws AuthenticationException {

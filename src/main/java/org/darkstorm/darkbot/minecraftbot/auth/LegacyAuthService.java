@@ -7,6 +7,8 @@ import java.security.cert.Certificate;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.darkstorm.darkbot.minecraftbot.util.ProxyData;
+
 public class LegacyAuthService implements AuthService<LegacySession> {
 	private static final String LOGIN_URL = "https://login.minecraft.net/";
 	private static final String LOGIN_URL_PARAMETERS = "user=%s&password=%s&version=%d";
@@ -19,7 +21,7 @@ public class LegacyAuthService implements AuthService<LegacySession> {
 	}
 
 	@Override
-	public LegacySession login(String username, String password, Proxy proxy) throws AuthenticationException, IOException {
+	public LegacySession login(String username, String password, ProxyData proxy) throws AuthenticationException, IOException {
 		String parameters = String.format(LOGIN_URL_PARAMETERS, encodeUtf8(username), encodeUtf8(password), LOGIN_VERSION);
 		String result = post(LOGIN_URL, parameters, proxy);
 		if(result == null)
@@ -30,12 +32,13 @@ public class LegacyAuthService implements AuthService<LegacySession> {
 		return new LegacySession(values[2], password, values[3].replaceAll("[\n\r]", ""));
 	}
 
-	private String post(String targetURL, String urlParameters, Proxy proxy) throws IOException {
+	private String post(String targetURL, String urlParameters, ProxyData proxy) throws IOException {
+		Proxy wrappedProxy = wrapProxy(proxy);
 		HttpsURLConnection connection = null;
 		try {
 			URL url = new URL(targetURL);
-			if(proxy != null)
-				connection = (HttpsURLConnection) url.openConnection(proxy);
+			if(wrappedProxy != null)
+				connection = (HttpsURLConnection) url.openConnection(wrappedProxy);
 			else
 				connection = (HttpsURLConnection) url.openConnection();
 			connection.setRequestMethod("POST");
@@ -95,9 +98,10 @@ public class LegacyAuthService implements AuthService<LegacySession> {
 	}
 
 	@Override
-	public void authenticate(LegacySession session, String serverId, Proxy proxy) throws AuthenticationException, IOException {
+	public void authenticate(LegacySession session, String serverId, ProxyData proxy) throws AuthenticationException, IOException {
+		Proxy wrappedProxy = wrapProxy(proxy);
 		URL url = new URL(String.format(SERVER_AUTH_URL, encodeUtf8(session.getUsername()), encodeUtf8(session.getSessionId()), encodeUtf8(serverId)));
-		URLConnection connection = proxy == null ? url.openConnection() : url.openConnection(proxy);
+		URLConnection connection = wrappedProxy == null ? url.openConnection() : url.openConnection(wrappedProxy);
 		connection.setConnectTimeout(30000);
 		connection.setReadTimeout(30000);
 
@@ -106,6 +110,12 @@ public class LegacyAuthService implements AuthService<LegacySession> {
 			if(!response.equalsIgnoreCase("ok"))
 				throw new AuthenticationException(response);
 		}
+	}
+
+	private Proxy wrapProxy(ProxyData proxy) {
+		if(proxy == null || (proxy.getType() != ProxyData.ProxyType.HTTP && proxy.getType() != ProxyData.ProxyType.SOCKS))
+			return null;
+		return new Proxy(proxy.getType() == ProxyData.ProxyType.HTTP ? Proxy.Type.HTTP : Proxy.Type.SOCKS, new InetSocketAddress(proxy.getHostName(), proxy.getPort()));
 	}
 
 	private String encodeUtf8(String string) throws IOException {

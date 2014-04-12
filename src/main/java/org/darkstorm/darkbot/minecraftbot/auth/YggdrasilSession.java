@@ -44,7 +44,7 @@ public class YggdrasilSession extends Session {
 		StringBuffer buffer = new StringBuffer("YggdrasilSession{");
 		buffer.append("username=").append(getUsername()).append(',');
 		buffer.append("password=").append(getPassword()).append(',');
-		buffer.append("accessToken=").append(accessToken).append(',');
+		buffer.append("accessToken=").append(accessToken.toString(16)).append(',');
 		buffer.append("clientToken=").append(clientToken).append(',');
 		buffer.append("selectedProfile=").append(selectedProfile.toString()).append(',');
 		buffer.append("availableProfiles=[");
