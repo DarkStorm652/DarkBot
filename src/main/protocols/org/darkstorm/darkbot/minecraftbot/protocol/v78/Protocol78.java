@@ -10,17 +10,15 @@ import javax.crypto.SecretKey;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.ai.BlockPlaceEvent;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
-import org.darkstorm.darkbot.minecraftbot.events.*;
-import org.darkstorm.darkbot.minecraftbot.events.io.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.EntitySpawnEvent.SpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.events.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.*;
+import org.darkstorm.darkbot.minecraftbot.event.io.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.EntitySpawnEvent.SpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ObjectEntitySpawnEvent.*;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
+import org.darkstorm.darkbot.minecraftbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v78.packets.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v78.packets.Packet18Animation.Animation;
@@ -124,7 +122,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		register(Packet254ServerPing.class);
 		register(Packet255KickDisconnect.class);
 
-		bot.getEventManager().registerListener(this);
+		bot.getEventBus().register(this);
 	}
 
 	@EventHandler
@@ -287,7 +285,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 	public void onPacketProcess(PacketProcessEvent event) {
 		Packet packet = event.getPacket();
 		ConnectionHandler connectionHandler = bot.getConnectionHandler();
-		EventManager eventManager = bot.getEventManager();
+		EventBus eventBus = bot.getEventBus();
 
 		switch(packet.getId()) {
 		// Awkward brace style to prevent accidental field name overlap, and
@@ -299,7 +297,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		}
 		case 1: {
 			Packet1Login loginPacket = (Packet1Login) packet;
-			eventManager.sendEvent(new LoginEvent(loginPacket.playerId, loginPacket.worldType, loginPacket.gameMode, loginPacket.dimension, loginPacket.difficulty, loginPacket.worldHeight, loginPacket.maxPlayers));
+			eventBus.fire(new LoginEvent(loginPacket.playerId, loginPacket.worldType, loginPacket.gameMode, loginPacket.dimension, loginPacket.difficulty, loginPacket.worldHeight, loginPacket.maxPlayers));
 			connectionHandler.sendPacket(new Packet204ClientInfo("en_US", 1, 0, true, 2, true));
 			break;
 		}
@@ -311,58 +309,58 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 				JSONObject json = (JSONObject) parser.parse(message);
 				// TODO: Actually attempt to handle new chat format
 				if(json.containsKey("text"))
-					eventManager.sendEvent(new ChatReceivedEvent((String) json.get("text")));
+					eventBus.fire(new ChatReceivedEvent((String) json.get("text")));
 			} catch(Exception exception) {}
 			break;
 		}
 		case 4: {
 			Packet4UpdateTime timePacket = (Packet4UpdateTime) packet;
-			eventManager.sendEvent(new TimeUpdateEvent(timePacket.time, timePacket.otherTime));
+			eventBus.fire(new TimeUpdateEvent(timePacket.time, timePacket.otherTime));
 			break;
 		}
 		case 5: {
 			Packet5PlayerInventory inventoryPacket = (Packet5PlayerInventory) packet;
-			eventManager.sendEvent(new PlayerEquipmentUpdateEvent(inventoryPacket.entityID, inventoryPacket.slot, inventoryPacket.item));
+			eventBus.fire(new PlayerEquipmentUpdateEvent(inventoryPacket.entityID, inventoryPacket.slot, inventoryPacket.item));
 			break;
 		}
 		case 8: {
 			Packet8UpdateHealth updateHealthPacket = (Packet8UpdateHealth) packet;
 			int health = (int) Math.ceil(updateHealthPacket.healthMP);
-			eventManager.sendEvent(new HealthUpdateEvent(health, updateHealthPacket.food, updateHealthPacket.foodSaturation));
+			eventBus.fire(new HealthUpdateEvent(health, updateHealthPacket.food, updateHealthPacket.foodSaturation));
 			break;
 		}
 		case 9: {
 			Packet9Respawn respawnPacket = (Packet9Respawn) packet;
-			eventManager.sendEvent(new RespawnEvent(respawnPacket.respawnDimension, respawnPacket.difficulty, respawnPacket.gameMode, respawnPacket.worldType, respawnPacket.worldHeight));
+			eventBus.fire(new RespawnEvent(respawnPacket.respawnDimension, respawnPacket.difficulty, respawnPacket.gameMode, respawnPacket.worldType, respawnPacket.worldHeight));
 			break;
 		}
 		case 13: {
 			Packet13PlayerLookMove lookMovePacket = (Packet13PlayerLookMove) packet;
 			connectionHandler.sendPacket(lookMovePacket);
-			eventManager.sendEvent(new TeleportEvent(lookMovePacket.x, lookMovePacket.y, lookMovePacket.z, lookMovePacket.stance, lookMovePacket.yaw, lookMovePacket.pitch));
+			eventBus.fire(new TeleportEvent(lookMovePacket.x, lookMovePacket.y, lookMovePacket.z, lookMovePacket.stance, lookMovePacket.yaw, lookMovePacket.pitch));
 			break;
 		}
 		case 17: {
 			Packet17Sleep sleepPacket = (Packet17Sleep) packet;
-			eventManager.sendEvent(new SleepEvent(sleepPacket.entityID, sleepPacket.bedX, sleepPacket.bedY, sleepPacket.bedZ));
+			eventBus.fire(new SleepEvent(sleepPacket.entityID, sleepPacket.bedX, sleepPacket.bedY, sleepPacket.bedZ));
 			break;
 		}
 		case 18: {
 			Packet18Animation animationPacket = (Packet18Animation) packet;
 			if(animationPacket.animation == Animation.EAT_FOOD)
-				eventManager.sendEvent(new EntityEatEvent(animationPacket.entityId));
+				eventBus.fire(new EntityEatEvent(animationPacket.entityId));
 			break;
 		}
 		case 20: {
 			Packet20NamedEntitySpawn spawnPacket = (Packet20NamedEntitySpawn) packet;
 			RotatedSpawnLocation location = new RotatedSpawnLocation(spawnPacket.xPosition / 32D, spawnPacket.yPosition / 32D, spawnPacket.zPosition / 32D, (spawnPacket.rotation * 360) / 256F, (spawnPacket.pitch * 360) / 256F);
 			ItemStack heldItem = new BasicItemStack(spawnPacket.currentItem, 1, 0);
-			eventManager.sendEvent(new PlayerSpawnEvent(spawnPacket.entityId, spawnPacket.name, heldItem, location, spawnPacket.data));
+			eventBus.fire(new PlayerSpawnEvent(spawnPacket.entityId, spawnPacket.name, heldItem, location, spawnPacket.data));
 			break;
 		}
 		case 22: {
 			Packet22Collect collectPacket = (Packet22Collect) packet;
-			eventManager.sendEvent(new EntityCollectEvent(collectPacket.collectedEntityId, collectPacket.collectorEntityId));
+			eventBus.fire(new EntityCollectEvent(collectPacket.collectedEntityId, collectPacket.collectorEntityId));
 			break;
 		}
 		case 23: {
@@ -373,37 +371,37 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 				spawnData = new ThrownObjectSpawnData(spawnPacket.type, spawnPacket.throwerEntityId, spawnPacket.speedX / 8000D, spawnPacket.speedY / 8000D, spawnPacket.speedZ / 8000D);
 			else
 				spawnData = new ObjectSpawnData(spawnPacket.type);
-			eventManager.sendEvent(new ObjectEntitySpawnEvent(spawnPacket.entityId, location, spawnData));
+			eventBus.fire(new ObjectEntitySpawnEvent(spawnPacket.entityId, location, spawnData));
 			break;
 		}
 		case 24: {
 			Packet24MobSpawn spawnPacket = (Packet24MobSpawn) packet;
 			LivingEntitySpawnLocation location = new LivingEntitySpawnLocation(spawnPacket.xPosition / 32D, spawnPacket.yPosition / 32D, spawnPacket.zPosition / 32D, (spawnPacket.yaw * 360) / 256F, (spawnPacket.pitch * 360) / 256F, (spawnPacket.headYaw * 360) / 256F);
 			LivingEntitySpawnData data = new LivingEntitySpawnData(spawnPacket.type, spawnPacket.velocityX / 8000D, spawnPacket.velocityY / 8000D, spawnPacket.velocityZ / 8000D);
-			eventManager.sendEvent(new LivingEntitySpawnEvent(spawnPacket.entityId, location, data, spawnPacket.metadata));
+			eventBus.fire(new LivingEntitySpawnEvent(spawnPacket.entityId, location, data, spawnPacket.metadata));
 			break;
 		}
 		case 25: {
 			Packet25EntityPainting spawnPacket = (Packet25EntityPainting) packet;
 			PaintingSpawnLocation location = new PaintingSpawnLocation(spawnPacket.xPosition, spawnPacket.yPosition, spawnPacket.zPosition, spawnPacket.direction);
-			eventManager.sendEvent(new PaintingSpawnEvent(spawnPacket.entityId, location, spawnPacket.title));
+			eventBus.fire(new PaintingSpawnEvent(spawnPacket.entityId, location, spawnPacket.title));
 			break;
 		}
 		case 26: {
 			Packet26EntityExpOrb spawnPacket = (Packet26EntityExpOrb) packet;
 			SpawnLocation location = new SpawnLocation(spawnPacket.posX / 32D, spawnPacket.posY / 32D, spawnPacket.posZ / 32D);
-			eventManager.sendEvent(new ExpOrbSpawnEvent(spawnPacket.entityId, location, spawnPacket.xpValue));
+			eventBus.fire(new ExpOrbSpawnEvent(spawnPacket.entityId, location, spawnPacket.xpValue));
 			break;
 		}
 		case 28: {
 			Packet28EntityVelocity velocityPacket = (Packet28EntityVelocity) packet;
-			eventManager.sendEvent(new EntityVelocityEvent(velocityPacket.entityId, velocityPacket.motionX / 8000D, velocityPacket.motionY / 8000D, velocityPacket.motionZ / 8000D));
+			eventBus.fire(new EntityVelocityEvent(velocityPacket.entityId, velocityPacket.motionX / 8000D, velocityPacket.motionY / 8000D, velocityPacket.motionZ / 8000D));
 			break;
 		}
 		case 29: {
 			Packet29DestroyEntity destroyEntityPacket = (Packet29DestroyEntity) packet;
 			for(int id : destroyEntityPacket.entityIds)
-				eventManager.sendEvent(new EntityDespawnEvent(id));
+				eventBus.fire(new EntityDespawnEvent(id));
 			break;
 		}
 		case 30:
@@ -412,29 +410,29 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		case 33: {
 			Packet30Entity entityPacket = (Packet30Entity) packet;
 			if(packet instanceof Packet31RelEntityMove || packet instanceof Packet33RelEntityMoveLook)
-				eventManager.sendEvent(new EntityMoveEvent(entityPacket.entityId, entityPacket.xPosition / 32D, entityPacket.yPosition / 32D, entityPacket.zPosition / 32D));
+				eventBus.fire(new EntityMoveEvent(entityPacket.entityId, entityPacket.xPosition / 32D, entityPacket.yPosition / 32D, entityPacket.zPosition / 32D));
 			if(packet instanceof Packet32EntityLook || packet instanceof Packet33RelEntityMoveLook)
-				eventManager.sendEvent(new EntityRotateEvent(entityPacket.entityId, (entityPacket.yaw * 360) / 256F, (entityPacket.pitch * 360) / 256F));
+				eventBus.fire(new EntityRotateEvent(entityPacket.entityId, (entityPacket.yaw * 360) / 256F, (entityPacket.pitch * 360) / 256F));
 			break;
 		}
 		case 34: {
 			Packet34EntityTeleport teleportPacket = (Packet34EntityTeleport) packet;
-			eventManager.sendEvent(new EntityTeleportEvent(teleportPacket.entityId, teleportPacket.xPosition / 32D, teleportPacket.yPosition / 32D, teleportPacket.zPosition / 32D, (teleportPacket.yaw * 360) / 256F, (teleportPacket.pitch * 360) / 256F));
+			eventBus.fire(new EntityTeleportEvent(teleportPacket.entityId, teleportPacket.xPosition / 32D, teleportPacket.yPosition / 32D, teleportPacket.zPosition / 32D, (teleportPacket.yaw * 360) / 256F, (teleportPacket.pitch * 360) / 256F));
 			break;
 		}
 		case 35: {
 			Packet35EntityHeadRotation headRotatePacket = (Packet35EntityHeadRotation) packet;
-			eventManager.sendEvent(new EntityHeadRotateEvent(headRotatePacket.entityId, (headRotatePacket.headRotationYaw * 360) / 256F));
+			eventBus.fire(new EntityHeadRotateEvent(headRotatePacket.entityId, (headRotatePacket.headRotationYaw * 360) / 256F));
 			break;
 		}
 		case 38: {
 			Packet38EntityStatus statusPacket = (Packet38EntityStatus) packet;
 			if(statusPacket.entityStatus == 2)
-				eventManager.sendEvent(new EntityHurtEvent(statusPacket.entityId));
+				eventBus.fire(new EntityHurtEvent(statusPacket.entityId));
 			else if(statusPacket.entityStatus == 3)
-				eventManager.sendEvent(new EntityDeathEvent(statusPacket.entityId));
+				eventBus.fire(new EntityDeathEvent(statusPacket.entityId));
 			else if(statusPacket.entityStatus == 9)
-				eventManager.sendEvent(new EntityStopEatingEvent(statusPacket.entityId));
+				eventBus.fire(new EntityStopEatingEvent(statusPacket.entityId));
 			break;
 		}
 		case 39: {
@@ -442,19 +440,19 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 			if(attachEntityPacket.leashed)
 				break;
 			if(attachEntityPacket.vehicleEntityId != -1)
-				eventManager.sendEvent(new EntityMountEvent(attachEntityPacket.entityId, attachEntityPacket.vehicleEntityId));
+				eventBus.fire(new EntityMountEvent(attachEntityPacket.entityId, attachEntityPacket.vehicleEntityId));
 			else
-				eventManager.sendEvent(new EntityDismountEvent(attachEntityPacket.entityId));
+				eventBus.fire(new EntityDismountEvent(attachEntityPacket.entityId));
 			break;
 		}
 		case 40: {
 			Packet40EntityMetadata metadataPacket = (Packet40EntityMetadata) packet;
-			eventManager.sendEvent(new EntityMetadataUpdateEvent(metadataPacket.entityId, metadataPacket.metadata));
+			eventBus.fire(new EntityMetadataUpdateEvent(metadataPacket.entityId, metadataPacket.metadata));
 			break;
 		}
 		case 43: {
 			Packet43Experience experiencePacket = (Packet43Experience) packet;
-			eventManager.sendEvent(new ExperienceUpdateEvent(experiencePacket.experienceLevel, experiencePacket.experienceTotal));
+			eventBus.fire(new ExperienceUpdateEvent(experiencePacket.experienceLevel, experiencePacket.experienceTotal));
 			break;
 		}
 		case 51: {
@@ -476,7 +474,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 					int x = word0 >> 12 & 0xf;
 					int z = word0 >> 8 & 0xf;
 					int y = word0 & 0xff;
-					eventManager.sendEvent(new BlockChangeEvent(id, metadata, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z));
+					eventBus.fire(new BlockChangeEvent(id, metadata, (multiBlockChangePacket.xPosition * 16) + x, y, (multiBlockChangePacket.zPosition * 16) + z));
 				}
 			} catch(IOException exception) {
 				exception.printStackTrace();
@@ -485,7 +483,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		}
 		case 53: {
 			Packet53BlockChange blockChangePacket = (Packet53BlockChange) packet;
-			eventManager.sendEvent(new BlockChangeEvent(blockChangePacket.type, blockChangePacket.metadata, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition));
+			eventBus.fire(new BlockChangeEvent(blockChangePacket.type, blockChangePacket.metadata, blockChangePacket.xPosition, blockChangePacket.yPosition, blockChangePacket.zPosition));
 			break;
 		}
 		case 56: {
@@ -498,45 +496,45 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		}
 		case 100: {
 			Packet100OpenWindow openWindowPacket = (Packet100OpenWindow) packet;
-			eventManager.sendEvent(new WindowOpenEvent(openWindowPacket.windowId, openWindowPacket.inventoryType, openWindowPacket.flag ? openWindowPacket.windowTitle : "", openWindowPacket.slotsCount));
+			eventBus.fire(new WindowOpenEvent(openWindowPacket.windowId, openWindowPacket.inventoryType, openWindowPacket.flag ? openWindowPacket.windowTitle : "", openWindowPacket.slotsCount));
 			break;
 		}
 		case 101: {
 			Packet101CloseWindow closeWindowPacket = (Packet101CloseWindow) packet;
-			eventManager.sendEvent(new WindowCloseEvent(closeWindowPacket.windowId));
+			eventBus.fire(new WindowCloseEvent(closeWindowPacket.windowId));
 			break;
 		}
 		case 103: {
 			Packet103SetSlot slotPacket = (Packet103SetSlot) packet;
-			eventManager.sendEvent(new WindowSlotChangeEvent(slotPacket.windowId, slotPacket.itemSlot, slotPacket.itemStack));
+			eventBus.fire(new WindowSlotChangeEvent(slotPacket.windowId, slotPacket.itemSlot, slotPacket.itemStack));
 			break;
 		}
 		case 104: {
 			Packet104WindowItems itemsPacket = (Packet104WindowItems) packet;
-			eventManager.sendEvent(new WindowUpdateEvent(itemsPacket.windowId, itemsPacket.itemStack));
+			eventBus.fire(new WindowUpdateEvent(itemsPacket.windowId, itemsPacket.itemStack));
 			break;
 		}
 		case 132: {
 			Packet132TileEntityData tileEntityPacket = (Packet132TileEntityData) packet;
-			eventManager.sendEvent(new TileEntityUpdateEvent(tileEntityPacket.xPosition, tileEntityPacket.yPosition, tileEntityPacket.zPosition, tileEntityPacket.actionType, tileEntityPacket.compound));
+			eventBus.fire(new TileEntityUpdateEvent(tileEntityPacket.xPosition, tileEntityPacket.yPosition, tileEntityPacket.zPosition, tileEntityPacket.actionType, tileEntityPacket.compound));
 			break;
 		}
 		case 130: {
 			Packet130UpdateSign signPacket = (Packet130UpdateSign) packet;
-			eventManager.sendEvent(new SignUpdateEvent(signPacket.x, signPacket.y, signPacket.z, signPacket.text));
+			eventBus.fire(new SignUpdateEvent(signPacket.x, signPacket.y, signPacket.z, signPacket.text));
 			break;
 		}
 		case 133: {
 			Packet133OpenTileEditor editPacket = (Packet133OpenTileEditor) packet;
-			eventManager.sendEvent(new EditTileEntityEvent(editPacket.x, editPacket.y, editPacket.z));
+			eventBus.fire(new EditTileEntityEvent(editPacket.x, editPacket.y, editPacket.z));
 			break;
 		}
 		case 201: {
 			Packet201PlayerInfo infoPacket = (Packet201PlayerInfo) packet;
 			if(infoPacket.isConnected)
-				eventManager.sendEvent(new PlayerListUpdateEvent(infoPacket.playerName, infoPacket.ping));
+				eventBus.fire(new PlayerListUpdateEvent(infoPacket.playerName, infoPacket.ping));
 			else
-				eventManager.sendEvent(new PlayerListRemoveEvent(infoPacket.playerName));
+				eventBus.fire(new PlayerListRemoveEvent(infoPacket.playerName));
 			break;
 		}
 		case 252: {
@@ -549,12 +547,13 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		}
 		case 255: {
 			Packet255KickDisconnect kickPacket = (Packet255KickDisconnect) packet;
-			eventManager.sendEvent(new KickEvent(kickPacket.reason));
+			eventBus.fire(new KickEvent(kickPacket.reason));
 			break;
 		}
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void handleServerAuthData(Packet253EncryptionKeyRequest keyRequest) {
 		String serverId = keyRequest.serverId.trim();
 		PublicKey publicKey = keyRequest.publicKey;
@@ -565,11 +564,11 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 			try {
 				AuthService service = bot.getAuthService();
 				Session session = bot.getSession();
+
 				String hash = new BigInteger(EncryptionUtil.encrypt(serverId, publicKey, secretKey)).toString(16);
-				if(session.isValidForAuthentication() && service.isValidSession(session))
-					service.authenticate(session, hash);
-				else
-					connectionHandler.disconnect("Session invalid!");
+				service.authenticate(service.validateSession(session), hash);
+			} catch(InvalidSessionException exception) {
+				connectionHandler.disconnect("Session invalid: " + exception);
 			} catch(NoSuchAlgorithmException | UnsupportedEncodingException exception) {
 				connectionHandler.disconnect("Unable to hash: " + exception);
 			} catch(AuthenticationException | IOException exception) {
@@ -632,10 +631,10 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 			i++;
 		}
 		System.arraycopy(data, data.length - 256, biomes, 0, 256);
-		EventManager eventManager = bot.getEventManager();
+		EventBus eventBus = bot.getEventBus();
 		for(i = 0; i < chunksChanged; i++) {
 			ChunkLoadEvent event = new ChunkLoadEvent(x, yValues[i], z, allBlocks[i], allMetadata[i], allLight[i], allSkylight[i], biomes.clone());
-			eventManager.sendEvent(event);
+			eventBus.fire(event);
 		}
 	}
 
@@ -656,7 +655,7 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 				handler.enableDecryption();
 		} else if(packet instanceof Packet106Transaction) {
 			Packet106Transaction transactionPacket = (Packet106Transaction) packet;
-			bot.getEventManager().sendEvent(new WindowTransactionCompleteEvent(transactionPacket.windowId, transactionPacket.shortWindowId, transactionPacket.accepted));
+			bot.getEventBus().fire(new WindowTransactionCompleteEvent(transactionPacket.windowId, transactionPacket.shortWindowId, transactionPacket.accepted));
 			transactionPacket.accepted = true;
 			handler.sendPacket(transactionPacket);
 		}
@@ -682,9 +681,9 @@ public final class Protocol78 extends AbstractProtocol implements EventListener 
 		}
 	}
 
-	public static final class Provider extends ProtocolProvider {
+	public static final class Provider extends ProtocolProvider<Protocol78> {
 		@Override
-		public Protocol getProtocolInstance(MinecraftBot bot) {
+		public Protocol78 getProtocolInstance(MinecraftBot bot) {
 			return new Protocol78(bot);
 		}
 

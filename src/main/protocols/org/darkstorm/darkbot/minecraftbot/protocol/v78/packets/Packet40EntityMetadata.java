@@ -4,7 +4,7 @@ import java.io.*;
 
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
+import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
 
 public class Packet40EntityMetadata extends AbstractPacket implements ReadablePacket {
 	public int entityId;
@@ -16,7 +16,7 @@ public class Packet40EntityMetadata extends AbstractPacket implements ReadablePa
 	@Override
 	public void readData(DataInputStream in) throws IOException {
 		entityId = in.readInt();
-		metadata = DataWatcher.readWatchableObjects(in);
+		metadata = readWatchableObjects(in);
 	}
 
 	@Override
