@@ -1,9 +1,9 @@
 package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
+import org.darkstorm.darkbot.minecraftbot.event.AbstractCancellableEvent;
 import org.darkstorm.darkbot.minecraftbot.world.item.Inventory;
 
-public abstract class InventoryEvent extends AbstractEvent {
+public abstract class InventoryEvent extends AbstractCancellableEvent {
 	private final Inventory inventory;
 
 	public InventoryEvent(Inventory inventory) {

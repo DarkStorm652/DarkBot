@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.protocol.v4x;
 
 import java.io.*;
-import java.math.BigInteger;
+import java.math.*;
 import java.security.*;
 import java.util.*;
 
@@ -67,10 +67,13 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public static final int VERSION = 4;
 	public static final String VERSION_NAME = "1.7.2";
 
-	private static final double STANCE_CONSTANT = 1.62000000476837;
+	private static final double STANCE_CONSTANT = 1.620000004768372;
+	private static final BigDecimal STANCE_CONSTANT_PRECISE = BigDecimal.valueOf(STANCE_CONSTANT);
 
 	private final MinecraftBot bot;
 	private final Map<String, String> lang;
+
+	private boolean positionSet = false;
 
 	public Protocol4X(MinecraftBot bot) {
 		super(VERSION);
@@ -179,15 +182,21 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 
 	@EventHandler
 	public void onHeldItemDrop(HeldItemDropEvent event) {
-		ConnectionHandler handler = bot.getConnectionHandler();
-		C07PacketBlockDig.Action action = event.isEntireStack() ? C07PacketBlockDig.Action.DROP_ITEM_STACK : C07PacketBlockDig.Action.DROP_ITEM;
-		handler.sendPacket(new C07PacketBlockDig(action, 0, 0, 0, 0));
+		if(positionSet) {
+			ConnectionHandler handler = bot.getConnectionHandler();
+			C07PacketBlockDig.Action action = event.isEntireStack() ? C07PacketBlockDig.Action.DROP_ITEM_STACK : C07PacketBlockDig.Action.DROP_ITEM;
+			handler.sendPacket(new C07PacketBlockDig(action, 0, 0, 0, 0));
+		} else
+			event.setCancelled(true);
 	}
 
 	@EventHandler
 	public void onHeldItemChange(HeldItemChangeEvent event) {
-		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C09PacketHeldItemChange(event.getNewSlot()));
+		if(positionSet) {
+			ConnectionHandler handler = bot.getConnectionHandler();
+			handler.sendPacket(new C09PacketHeldItemChange(event.getNewSlot()));
+		} else
+			event.setCancelled(true);
 	}
 
 	@EventHandler
@@ -261,14 +270,15 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public void onPlayerUpdate(PlayerUpdateEvent event) {
 		MainPlayerEntity player = event.getEntity();
 		double x = player.getX(), y = player.getY(), z = player.getZ(), yaw = player.getYaw(), pitch = player.getPitch();
+		double eyeY = BigDecimal.valueOf(y).add(STANCE_CONSTANT_PRECISE).doubleValue();
 		boolean move = x != player.getLastX() || y != player.getLastY() || z != player.getLastZ();
 		boolean rotate = yaw != player.getLastYaw() || pitch != player.getLastPitch();
 		boolean onGround = player.isOnGround();
 		C03PacketPlayerUpdate packet;
 		if(move && rotate)
-			packet = new C06PacketPositionRotationUpdate(x, y, y + STANCE_CONSTANT, z, yaw, pitch, onGround);
+			packet = new C06PacketPositionRotationUpdate(x, y, z, eyeY, yaw, pitch, onGround);
 		else if(move)
-			packet = new C04PacketPositionUpdate(x, y, y + STANCE_CONSTANT, z, onGround);
+			packet = new C04PacketPositionUpdate(x, y, z, eyeY, onGround);
 		else if(rotate)
 			packet = new C05PacketRotationUpdate(yaw, pitch, onGround);
 		else
@@ -385,6 +395,11 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 												256,
 												joinPacket.getMaxPlayers()));
 				connectionHandler.sendPacket(new C15PacketClientSettings("en_US", ViewDistance.FAR, ChatMode.ENABLED, Difficulty.NORMAL, true, true));
+				try {
+					connectionHandler.sendPacket(new C17PacketPluginMessage("MC|Brand", "vanilla".getBytes("UTF-8")));
+				} catch(UnsupportedEncodingException exception) {
+					throw new RuntimeException(exception);
+				}
 				break;
 			}
 			case 0x02: {
@@ -429,20 +444,17 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 			case 0x08: {
 				S08PacketTeleport teleportPacket = (S08PacketTeleport) packet;
 
-				C06PacketPositionRotationUpdate clientUpdatePacket = new C06PacketPositionRotationUpdate(	teleportPacket.getX(),
-																											teleportPacket.getY(),
-																											teleportPacket.getZ(),
-																											teleportPacket.getY() + STANCE_CONSTANT,
-																											teleportPacket.getYaw(),
-																											teleportPacket.getPitch(),
-																											teleportPacket.isGrounded());
-				connectionHandler.sendPacket(clientUpdatePacket);
+				double x = teleportPacket.getX(), eyeY = teleportPacket.getY(), z = teleportPacket.getZ();
+				double yaw = teleportPacket.getYaw(), pitch = teleportPacket.getPitch();
+				boolean grounded = teleportPacket.isGrounded();
+				// Computers can't arithmetic
+				double actualY = BigDecimal.valueOf(eyeY).subtract(STANCE_CONSTANT_PRECISE).doubleValue();
 
-				eventBus.fire(new TeleportEvent(teleportPacket.getX(),
-												teleportPacket.getY(),
-												teleportPacket.getZ(),
-												(float) teleportPacket.getYaw(),
-												(float) teleportPacket.getPitch()));
+				C06PacketPositionRotationUpdate clientUpdatePacket = new C06PacketPositionRotationUpdate(x, actualY, z, eyeY, yaw, pitch, grounded);
+				connectionHandler.sendPacket(clientUpdatePacket);
+				positionSet = true;
+
+				eventBus.fire(new TeleportEvent(x, actualY, z, (float) yaw, (float) pitch));
 				break;
 			}
 			case 0x09: {
@@ -632,6 +644,10 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				for(ChunkData chunk : chunkPacket.getChunks())
 					processChunk(chunk, chunkPacket.hasSkylight(), true);
 				break;
+			}
+			case 0x40: {
+				S40PacketDisconnect disconnectPacket = (S40PacketDisconnect) packet;
+				eventBus.fire(new KickEvent(disconnectPacket.getReason()));
 			}
 			}
 			break;
