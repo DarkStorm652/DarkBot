@@ -75,7 +75,7 @@
 				</fileset>
 			</classpath>
 		</javac>
-		<propertyregex property="protocolsFolder" input="src.minecraft.protocols.${protocolsPackage}" global="true" regexp="\." replace="/" />
+		<propertyregex property="protocolsFolder" input="src.main.protocols.${protocolsPackage}" global="true" regexp="\." replace="/" />
 		<pathconvert property="files" pathsep="${line.separator}">
 			<map from="${protocolsFolder}{$file.separator}" to="" />
 			<dirset dir="${protocolsFolder}">
