@@ -87,10 +87,20 @@
 			<sequential>
 				<local name="protocolVersion" />
 				<basename property="protocolVersion" file="@{file}" />
-				<propertyregex property="protocolVersion" override="true" input="${protocolVersion}" regexp="v([0-9]+)" select="\1" />
 				<mkdir dir="${protocolsDir}/META-INF/services" />
-				<echo message="${protocolsPackage}.v${protocolVersion}.Protocol${protocolVersion}$$Provider" file="${protocolsDir}/META-INF/services/${protocolsPackage}.ProtocolProvider" />
-				<jar destfile="${protocolsDir}/v${protocolVersion}.jar" update="false" basedir="${protocolsDir}" includes="${protocolsFolder}/v${protocolVersion}/**/**,META-INF/**/**" />
+				<if>
+				    <contains string="${protocolVersion}" substring="x" />
+				    <then>
+				    	<propertyregex property="protocolVersion" override="true" input="${protocolVersion}" regexp="v([0-9]+)" select="\1" />
+				    	<echo message="${protocolsPackage}.v${protocolVersion}x.Protocol${protocolVersion}X$$Provider" file="${protocolsDir}/META-INF/services/${protocolsPackage}.ProtocolProvider" />
+				    	<jar destfile="${protocolsDir}/v${protocolVersion}x.jar" update="false" basedir="${protocolsDir}" includes="${protocolsFolder}/v${protocolVersion}x/**/**,META-INF/**/**" />
+				    </then>
+				    <else>
+				    	<propertyregex property="protocolVersion" override="true" input="${protocolVersion}" regexp="v([0-9]+)" select="\1" />
+				    	<echo message="${protocolsPackage}.v${protocolVersion}.Protocol${protocolVersion}$$Provider" file="${protocolsDir}/META-INF/services/${protocolsPackage}.ProtocolProvider" />
+				    	<jar destfile="${protocolsDir}/v${protocolVersion}.jar" update="false" basedir="${protocolsDir}" includes="${protocolsFolder}/v${protocolVersion}/**/**,META-INF/**/**" />
+				    </else>
+				</if>
 				<delete dir="${protocolsDir}/META-INF" />
 			</sequential>
 		</for>
