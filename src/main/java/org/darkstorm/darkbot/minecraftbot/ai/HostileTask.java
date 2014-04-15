@@ -59,7 +59,7 @@ public class HostileTask implements Task {
 			BlockLocation location = new BlockLocation(entity.getLocation());
 			BlockLocation original = location;
 			BlockLocation below = location.offset(0, -1, 0);
-			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
+			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getWorldPhysics().canClimb(below)) {
 				location = below;
 				below = below.offset(0, -1, 0);
 				if(original.getY() - location.getY() >= 5)

@@ -60,7 +60,7 @@ public class FollowTask implements Task {
 			System.out.println(world.getChunkAt(new ChunkLocation(location)));
 			BlockLocation original = location;
 			BlockLocation below = location.offset(0, -1, 0);
-			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
+			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getWorldPhysics().canClimb(below)) {
 				location = below;
 				below = below.offset(0, -1, 0);
 				if(original.getY() - location.getY() >= 5)
@@ -83,7 +83,9 @@ public class FollowTask implements Task {
 				return active;
 			FallTask fallTask = bot.getTaskManager().getTaskFor(FallTask.class);
 			WalkActivity walkActivity = (WalkActivity) activity;
-			if(walkActivity.isActive() && ((player.getDistanceTo(following) < 2 && (fallTask == null || !fallTask.isPreconditionMet())) || following.getDistanceTo(walkActivity.getTarget()) > 3) && player.isOnGround())
+			if(walkActivity.isActive()
+					&& ((player.getDistanceTo(following) < 2 && (fallTask == null || !fallTask.isPreconditionMet())) || following.getDistanceTo(walkActivity
+							.getTarget()) > 3) && player.isOnGround())
 				bot.setActivity(null);
 		}
 		return active;

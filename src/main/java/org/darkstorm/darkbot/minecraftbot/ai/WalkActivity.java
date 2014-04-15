@@ -3,7 +3,7 @@ package org.darkstorm.darkbot.minecraftbot.ai;
 import java.util.concurrent.*;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
@@ -145,18 +145,18 @@ public class WalkActivity implements Activity {
 				return;
 			}
 			double speed = this.speed;
-			WorldLocation location = nextStep.getLocation();
+			BlockLocation location = nextStep.getLocation();
 			BlockLocation block = new BlockLocation(player.getLocation());
 			double x = location.getX(), y = location.getY(), z = location.getZ();
 			boolean inLiquid = player.isInLiquid();
 			if(BlockType.getById(bot.getWorld().getBlockIdAt(block.offset(0, -1, 0))) == BlockType.SOUL_SAND) {
-				if(BlockType.getById(bot.getWorld().getBlockIdAt(new BlockLocation(location).offset(0, -1, 0))) == BlockType.SOUL_SAND)
+				if(BlockType.getById(bot.getWorld().getBlockIdAt(location.offset(0, -1, 0))) == BlockType.SOUL_SAND)
 					y -= 0.12;
 				speed *= liquidFactor;
 			} else if(inLiquid)
 				speed *= liquidFactor;
 			if(player.getY() != y) {
-				if(!inLiquid && !bot.getWorld().getPathFinder().getHeuristic().isClimbableBlock(block))
+				if(!inLiquid && !bot.getWorld().getPathFinder().getWorldPhysics().canClimb(block))
 					if(player.getY() < y)
 						speed *= jumpFactor;
 					else

@@ -2,53 +2,54 @@ package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
+import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 
 public class AStarPathSearch implements PathSearch {
+	private static final PathNodeComparator PATH_NODE_COMPARATOR = new PathNodeComparator();
 
 	private final AStarPathSearchProvider provider;
-	private final AStarHeuristic heuristic;
-	private final WorldLocation start, end;
+	private final Heuristic heuristic;
+	private final WorldPhysics physics;
+	private final BlockLocation start, end;
 
 	private PathNode first, last, complete, completeReverse;
 
-	private List<PathNode> openSet, closedSet, openSetReverse,
-			closedSetReverse;
-	private Map<WorldLocation, PathNode> nodeWorld;
+	private TreeSet<PathNode> openSet, closedSet, openSetReverse, closedSetReverse;
+	private Map<BlockLocation, PathNode> nodeWorld;
 
-	public AStarPathSearch(AStarPathSearchProvider provider,
-			AStarHeuristic heuristic, WorldLocation start, WorldLocation end) {
+	public AStarPathSearch(AStarPathSearchProvider provider, BlockLocation start, BlockLocation end) {
 		this.provider = provider;
-		this.heuristic = heuristic;
 		this.start = start;
 		this.end = end;
 
-		nodeWorld = new HashMap<WorldLocation, PathNode>();
+		heuristic = provider.getHeuristic();
+		physics = provider.getWorldPhysics();
 
-		first = new BasicPathNode(this, start);
-		first.setGScore(heuristic.calculateGScore(this, first, false));
-		first.setFScore(heuristic.calculateFScore(this, first, false));
-		openSet = new ArrayList<PathNode>();
-		closedSet = new ArrayList<PathNode>();
+		nodeWorld = new HashMap<BlockLocation, PathNode>();
+
+		first = new BlockPathNode(this, start);
+		first.setCost(0);
+		first.setCostEstimate(heuristic.calculateCost(start, end));
+		openSet = new TreeSet<>(PATH_NODE_COMPARATOR);
+		closedSet = new TreeSet<>(PATH_NODE_COMPARATOR);
 		nodeWorld.put(start, first);
 		openSet.add(first);
 
-		last = new BasicPathNode(this, end);
-		last.setGScore(heuristic.calculateGScore(this, last, true));
-		last.setFScore(heuristic.calculateFScore(this, last, true));
-		openSetReverse = new ArrayList<PathNode>();
-		closedSetReverse = new ArrayList<PathNode>();
+		last = new BlockPathNode(this, end);
+		last.setCost(0);
+		last.setCostEstimate(heuristic.calculateCost(end, start));
+		openSetReverse = new TreeSet<>(PATH_NODE_COMPARATOR);
+		closedSetReverse = new TreeSet<>(PATH_NODE_COMPARATOR);
 		nodeWorld.put(end, last);
 		openSetReverse.add(last);
 	}
-
 	@Override
 	public void step() {
 		if(isDone())
 			return;
 
-		PathNode current = heuristic.findNext(openSet);
+		PathNode current = openSet.first();
 		openSet.remove(current);
 
 		if(complete == null && current.getLocation().equals(end)) {
@@ -60,48 +61,48 @@ public class AStarPathSearch implements PathSearch {
 		if(completeReverse != null)
 			return;
 
-		PathNode currentReverse = heuristic.findNext(openSetReverse);
+		PathNode currentReverse = openSetReverse.first();
 		openSetReverse.remove(current);
 
-		if(completeReverse == null
-				&& currentReverse.getLocation().equals(start))
+		if(completeReverse == null && start.equals(currentReverse.getLocation()))
 			completeReverse = reconstructPath(currentReverse);
 		else if(completeReverse == null)
 			calculate(currentReverse, true);
 	}
 
 	private void calculate(PathNode current, boolean reverse) {
-		List<PathNode> openSet = (reverse ? openSetReverse : this.openSet);
-		List<PathNode> closedSet = (reverse ? closedSetReverse : this.closedSet);
+		BlockLocation location = current.getLocation();
+
+		TreeSet<PathNode> openSet = (reverse ? openSetReverse : this.openSet);
+		TreeSet<PathNode> closedSet = (reverse ? closedSetReverse : this.closedSet);
 
 		closedSet.add(current);
-		for(WorldLocation adjacentLocation : heuristic.getSurrounding(this,
-				current.getLocation())) {
+		for(BlockLocation adjacentLocation : physics.findAdjacent(current.getLocation())) {
 			PathNode adjacent;
 			if(!nodeWorld.containsKey(adjacentLocation)) {
-				adjacent = new BasicPathNode(this, adjacentLocation);
+				adjacent = new BlockPathNode(this, adjacentLocation);
 				adjacent.setPrevious(current);
 				nodeWorld.put(adjacentLocation, adjacent);
 			} else
 				adjacent = nodeWorld.get(adjacentLocation);
 
-			if(closedSet.contains(adjacent)
-					|| !(reverse ? heuristic.isWalkable(current, adjacent)
-							&& heuristic.isWalkable(adjacent, current)
-							: heuristic.isWalkable(current, adjacent)))
+			if(closedSet.contains(adjacent))
 				continue;
-			double cost = current.getGScore()
-					+ heuristic.calculateGScore(this, adjacent, reverse);
+			if(!physics.canWalk(location, adjacentLocation))
+				continue;
+			if(reverse && !physics.canWalk(adjacentLocation, location))
+				continue;
+
+			double cost = current.getCost() + heuristic.calculateCost(location, adjacentLocation);
 
 			boolean contained = openSet.contains(adjacent);
-			if(!contained || cost < adjacent.getGScore()) {
+			if(!contained || cost < adjacent.getCost()) {
 				if(!contained)
 					openSet.add(adjacent);
 				adjacent.setPrevious(current);
 				current.setNext(adjacent);
-				adjacent.setGScore(cost);
-				adjacent.setFScore(heuristic.calculateFScore(this, adjacent,
-						reverse));
+				adjacent.setCost(cost);
+				adjacent.setCostEstimate(cost + heuristic.calculateCost(adjacentLocation, reverse ? start : end));
 			}
 		}
 	}
@@ -118,17 +119,16 @@ public class AStarPathSearch implements PathSearch {
 
 	@Override
 	public boolean isDone() {
-		return complete != null || openSet.size() == 0
-				|| (openSetReverse.size() == 0 && completeReverse == null);
+		return complete != null || openSet.size() == 0 || (openSetReverse.size() == 0 && completeReverse == null);
 	}
 
 	@Override
-	public WorldLocation getStart() {
+	public BlockLocation getStart() {
 		return start;
 	}
 
 	@Override
-	public WorldLocation getEnd() {
+	public BlockLocation getEnd() {
 		return end;
 	}
 
@@ -142,4 +142,10 @@ public class AStarPathSearch implements PathSearch {
 		return provider;
 	}
 
+	private static final class PathNodeComparator implements Comparator<PathNode> {
+		@Override
+		public int compare(PathNode node1, PathNode node2) {
+			return Double.compare(node1.getCostEstimate(), node2.getCostEstimate());
+		}
+	}
 }

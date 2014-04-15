@@ -1,37 +1,39 @@
 package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
 
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.PathSearchProvider;
+import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 
 public class AStarPathSearchProvider implements PathSearchProvider {
+	private final Heuristic heuristic;
+	private final WorldPhysics worldPhysics;
+
 	private final World world;
 
-	private AStarHeuristic heuristic;
+	public AStarPathSearchProvider(Heuristic heuristic, WorldPhysics worldPhysics) {
+		this.heuristic = heuristic;
+		this.worldPhysics = worldPhysics;
 
-	public AStarPathSearchProvider(World world) {
-		this.world = world;
-
-		heuristic = new BasicAStarHeuristic(this);
+		world = worldPhysics.getWorld();
 	}
 
 	@Override
 	public AStarPathSearch provideSearch(BlockLocation start, BlockLocation end) {
-		return provideSearch(new WorldLocation(start), new WorldLocation(end));
+		return new AStarPathSearch(this, start, end);
 	}
 
 	@Override
-	public AStarPathSearch provideSearch(WorldLocation start, WorldLocation end) {
-		return new AStarPathSearch(this, heuristic, start, end);
+	public Heuristic getHeuristic() {
+		return heuristic;
+	}
+
+	@Override
+	public WorldPhysics getWorldPhysics() {
+		return worldPhysics;
 	}
 
 	@Override
 	public World getWorld() {
 		return world;
-	}
-
-	@Override
-	public AStarHeuristic getHeuristic() {
-		return heuristic;
 	}
 }

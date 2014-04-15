@@ -72,7 +72,7 @@ public class AttackTask implements Task {
 			World world = bot.getWorld();
 			BlockLocation original = location;
 			BlockLocation below = location.offset(0, -1, 0);
-			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getHeuristic().isClimbableBlock(below)) {
+			while(!BlockType.getById(world.getBlockIdAt(below)).isSolid() && !world.getPathFinder().getWorldPhysics().canClimb(below)) {
 				location = below;
 				below = below.offset(0, -1, 0);
 				if(original.getY() - location.getY() >= 5)
@@ -146,7 +146,8 @@ public class AttackTask implements Task {
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
 			WalkActivity walkActivity = (WalkActivity) activity;
-			if(walkActivity.isActive() && (player.getDistanceTo(attackEntity) < 3 || attackEntity.getDistanceTo(walkActivity.getTarget()) > 3) && player.isOnGround())
+			if(walkActivity.isActive() && (player.getDistanceTo(attackEntity) < 3 || attackEntity.getDistanceTo(walkActivity.getTarget()) > 3)
+					&& player.isOnGround())
 				bot.setActivity(null);
 		}
 		return active;

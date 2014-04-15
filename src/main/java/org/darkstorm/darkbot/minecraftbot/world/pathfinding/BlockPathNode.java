@@ -1,19 +1,20 @@
 package org.darkstorm.darkbot.minecraftbot.world.pathfinding;
 
-import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
+import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 
-public class BasicPathNode implements PathNode {
-	private final WorldLocation location;
+public class BlockPathNode implements PathNode {
+	private final BlockLocation location;
 	private final PathSearch source;
-	private PathNode previous, next;
-	private double gScore = Integer.MAX_VALUE, fScore = Integer.MAX_VALUE;
 
-	public BasicPathNode(PathSearch source, WorldLocation location) {
+	private PathNode previous, next;
+
+	private double cost = Integer.MAX_VALUE, costEstimate = Integer.MAX_VALUE;
+
+	public BlockPathNode(PathSearch source, BlockLocation location) {
 		this(source, location, null, null);
 	}
 
-	public BasicPathNode(PathSearch source, WorldLocation location,
-			PathNode previous, PathNode next) {
+	public BlockPathNode(PathSearch source, BlockLocation location, PathNode previous, PathNode next) {
 		this.location = location;
 		this.source = source;
 		this.previous = previous;
@@ -21,7 +22,7 @@ public class BasicPathNode implements PathNode {
 	}
 
 	@Override
-	public WorldLocation getLocation() {
+	public BlockLocation getLocation() {
 		return location;
 	}
 
@@ -61,33 +62,32 @@ public class BasicPathNode implements PathNode {
 	}
 
 	@Override
-	public double getGScore() {
-		return gScore;
+	public double getCost() {
+		return cost;
 	}
 
 	@Override
-	public double getFScore() {
-		return fScore;
+	public double getCostEstimate() {
+		return costEstimate;
 	}
 
 	@Override
-	public void setGScore(double gScore) {
-		this.gScore = gScore;
+	public void setCost(double cost) {
+		this.cost = cost;
 	}
 
 	@Override
-	public void setFScore(double fScore) {
-		this.fScore = fScore;
+	public void setCostEstimate(double costEstimate) {
+		this.costEstimate = costEstimate;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof PathNode
-				&& ((PathNode) obj).getLocation().equals(location);
+		return obj instanceof PathNode && location.equals(((PathNode) obj).getLocation());
 	}
 
 	@Override
 	public String toString() {
-		return location.toString() + " G=" + gScore + " F=" + fScore;
+		return location.toString() + " Cost=" + cost + " Estimate=" + costEstimate;
 	}
 }

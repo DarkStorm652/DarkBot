@@ -180,20 +180,32 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		// TODO main
 		OptionParser parser = new OptionParser();
 		parser.acceptsAll(Arrays.asList("h", "help"), "Show this help dialog.");
-		OptionSpec<String> serverOption = parser.acceptsAll(Arrays.asList("s", "server"), "Server to join.").withRequiredArg().describedAs("server-address[:port]");
-		OptionSpec<String> proxyOption = parser.acceptsAll(Arrays.asList("P", "proxy"), "SOCKS proxy to use. Ignored in presence of 'socks-proxy-list'.").withRequiredArg().describedAs("proxy-address");
-		OptionSpec<String> ownerOption = parser.acceptsAll(Arrays.asList("o", "owner"), "Owner of the bot (username of in-game control).").withRequiredArg().describedAs("username");
-		OptionSpec<?> offlineOption = parser.acceptsAll(Arrays.asList("O", "offline"), "Offline-mode. Ignores 'password' and 'account-list' (will " + "generate random usernames if 'username' is not supplied).");
+		OptionSpec<String> serverOption = parser.acceptsAll(Arrays.asList("s", "server"), "Server to join.").withRequiredArg()
+				.describedAs("server-address[:port]");
+		OptionSpec<String> proxyOption = parser.acceptsAll(Arrays.asList("P", "proxy"), "SOCKS proxy to use. Ignored in presence of 'socks-proxy-list'.")
+				.withRequiredArg().describedAs("proxy-address");
+		OptionSpec<String> ownerOption = parser.acceptsAll(Arrays.asList("o", "owner"), "Owner of the bot (username of in-game control).").withRequiredArg()
+				.describedAs("username");
+		OptionSpec<?> offlineOption = parser.acceptsAll(Arrays.asList("O", "offline"), "Offline-mode. Ignores 'password' and 'account-list' (will "
+				+ "generate random usernames if 'username' is not supplied).");
 		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
-		OptionSpec<Integer> loginDelayOption = parser.acceptsAll(Arrays.asList("d", "login-delay"), "Delay between bot joins, in milliseconds. 5000 is " + "recommended if not using socks proxies.").withRequiredArg().describedAs("delay").ofType(Integer.class);
-		OptionSpec<Integer> botAmountOption = parser.acceptsAll(Arrays.asList("b", "bot-amount"), "Amount of bots to join. Must be <= amount of accounts.").withRequiredArg().describedAs("amount").ofType(Integer.class);
-		OptionSpec<String> protocolOption = parser.accepts("protocol", "Protocol version to use. Can be either protocol number or Minecraft version.").withRequiredArg();
+		OptionSpec<Integer> loginDelayOption = parser
+				.acceptsAll(Arrays.asList("d", "login-delay"), "Delay between bot joins, in milliseconds. 5000 is " + "recommended if not using socks proxies.")
+				.withRequiredArg().describedAs("delay").ofType(Integer.class);
+		OptionSpec<Integer> botAmountOption = parser.acceptsAll(Arrays.asList("b", "bot-amount"), "Amount of bots to join. Must be <= amount of accounts.")
+				.withRequiredArg().describedAs("amount").ofType(Integer.class);
+		OptionSpec<String> protocolOption = parser.accepts("protocol", "Protocol version to use. Can be either protocol number or Minecraft version.")
+				.withRequiredArg();
 		OptionSpec<?> protocolsOption = parser.accepts("protocols", "List available protocols and exit.");
 
-		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
-		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
-		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
-		OptionSpec<String> captchaListOption = parser.accepts("captcha-list", "File containing a list of chat baised captcha to bypass.").withRequiredArg().describedAs("file");
+		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.")
+				.withRequiredArg().describedAs("file");
+		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.")
+				.withRequiredArg().describedAs("file");
+		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.")
+				.withRequiredArg().describedAs("file");
+		OptionSpec<String> captchaListOption = parser.accepts("captcha-list", "File containing a list of chat baised captcha to bypass.").withRequiredArg()
+				.describedAs("file");
 
 		OptionSet options;
 		try {
@@ -215,7 +227,8 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			System.out.println("Available protocols:");
 			for(ProtocolProvider<?> provider : ProtocolProvider.getProviders())
 				System.out.println("\t" + provider.getMinecraftVersion() + " (" + provider.getSupportedVersion() + "): " + provider.getClass().getName());
-			System.out.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
+			System.out
+					.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
 			return;
 		}
 
@@ -276,6 +289,8 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		final List<String> socksProxies;
 		if(options.has(socksProxyListOption))
 			socksProxies = loadProxies(options.valueOf(socksProxyListOption));
+		else if(options.has(proxyOption))
+			socksProxies = Arrays.asList(options.valueOf(proxyOption));
 		else
 			socksProxies = null;
 		final boolean useProxy = socksProxies != null;
@@ -450,7 +465,14 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 							while(true) {
 								String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 								try {
-									CLISpamBotWrapper bot = new CLISpamBotWrapper(createBot(server, session.getUsername(), session.getPassword(), authService, session, protocol, null, proxy), owner);
+									CLISpamBotWrapper bot = new CLISpamBotWrapper(createBot(server,
+																							session.getUsername(),
+																							session.getPassword(),
+																							authService,
+																							session,
+																							protocol,
+																							null,
+																							proxy), owner);
 									while(bot.getBot().isConnected()) {
 										try {
 											Thread.sleep(500);
@@ -675,7 +697,14 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		return new ProxyData(proxyData, port, type);
 	}
 
-	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, int protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBot createBot(	String server,
+											String username,
+											String password,
+											AuthService<?> service,
+											Session session,
+											int protocol,
+											String loginProxy,
+											String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
 		MinecraftBot.Builder builder = MinecraftBot.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;

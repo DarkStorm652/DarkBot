@@ -39,7 +39,7 @@ public class FallTask implements Task {
 		BlockLocation location = new BlockLocation(player.getLocation());
 		if(player.isInLiquid())
 			speed *= WalkActivity.getDefaultLiquidFactor();
-		else if(!bot.getWorld().getPathFinder().getHeuristic().isClimbableBlock(location))
+		else if(!bot.getWorld().getPathFinder().getWorldPhysics().canClimb(location))
 			speed *= WalkActivity.getDefaultFallFactor();
 		int lowestY = location.getY();
 		while(true) {

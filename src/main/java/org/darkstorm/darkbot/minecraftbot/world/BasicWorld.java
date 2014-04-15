@@ -19,7 +19,7 @@ import org.darkstorm.darkbot.minecraftbot.event.world.ChunkLoadEvent;
 import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.*;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.PathSearchProvider;
+import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar.AStarPathSearchProvider;
 
 public final class BasicWorld implements World, EventListener {
@@ -30,7 +30,7 @@ public final class BasicWorld implements World, EventListener {
 	private final int height;
 	private final Map<ChunkLocation, Chunk> chunks;
 	private final List<Entity> entities;
-	private final PathSearchProvider pathFinder;
+	private PathSearchProvider pathFinder;
 
 	private long time, age;
 
@@ -42,7 +42,7 @@ public final class BasicWorld implements World, EventListener {
 		this.difficulty = difficulty;
 		chunks = new HashMap<ChunkLocation, Chunk>();
 		entities = new ArrayList<Entity>();
-		pathFinder = new AStarPathSearchProvider(this);
+		pathFinder = new AStarPathSearchProvider(new EuclideanHeuristic(), new SimpleWorldPhysics(this));
 		EventBus eventBus = bot.getEventBus();
 		eventBus.register(this);
 	}
@@ -493,6 +493,11 @@ public final class BasicWorld implements World, EventListener {
 	@Override
 	public PathSearchProvider getPathFinder() {
 		return pathFinder;
+	}
+
+	@Override
+	public void setPathFinder(PathSearchProvider pathFinder) {
+		this.pathFinder = pathFinder;
 	}
 
 	@Override
