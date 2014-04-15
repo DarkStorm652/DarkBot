@@ -1,6 +1,5 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.BlockFaceEvent;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
 
