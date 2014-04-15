@@ -305,7 +305,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		ConnectionHandler handler = bot.getConnectionHandler();
 		// Ensures sending of previously queued packets now that there is no
 		// disconnect packet included
-		handler.sendPacket(new C01PacketChat("\n"));
+		handler.sendPacket(new C04PacketPositionUpdate(Double.NaN, Double.NaN, Double.NaN, Double.NaN, true));
 	}
 
 	@EventHandler
