@@ -8,7 +8,6 @@ import java.util.*;
 import javax.crypto.SecretKey;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.BlockPlaceEvent;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
 import org.darkstorm.darkbot.minecraftbot.event.*;
 import org.darkstorm.darkbot.minecraftbot.event.EventListener;
@@ -24,15 +23,15 @@ import org.darkstorm.darkbot.minecraftbot.event.protocol.server.PaintingSpawnEve
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.PlayerEquipmentUpdateEvent.EquipmentSlot;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
 import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.v4x.handshake.HC00PacketHandshake;
+import org.darkstorm.darkbot.minecraftbot.protocol.v4x.handshake.PacketHC00_Handshake;
 import org.darkstorm.darkbot.minecraftbot.protocol.v4x.login.client.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v4x.login.server.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.client.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.client.C15PacketClientSettings.ChatMode;
-import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.client.C15PacketClientSettings.ViewDistance;
+import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.client.PacketC15_ClientSettings.ChatMode;
+import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.client.PacketC15_ClientSettings.ViewDistance;
 import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.S0BPacketAnimation.Animation;
-import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.S21PacketChunkData.ChunkData;
+import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.PacketS0B_Animation.Animation;
+import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.PacketS21_ChunkData.ChunkData;
 import org.darkstorm.darkbot.minecraftbot.util.ChatColor;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
@@ -97,51 +96,51 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		}
 		this.lang = Collections.unmodifiableMap(lang);
 
-		register(State.LOGIN, LS00PacketDisconnect.class);
-		register(State.LOGIN, LS01PacketEncryptionRequest.class);
-		register(State.LOGIN, LS02PacketLoginSuccess.class);
+		register(State.LOGIN, PacketLS00_Disconnect.class);
+		register(State.LOGIN, PacketLS01_EncryptionRequest.class);
+		register(State.LOGIN, PacketLS02_LoginSuccess.class);
 
-		register(State.PLAY, S00PacketKeepAlive.class);
-		register(State.PLAY, S01PacketJoinGame.class);
-		register(State.PLAY, S02PacketChatMessage.class);
-		register(State.PLAY, S03PacketTimeUpdate.class);
-		register(State.PLAY, S04PacketEntityEquipment.class);
-		register(State.PLAY, S05PacketSpawnLocation.class);
-		register(State.PLAY, S06PacketUpdateHealth.class);
-		register(State.PLAY, S07PacketRespawn.class);
-		register(State.PLAY, S08PacketTeleport.class);
-		register(State.PLAY, S09PacketChangeHeldItem.class);
-		register(State.PLAY, S0APacketEnterBed.class);
-		register(State.PLAY, S0BPacketAnimation.class);
-		register(State.PLAY, S0CPacketSpawnPlayer.class);
-		register(State.PLAY, S0DPacketCollectItem.class);
-		register(State.PLAY, S0EPacketSpawnObject.class);
-		register(State.PLAY, S0FPacketSpawnMob.class);
-		register(State.PLAY, S10PacketSpawnPainting.class);
-		register(State.PLAY, S11PacketSpawnExperienceOrb.class);
-		register(State.PLAY, S12PacketEntityVelocityUpdate.class);
-		register(State.PLAY, S13PacketDespawnEntities.class);
-		register(State.PLAY, S14PacketEntityUpdate.class);
-		register(State.PLAY, S15PacketEntityRelativeMovementUpdate.class);
-		register(State.PLAY, S16PacketEntityRotationUpdate.class);
-		register(State.PLAY, S17PacketEntityRelativeMovementRotationUpdate.class);
-		register(State.PLAY, S18PacketEntityPositionRotationUpdate.class);
-		register(State.PLAY, S19PacketEntityHeadRotationUpdate.class);
-		register(State.PLAY, S1APacketEntityStatusUpdate.class);
-		register(State.PLAY, S1BPacketEntityAttachmentUpdate.class);
-		register(State.PLAY, S1CPacketEntityMetadataUpdate.class);
-		register(State.PLAY, S1DPacketEntityEffectUpdate.class);
-		register(State.PLAY, S1EPacketEntityRemoveEffect.class);
-		register(State.PLAY, S1FPacketExperienceUpdate.class);
-		register(State.PLAY, S20PacketEntityPropertyUpdate.class);
-		register(State.PLAY, S21PacketChunkData.class);
-		register(State.PLAY, S22PacketMultiBlockUpdate.class);
-		register(State.PLAY, S23PacketBlockUpdate.class);
-		register(State.PLAY, S24PacketBlockAction.class);
-		register(State.PLAY, S25PacketBlockBreakAnimation.class);
-		register(State.PLAY, S26MultiChunkData.class);
+		register(State.PLAY, PacketS00_KeepAlive.class);
+		register(State.PLAY, PacketS01_JoinGame.class);
+		register(State.PLAY, PacketS02_ChatMessage.class);
+		register(State.PLAY, PacketS03_TimeUpdate.class);
+		register(State.PLAY, PacketS04_EntityEquipment.class);
+		register(State.PLAY, PacketS05_SpawnLocation.class);
+		register(State.PLAY, PacketS06_UpdateHealth.class);
+		register(State.PLAY, PacketS07_Respawn.class);
+		register(State.PLAY, PacketS08_Teleport.class);
+		register(State.PLAY, PacketS09_ChangeHeldItem.class);
+		register(State.PLAY, PacketS0A_EnterBed.class);
+		register(State.PLAY, PacketS0B_Animation.class);
+		register(State.PLAY, PacketS0C_SpawnPlayer.class);
+		register(State.PLAY, PacketS0D_CollectItem.class);
+		register(State.PLAY, PacketS0E_SpawnObject.class);
+		register(State.PLAY, PacketS0F_SpawnMob.class);
+		register(State.PLAY, PacketS10_SpawnPainting.class);
+		register(State.PLAY, PacketS11_SpawnExperienceOrb.class);
+		register(State.PLAY, PacketS12_EntityVelocityUpdate.class);
+		register(State.PLAY, PacketS13_DespawnEntities.class);
+		register(State.PLAY, PacketS14_EntityUpdate.class);
+		register(State.PLAY, PacketS15_EntityRelativeMovementUpdate.class);
+		register(State.PLAY, PacketS16_EntityRotationUpdate.class);
+		register(State.PLAY, PacketS17_EntityRelativeMovementRotationUpdate.class);
+		register(State.PLAY, PacketS18_EntityPositionRotationUpdate.class);
+		register(State.PLAY, PacketS19_EntityHeadRotationUpdate.class);
+		register(State.PLAY, PacketS1A_EntityStatusUpdate.class);
+		register(State.PLAY, PacketS1B_EntityAttachmentUpdate.class);
+		register(State.PLAY, PacketS1C_EntityMetadataUpdate.class);
+		register(State.PLAY, PacketS1D_EntityEffectUpdate.class);
+		register(State.PLAY, PacketS1E_EntityRemoveEffect.class);
+		register(State.PLAY, PacketS1F_ExperienceUpdate.class);
+		register(State.PLAY, PacketS20_EntityPropertyUpdate.class);
+		register(State.PLAY, PacketS21_ChunkData.class);
+		register(State.PLAY, PacketS22_MultiBlockUpdate.class);
+		register(State.PLAY, PacketS23_BlockUpdate.class);
+		register(State.PLAY, PacketS24_BlockAction.class);
+		register(State.PLAY, PacketS25_BlockBreakAnimation.class);
+		register(State.PLAY, PacketS26_MultiChunkData.class);
 
-		register(State.PLAY, S40PacketDisconnect.class);
+		register(State.PLAY, PacketS40_Disconnect.class);
 
 		bot.getEventBus().register(this);
 	}
@@ -157,8 +156,8 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 
 	@EventHandler
 	public void onHandshake(HandshakeEvent event) {
-		bot.getConnectionHandler().sendPacket(new HC00PacketHandshake(VERSION, event.getServer(), event.getPort(), State.LOGIN));
-		bot.getConnectionHandler().sendPacket(new LC00PacketLoginStart(event.getSession().getUsername()));
+		bot.getConnectionHandler().sendPacket(new PacketHC00_Handshake(VERSION, event.getServer(), event.getPort(), State.LOGIN));
+		bot.getConnectionHandler().sendPacket(new PacketLC00_LoginStart(event.getSession().getUsername()));
 	}
 
 	/*@EventHandler
@@ -184,8 +183,8 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public void onHeldItemDrop(HeldItemDropEvent event) {
 		if(positionSet) {
 			ConnectionHandler handler = bot.getConnectionHandler();
-			C07PacketBlockDig.Action action = event.isEntireStack() ? C07PacketBlockDig.Action.DROP_ITEM_STACK : C07PacketBlockDig.Action.DROP_ITEM;
-			handler.sendPacket(new C07PacketBlockDig(action, 0, 0, 0, 0));
+			PacketC07_BlockDig.Action action = event.isEntireStack() ? PacketC07_BlockDig.Action.DROP_ITEM_STACK : PacketC07_BlockDig.Action.DROP_ITEM;
+			handler.sendPacket(new PacketC07_BlockDig(action, 0, 0, 0, 0));
 		} else
 			event.setCancelled(true);
 	}
@@ -194,7 +193,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public void onHeldItemChange(HeldItemChangeEvent event) {
 		if(positionSet) {
 			ConnectionHandler handler = bot.getConnectionHandler();
-			handler.sendPacket(new C09PacketHeldItemChange(event.getNewSlot()));
+			handler.sendPacket(new PacketC09_HeldItemChange(event.getNewSlot()));
 		} else
 			event.setCancelled(true);
 	}
@@ -209,60 +208,60 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 			mode = 0;
 		else
 			return;
-		handler.sendPacket(new C02PacketUseEntity(event.getEntity().getId(), mode));
+		handler.sendPacket(new PacketC02_UseEntity(event.getEntity().getId(), mode));
 	}
 
 	@EventHandler
 	public void onArmSwing(ArmSwingEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C0APacketAnimation(bot.getPlayer().getId(), C0APacketAnimation.Animation.SWING_ARM));
+		handler.sendPacket(new PacketC0A_Animation(bot.getPlayer().getId(), PacketC0A_Animation.Animation.SWING_ARM));
 	}
 
 	@EventHandler
 	public void onCrouchUpdate(CrouchUpdateEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C0BPacketEntityAction(bot.getPlayer().getId(), event.isCrouching() ? C0BPacketEntityAction.Action.CROUCH
-				: C0BPacketEntityAction.Action.UNCROUCH, 0));
+		handler.sendPacket(new PacketC0B_EntityAction(bot.getPlayer().getId(), event.isCrouching() ? PacketC0B_EntityAction.Action.CROUCH
+				: PacketC0B_EntityAction.Action.UNCROUCH, 0));
 	}
 
 	@EventHandler
 	public void onSprintUpdate(SprintUpdateEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C0BPacketEntityAction(bot.getPlayer().getId(), event.isSprinting() ? C0BPacketEntityAction.Action.START_SPRINTING
-				: C0BPacketEntityAction.Action.STOP_SPRINTING, 0));
+		handler.sendPacket(new PacketC0B_EntityAction(bot.getPlayer().getId(), event.isSprinting() ? PacketC0B_EntityAction.Action.START_SPRINTING
+				: PacketC0B_EntityAction.Action.STOP_SPRINTING, 0));
 	}
 
 	@EventHandler
 	public void onBedLeave(BedLeaveEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C0BPacketEntityAction(bot.getPlayer().getId(), C0BPacketEntityAction.Action.LEAVE_BED, 0));
+		handler.sendPacket(new PacketC0B_EntityAction(bot.getPlayer().getId(), PacketC0B_EntityAction.Action.LEAVE_BED, 0));
 	}
 
 	@EventHandler
 	public void onChatSent(ChatSentEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C01PacketChat(event.getMessage()));
+		handler.sendPacket(new PacketC01_Chat(event.getMessage()));
 	}
 
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		C07PacketBlockDig.Action action;
+		PacketC07_BlockDig.Action action;
 		if(event instanceof BlockBreakStartEvent)
-			action = C07PacketBlockDig.Action.START_DIGGING;
+			action = PacketC07_BlockDig.Action.START_DIGGING;
 		else if(event instanceof BlockBreakStopEvent)
-			action = C07PacketBlockDig.Action.CANCEL_DIGGING;
+			action = PacketC07_BlockDig.Action.CANCEL_DIGGING;
 		else if(event instanceof BlockBreakCompleteEvent)
-			action = C07PacketBlockDig.Action.FINISH_DIGGING;
+			action = PacketC07_BlockDig.Action.FINISH_DIGGING;
 		else
 			return;
-		handler.sendPacket(new C07PacketBlockDig(action, event.getX(), event.getY(), event.getZ(), event.getFace()));
+		handler.sendPacket(new PacketC07_BlockDig(action, event.getX(), event.getY(), event.getZ(), event.getFace()));
 	}
 
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C08PacketBlockPlace(event.getX(), event.getY(), event.getZ(), event.getFace(), event.getItem(), event.getXOffset(), event
+		handler.sendPacket(new PacketC08_BlockPlace(event.getX(), event.getY(), event.getZ(), event.getFace(), event.getItem(), event.getXOffset(), event
 				.getYOffset(), event.getZOffset()));
 	}
 
@@ -274,15 +273,15 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		boolean move = x != player.getLastX() || y != player.getLastY() || z != player.getLastZ();
 		boolean rotate = yaw != player.getLastYaw() || pitch != player.getLastPitch();
 		boolean onGround = player.isOnGround();
-		C03PacketPlayerUpdate packet;
+		PacketC03_PlayerUpdate packet;
 		if(move && rotate)
-			packet = new C06PacketPositionRotationUpdate(x, y, z, eyeY, yaw, pitch, onGround);
+			packet = new PacketC06_PositionRotationUpdate(x, y, z, eyeY, yaw, pitch, onGround);
 		else if(move)
-			packet = new C04PacketPositionUpdate(x, y, z, eyeY, onGround);
+			packet = new PacketC04_PositionUpdate(x, y, z, eyeY, onGround);
 		else if(rotate)
-			packet = new C05PacketRotationUpdate(yaw, pitch, onGround);
+			packet = new PacketC05_RotationUpdate(yaw, pitch, onGround);
 		else
-			packet = new C03PacketPlayerUpdate(onGround);
+			packet = new PacketC03_PlayerUpdate(onGround);
 		ConnectionHandler handler = bot.getConnectionHandler();
 		handler.sendPacket(packet);
 	}
@@ -291,13 +290,13 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public void onItemUse(ItemUseEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
 		ItemStack item = event.getItem();
-		handler.sendPacket(new C08PacketBlockPlace(-1, -1, -1, item != null && item.getId() == 346 ? 255 : -1, item, 0, 0, 0));
+		handler.sendPacket(new PacketC08_BlockPlace(-1, -1, -1, item != null && item.getId() == 346 ? 255 : -1, item, 0, 0, 0));
 	}
 
 	@EventHandler
 	public void onRequestRespawn(RequestRespawnEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new C16PacketClientStatus(1));
+		handler.sendPacket(new PacketC16_ClientStatus(1));
 	}
 
 	@EventHandler
@@ -305,17 +304,17 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		ConnectionHandler handler = bot.getConnectionHandler();
 		// Ensures sending of previously queued packets now that there is no
 		// disconnect packet included
-		handler.sendPacket(new C04PacketPositionUpdate(Double.NaN, Double.NaN, Double.NaN, Double.NaN, true));
+		handler.sendPacket(new PacketC04_PositionUpdate(Double.NaN, Double.NaN, Double.NaN, Double.NaN, true));
 	}
 
 	@EventHandler
 	public void onPacketReceived(PacketReceivedEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
 		Packet packet = event.getPacket();
-		if(packet instanceof LS01PacketEncryptionRequest) {
+		if(packet instanceof PacketLS01_EncryptionRequest) {
 			handler.pauseReading();
-			handleEncryption((LS01PacketEncryptionRequest) packet);
-		} else if(packet instanceof LS02PacketLoginSuccess) {
+			handleEncryption((PacketLS01_EncryptionRequest) packet);
+		} else if(packet instanceof PacketLS02_LoginSuccess) {
 			handler.pauseReading();
 		}/* else if(packet instanceof Packet106Transaction) {
 			Packet106Transaction transactionPacket = (Packet106Transaction) packet;
@@ -330,9 +329,9 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		ConnectionHandler handler = bot.getConnectionHandler();
 		Packet packet = event.getPacket();
 
-		if(packet instanceof HC00PacketHandshake) {
-			setState(((HC00PacketHandshake) packet).getNextState());
-		} else if(packet instanceof LC01PacketEncryptionResponse) {
+		if(packet instanceof PacketHC00_Handshake) {
+			setState(((PacketHC00_Handshake) packet).getNextState());
+		} else if(packet instanceof PacketLC01_EncryptionResponse) {
 			if(!handler.supportsEncryption()) {
 				handler.disconnect("ConnectionHandler does not support encryption!");
 				return;
@@ -342,7 +341,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				return;
 			}
 			if(!handler.isEncrypting()) {
-				handler.setSharedKey(((LC01PacketEncryptionResponse) packet).getSecretKey());
+				handler.setSharedKey(((PacketLC01_EncryptionResponse) packet).getSecretKey());
 				handler.enableEncryption();
 			}
 			if(handler.getSharedKey() == null) {
@@ -366,7 +365,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		case LOGIN:
 			switch(packet.getId()) {
 			case 0x00: {
-				connectionHandler.disconnect(((LS00PacketDisconnect) packet).getData());
+				connectionHandler.disconnect(((PacketLS00_Disconnect) packet).getData());
 				break;
 			}
 			case 0x01: {
@@ -382,11 +381,11 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		case PLAY:
 			switch(packet.getId()) {
 			case 0x00: {
-				connectionHandler.sendPacket(new C00PacketKeepAlive(((S00PacketKeepAlive) packet).getPingId()));
+				connectionHandler.sendPacket(new PacketC00_KeepAlive(((PacketS00_KeepAlive) packet).getPingId()));
 				break;
 			}
 			case 0x01: {
-				S01PacketJoinGame joinPacket = (S01PacketJoinGame) packet;
+				PacketS01_JoinGame joinPacket = (PacketS01_JoinGame) packet;
 				eventBus.fire(new LoginEvent(	joinPacket.getPlayerId(),
 												joinPacket.getWorldType(),
 												joinPacket.getGameMode(),
@@ -394,16 +393,16 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 												joinPacket.getDifficulty(),
 												256,
 												joinPacket.getMaxPlayers()));
-				connectionHandler.sendPacket(new C15PacketClientSettings("en_US", ViewDistance.FAR, ChatMode.ENABLED, Difficulty.NORMAL, true, true));
+				connectionHandler.sendPacket(new PacketC15_ClientSettings("en_US", ViewDistance.FAR, ChatMode.ENABLED, Difficulty.NORMAL, true, true));
 				try {
-					connectionHandler.sendPacket(new C17PacketPluginMessage("MC|Brand", "vanilla".getBytes("UTF-8")));
+					connectionHandler.sendPacket(new PacketC17_PluginMessage("MC|Brand", "vanilla".getBytes("UTF-8")));
 				} catch(UnsupportedEncodingException exception) {
 					throw new RuntimeException(exception);
 				}
 				break;
 			}
 			case 0x02: {
-				S02PacketChatMessage chatPacket = (S02PacketChatMessage) packet;
+				PacketS02_ChatMessage chatPacket = (PacketS02_ChatMessage) packet;
 				String message = chatPacket.getMessage();
 				try {
 					JSONParser parser = new JSONParser();
@@ -418,31 +417,32 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x03: {
-				S03PacketTimeUpdate timePacket = (S03PacketTimeUpdate) packet;
+				PacketS03_TimeUpdate timePacket = (PacketS03_TimeUpdate) packet;
 				eventBus.fire(new TimeUpdateEvent(timePacket.getTime(), timePacket.getWorldAge()));
 				break;
 			}
 			case 0x04: {
-				S04PacketEntityEquipment equipmentPacket = (S04PacketEntityEquipment) packet;
+				PacketS04_EntityEquipment equipmentPacket = (PacketS04_EntityEquipment) packet;
 				eventBus.fire(new PlayerEquipmentUpdateEvent(	equipmentPacket.getEntityId(),
 																EquipmentSlot.fromId(equipmentPacket.getSlot().ordinal()),
 																equipmentPacket.getItem()));
 				break;
 			}
 			case 0x06: {
-				S06PacketUpdateHealth healthPacket = (S06PacketUpdateHealth) packet;
+				PacketS06_UpdateHealth healthPacket = (PacketS06_UpdateHealth) packet;
 				int health = (int) Math.ceil(healthPacket.getHealth());
+				System.out.println("Received health: " + healthPacket.getHealth() + " " + healthPacket.getFood() + " " + healthPacket.getFoodSaturation());
 				eventBus.fire(new HealthUpdateEvent(health, healthPacket.getFood(), (float) healthPacket.getFoodSaturation()));
 				break;
 			}
 			case 0x07: {
-				S07PacketRespawn respawnPacket = (S07PacketRespawn) packet;
+				PacketS07_Respawn respawnPacket = (PacketS07_Respawn) packet;
 				eventBus.fire(new RespawnEvent(respawnPacket.getDimension(), respawnPacket.getDifficulty(), respawnPacket.getGameMode(), respawnPacket
 						.getWorldType(), 256));
 				break;
 			}
 			case 0x08: {
-				S08PacketTeleport teleportPacket = (S08PacketTeleport) packet;
+				PacketS08_Teleport teleportPacket = (PacketS08_Teleport) packet;
 
 				double x = teleportPacket.getX(), eyeY = teleportPacket.getY(), z = teleportPacket.getZ();
 				double yaw = teleportPacket.getYaw(), pitch = teleportPacket.getPitch();
@@ -450,7 +450,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				// Computers can't arithmetic
 				double actualY = BigDecimal.valueOf(eyeY).subtract(STANCE_CONSTANT_PRECISE).doubleValue();
 
-				C06PacketPositionRotationUpdate clientUpdatePacket = new C06PacketPositionRotationUpdate(x, actualY, z, eyeY, yaw, pitch, grounded);
+				PacketC06_PositionRotationUpdate clientUpdatePacket = new PacketC06_PositionRotationUpdate(x, actualY, z, eyeY, yaw, pitch, grounded);
 				connectionHandler.sendPacket(clientUpdatePacket);
 				positionSet = true;
 
@@ -458,23 +458,23 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x09: {
-				S09PacketChangeHeldItem heldItemPacket = (S09PacketChangeHeldItem) packet;
+				PacketS09_ChangeHeldItem heldItemPacket = (PacketS09_ChangeHeldItem) packet;
 				eventBus.fire(new org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChangeHeldItemEvent(heldItemPacket.getSlot()));
 				break;
 			}
 			case 0x0A: {
-				S0APacketEnterBed sleepPacket = (S0APacketEnterBed) packet;
+				PacketS0A_EnterBed sleepPacket = (PacketS0A_EnterBed) packet;
 				eventBus.fire(new SleepEvent(sleepPacket.getEntityId(), sleepPacket.getBedX(), sleepPacket.getBedY(), sleepPacket.getBedZ()));
 				break;
 			}
 			case 0x0B: {
-				S0BPacketAnimation animationPacket = (S0BPacketAnimation) packet;
+				PacketS0B_Animation animationPacket = (PacketS0B_Animation) packet;
 				if(animationPacket.getAnimation() == Animation.EAT_FOOD)
 					eventBus.fire(new EntityEatEvent(animationPacket.getPlayerId()));
 				break;
 			}
 			case 0x0C: {
-				S0CPacketSpawnPlayer spawnPacket = (S0CPacketSpawnPlayer) packet;
+				PacketS0C_SpawnPlayer spawnPacket = (PacketS0C_SpawnPlayer) packet;
 				RotatedSpawnLocation location = new RotatedSpawnLocation(	spawnPacket.getX(),
 																			spawnPacket.getY(),
 																			spawnPacket.getZ(),
@@ -485,12 +485,12 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x0D: {
-				S0DPacketCollectItem collectPacket = (S0DPacketCollectItem) packet;
+				PacketS0D_CollectItem collectPacket = (PacketS0D_CollectItem) packet;
 				eventBus.fire(new EntityCollectEvent(collectPacket.getItemEntityId(), collectPacket.getCollectorEntityId()));
 				break;
 			}
 			case 0x0E: {
-				S0EPacketSpawnObject spawnPacket = (S0EPacketSpawnObject) packet;
+				PacketS0E_SpawnObject spawnPacket = (PacketS0E_SpawnObject) packet;
 				RotatedSpawnLocation location = new RotatedSpawnLocation(	spawnPacket.getX(),
 																			spawnPacket.getY(),
 																			spawnPacket.getZ(),
@@ -509,7 +509,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x0F: {
-				S0FPacketSpawnMob spawnPacket = (S0FPacketSpawnMob) packet;
+				PacketS0F_SpawnMob spawnPacket = (PacketS0F_SpawnMob) packet;
 				LivingEntitySpawnLocation location = new LivingEntitySpawnLocation(	spawnPacket.getX(),
 																					spawnPacket.getY(),
 																					spawnPacket.getZ(),
@@ -524,19 +524,19 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x10: {
-				S10PacketSpawnPainting spawnPacket = (S10PacketSpawnPainting) packet;
+				PacketS10_SpawnPainting spawnPacket = (PacketS10_SpawnPainting) packet;
 				PaintingSpawnLocation location = new PaintingSpawnLocation(spawnPacket.getX(), spawnPacket.getY(), spawnPacket.getZ(), spawnPacket.getFace());
 				eventBus.fire(new PaintingSpawnEvent(spawnPacket.getEntityId(), location, spawnPacket.getTitle()));
 				break;
 			}
 			case 0x11: {
-				S11PacketSpawnExperienceOrb spawnPacket = (S11PacketSpawnExperienceOrb) packet;
+				PacketS11_SpawnExperienceOrb spawnPacket = (PacketS11_SpawnExperienceOrb) packet;
 				SpawnLocation location = new SpawnLocation(spawnPacket.getX(), spawnPacket.getY(), spawnPacket.getZ());
 				eventBus.fire(new ExpOrbSpawnEvent(spawnPacket.getEntityId(), location, spawnPacket.getCount()));
 				break;
 			}
 			case 0x12: {
-				S12PacketEntityVelocityUpdate velocityPacket = (S12PacketEntityVelocityUpdate) packet;
+				PacketS12_EntityVelocityUpdate velocityPacket = (PacketS12_EntityVelocityUpdate) packet;
 				eventBus.fire(new EntityVelocityEvent(	velocityPacket.getEntityId(),
 														velocityPacket.getVelocityX(),
 														velocityPacket.getVelocityY(),
@@ -544,40 +544,40 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x13: {
-				S13PacketDespawnEntities despawnPacket = (S13PacketDespawnEntities) packet;
+				PacketS13_DespawnEntities despawnPacket = (PacketS13_DespawnEntities) packet;
 				for(int id : despawnPacket.getEntityIds())
 					eventBus.fire(new EntityDespawnEvent(id));
 				break;
 			}
 			case 0x15: {
-				S15PacketEntityRelativeMovementUpdate updatePacket = (S15PacketEntityRelativeMovementUpdate) packet;
+				PacketS15_EntityRelativeMovementUpdate updatePacket = (PacketS15_EntityRelativeMovementUpdate) packet;
 				eventBus.fire(new EntityMoveEvent(updatePacket.getEntityId(), updatePacket.getDX(), updatePacket.getDY(), updatePacket.getDZ()));
 				break;
 			}
 			case 0x16: {
-				S16PacketEntityRotationUpdate updatePacket = (S16PacketEntityRotationUpdate) packet;
+				PacketS16_EntityRotationUpdate updatePacket = (PacketS16_EntityRotationUpdate) packet;
 				eventBus.fire(new EntityRotateEvent(updatePacket.getEntityId(), updatePacket.getYaw(), updatePacket.getPitch()));
 				break;
 			}
 			case 0x17: {
-				S17PacketEntityRelativeMovementRotationUpdate updatePacket = (S17PacketEntityRelativeMovementRotationUpdate) packet;
+				PacketS17_EntityRelativeMovementRotationUpdate updatePacket = (PacketS17_EntityRelativeMovementRotationUpdate) packet;
 				eventBus.fire(new EntityMoveEvent(updatePacket.getEntityId(), updatePacket.getDX(), updatePacket.getDY(), updatePacket.getDZ()));
 				eventBus.fire(new EntityRotateEvent(updatePacket.getEntityId(), updatePacket.getYaw(), updatePacket.getPitch()));
 				break;
 			}
 			case 0x18: {
-				S18PacketEntityPositionRotationUpdate updatePacket = (S18PacketEntityPositionRotationUpdate) packet;
+				PacketS18_EntityPositionRotationUpdate updatePacket = (PacketS18_EntityPositionRotationUpdate) packet;
 				eventBus.fire(new EntityTeleportEvent(updatePacket.getEntityId(), updatePacket.getX(), updatePacket.getY(), updatePacket.getZ(), updatePacket
 						.getYaw(), updatePacket.getPitch()));
 				break;
 			}
 			case 0x19: {
-				S19PacketEntityHeadRotationUpdate updatePacket = (S19PacketEntityHeadRotationUpdate) packet;
+				PacketS19_EntityHeadRotationUpdate updatePacket = (PacketS19_EntityHeadRotationUpdate) packet;
 				eventBus.fire(new EntityHeadRotateEvent(updatePacket.getEntityId(), updatePacket.getHeadYaw()));
 				break;
 			}
 			case 0x1A: {
-				S1APacketEntityStatusUpdate updatePacket = (S1APacketEntityStatusUpdate) packet;
+				PacketS1A_EntityStatusUpdate updatePacket = (PacketS1A_EntityStatusUpdate) packet;
 				if(updatePacket.getStatus() == 2)
 					eventBus.fire(new EntityHurtEvent(updatePacket.getEntityId()));
 				else if(updatePacket.getStatus() == 3)
@@ -587,7 +587,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x1B: {
-				S1BPacketEntityAttachmentUpdate updatePacket = (S1BPacketEntityAttachmentUpdate) packet;
+				PacketS1B_EntityAttachmentUpdate updatePacket = (PacketS1B_EntityAttachmentUpdate) packet;
 				if(updatePacket.isWithLeash())
 					break;
 				if(updatePacket.getAttachedEntityId() != -1)
@@ -597,19 +597,19 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x1C: {
-				S1CPacketEntityMetadataUpdate updatePacket = (S1CPacketEntityMetadataUpdate) packet;
+				PacketS1C_EntityMetadataUpdate updatePacket = (PacketS1C_EntityMetadataUpdate) packet;
 				eventBus.fire(new EntityMetadataUpdateEvent(updatePacket.getEntityId(), updatePacket.getMetadata()));
 				break;
 			}
 			case 0x21: {
 				if(bot.isMovementDisabled())
 					return;
-				S21PacketChunkData chunkPacket = (S21PacketChunkData) packet;
+				PacketS21_ChunkData chunkPacket = (PacketS21_ChunkData) packet;
 				processChunk(chunkPacket.getChunk(), bot.getWorld().getDimension() == Dimension.OVERWORLD, chunkPacket.hasBiomes());
 				break;
 			}
 			case 0x22: {
-				S22PacketMultiBlockUpdate blockPacket = (S22PacketMultiBlockUpdate) packet;
+				PacketS22_MultiBlockUpdate blockPacket = (PacketS22_MultiBlockUpdate) packet;
 				if(blockPacket.getBlockData() == null)
 					return;
 				int chunkX = blockPacket.getX() * 16, chunkZ = blockPacket.getZ() * 16;
@@ -629,7 +629,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 				break;
 			}
 			case 0x23: {
-				S23PacketBlockUpdate blockPacket = (S23PacketBlockUpdate) packet;
+				PacketS23_BlockUpdate blockPacket = (PacketS23_BlockUpdate) packet;
 				eventBus.fire(new BlockChangeEvent(	blockPacket.getBlockId(),
 													blockPacket.getBlockMetadata(),
 													blockPacket.getX(),
@@ -640,13 +640,13 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 			case 0x26: {
 				if(bot.isMovementDisabled())
 					return;
-				S26MultiChunkData chunkPacket = (S26MultiChunkData) packet;
+				PacketS26_MultiChunkData chunkPacket = (PacketS26_MultiChunkData) packet;
 				for(ChunkData chunk : chunkPacket.getChunks())
 					processChunk(chunk, chunkPacket.hasSkylight(), true);
 				break;
 			}
 			case 0x40: {
-				S40PacketDisconnect disconnectPacket = (S40PacketDisconnect) packet;
+				PacketS40_Disconnect disconnectPacket = (PacketS40_Disconnect) packet;
 				eventBus.fire(new KickEvent(disconnectPacket.getReason()));
 			}
 			}
@@ -656,7 +656,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void handleEncryption(LS01PacketEncryptionRequest request) {
+	public void handleEncryption(PacketLS01_EncryptionRequest request) {
 		String serverId = request.getServerId().trim();
 		PublicKey publicKey;
 		try {
@@ -683,7 +683,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 			}
 		}
 
-		connectionHandler.sendPacket(new LC01PacketEncryptionResponse(secretKey, publicKey, request.getVerifyToken()));
+		connectionHandler.sendPacket(new PacketLC01_EncryptionResponse(secretKey, publicKey, request.getVerifyToken()));
 	}
 
 	public String parseChatMessage(JSONObject messageData) {
