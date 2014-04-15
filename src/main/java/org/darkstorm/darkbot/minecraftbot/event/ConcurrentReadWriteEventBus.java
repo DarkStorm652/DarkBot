@@ -21,17 +21,18 @@ public class ConcurrentReadWriteEventBus implements EventBus {
 
 	@Override
 	public void fire(Event event) {
-		Class<?> eventClass = event.getClass();
-		List<ConcurrentReadWriteEventDelegate<?>> targets = new ArrayList<>();
+		List<ConcurrentReadWriteEventDelegate<?>> targets = findTargetDelegates(event.getClass());
 
-		readLock.lock();
-		try {
-			for(ConcurrentReadWriteEventDelegate<?> delegate : delegates)
-				if(delegate.getEventClass().isAssignableFrom(eventClass))
-					targets.add(delegate);
-		} finally {
-			readLock.unlock();
+		for(ConcurrentReadWriteEventDelegate<?> target : targets) {
+			try {
+				fireDelegated(target, event);
+			} catch(MultiEventException exception) {}
 		}
+	}
+
+	@Override
+	public void fireWithError(Event event) throws MultiEventException {
+		List<ConcurrentReadWriteEventDelegate<?>> targets = findTargetDelegates(event.getClass());
 
 		List<EventException> exceptions = new ArrayList<>();
 		for(ConcurrentReadWriteEventDelegate<?> target : targets) {
@@ -45,6 +46,31 @@ public class ConcurrentReadWriteEventBus implements EventBus {
 
 		if(!exceptions.isEmpty())
 			throw new MultiEventException("Exception occurred firing " + event.getName(), exceptions.toArray(new EventException[exceptions.size()]));
+	}
+
+	@Override
+	public void fireAsync(final Event event) {
+		new Thread() {
+			@Override
+			public void run() {
+				fire(event);
+			}
+		}.start();
+	}
+
+	private List<ConcurrentReadWriteEventDelegate<?>> findTargetDelegates(Class<?> eventClass) {
+		List<ConcurrentReadWriteEventDelegate<?>> targets = new ArrayList<>();
+
+		readLock.lock();
+		try {
+			for(ConcurrentReadWriteEventDelegate<?> delegate : delegates)
+				if(delegate.getEventClass().isAssignableFrom(eventClass))
+					targets.add(delegate);
+		} finally {
+			readLock.unlock();
+		}
+
+		return targets;
 	}
 
 	private <T extends Event> void fireDelegated(ConcurrentReadWriteEventDelegate<T> delegate, Event event) throws MultiEventException {

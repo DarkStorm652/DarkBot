@@ -2,7 +2,7 @@ package org.darkstorm.darkbot.minecraftbot.event;
 
 import java.lang.reflect.Method;
 
-public final class MultiEventException extends RuntimeException {
+public final class MultiEventException extends Exception {
 	private static final long serialVersionUID = -1392819062389929428L;
 
 	private final EventException[] exceptions;
