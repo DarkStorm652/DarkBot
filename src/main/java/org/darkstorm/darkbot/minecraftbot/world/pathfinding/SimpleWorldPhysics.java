@@ -46,50 +46,49 @@ public class SimpleWorldPhysics implements WorldPhysics {
 			return false;
 
 		boolean valid = true;
-		valid = valid && emptyBlocks[world.getBlockIdAt(x2, y2, z2)]; // Block at must be non-solid
-		valid = valid && emptyBlocks[world.getBlockIdAt(x2, y2 + 1, z2)]; // Block above must be non-solid
+		valid = valid && isEmpty(x2, y2, z2); // Block at must be non-solid
+		valid = valid && isEmpty(x2, y2 + 1, z2); // Block above must be non-solid
 
 		int lowerBlock = world.getBlockIdAt(x2, y2 - 1, z2);
 		valid = valid && lowerBlock != 10;
 		valid = valid && lowerBlock != 11;
-		int currentLowerBlock = world.getBlockIdAt(x, y - 1, z);
-		if(emptyBlocks[currentLowerBlock])
+
+		if(isEmpty(x, y - 1, z))
 			valid = valid
-					&& (y2 < y && x2 == x && z2 == z)
-					|| ((canClimb(location) && canClimb(location2)) || (!canClimb(location) && canClimb(location2)) || (canClimb(location)
-							&& !canClimb(location2) && (x2 == x && z2 == z ? true : !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)])))
-					|| !emptyBlocks[world.getBlockIdAt(x2, y2 - 1, z2)];
+					&& ((y2 < y && x2 == x && z2 == z)
+							|| ((canClimb(location) && canClimb(location2)) || (!canClimb(location) && canClimb(location2)) || (canClimb(location)
+									&& !canClimb(location2) && (x2 == x && z2 == z ? true : !isEmpty(x2, y2 - 1, z2)))) || !isEmpty(x2, y2 - 1, z2));
 		if(y != y2 && (x != x2 || z != z2))
 			return false;
 		if(x != x2 && z != z2) {
-			valid = valid && emptyBlocks[world.getBlockIdAt(x2, y, z)];
-			valid = valid && emptyBlocks[world.getBlockIdAt(x, y, z2)];
-			valid = valid && emptyBlocks[world.getBlockIdAt(x2, y + 1, z)];
-			valid = valid && emptyBlocks[world.getBlockIdAt(x, y + 1, z2)];
+			valid = valid && isEmpty(x2, y, z);
+			valid = valid && isEmpty(x, y, z2);
+			valid = valid && isEmpty(x2, y + 1, z);
+			valid = valid && isEmpty(x, y + 1, z2);
 			if(y != y2) {
-				valid = valid && emptyBlocks[world.getBlockIdAt(x2, y2, z)];
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y2, z2)];
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y2, z)];
-				valid = valid && emptyBlocks[world.getBlockIdAt(x2, y, z2)];
-				valid = valid && emptyBlocks[world.getBlockIdAt(x2, y + 1, z2)];
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y2 + 1, z)];
+				valid = valid && isEmpty(x2, y2, z);
+				valid = valid && isEmpty(x, y2, z2);
+				valid = valid && isEmpty(x, y2, z);
+				valid = valid && isEmpty(x2, y, z2);
+				valid = valid && isEmpty(x2, y + 1, z2);
+				valid = valid && isEmpty(x, y2 + 1, z);
 				valid = false;
 			}
 		} else if(x != x2 && y != y2) {
-			valid = valid && emptyBlocks[world.getBlockIdAt(x2, y, z)];
-			valid = valid && emptyBlocks[world.getBlockIdAt(x, y2, z)];
+			valid = valid && isEmpty(x2, y, z);
+			valid = valid && isEmpty(x, y2, z);
 			if(y > y2)
-				valid = valid && emptyBlocks[world.getBlockIdAt(x2, y + 1, z)];
+				valid = valid && isEmpty(x2, y + 1, z);
 			else
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y2 + 1, z)];
+				valid = valid && isEmpty(x, y2 + 1, z);
 			valid = false;
 		} else if(z != z2 && y != y2) {
-			valid = valid && emptyBlocks[world.getBlockIdAt(x, y, z2)];
-			valid = valid && emptyBlocks[world.getBlockIdAt(x, y2, z)];
+			valid = valid && isEmpty(x, y, z2);
+			valid = valid && isEmpty(x, y2, z);
 			if(y > y2)
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y + 1, z2)];
+				valid = valid && isEmpty(x, y + 1, z2);
 			else
-				valid = valid && emptyBlocks[world.getBlockIdAt(x, y2 + 1, z)];
+				valid = valid && isEmpty(x, y2 + 1, z);
 			valid = false;
 		}
 		int nodeBlockUnder = world.getBlockIdAt(x2, y2 - 1, z2);
@@ -104,13 +103,16 @@ public class SimpleWorldPhysics implements WorldPhysics {
 		if(id == 8 || id == 9 || id == 65) // Water / Moving Water / Ladder
 			return true;
 		if(id == 106) { // Vines (which require an adjacent solid block)
-			if(!emptyBlocks[world.getBlockIdAt(location.getX(), location.getY(), location.getZ() + 1)]
-					|| !emptyBlocks[world.getBlockIdAt(location.getX(), location.getY(), location.getZ() - 1)]
-					|| !emptyBlocks[world.getBlockIdAt(location.getX() + 1, location.getY(), location.getZ())]
-					|| !emptyBlocks[world.getBlockIdAt(location.getX() - 1, location.getY(), location.getZ())])
+			if(!isEmpty(location.getX(), location.getY(), location.getZ() + 1) || !isEmpty(location.getX(), location.getY(), location.getZ() - 1)
+					|| !isEmpty(location.getX() + 1, location.getY(), location.getZ()) || !isEmpty(location.getX() - 1, location.getY(), location.getZ()))
 				return true;
 		}
 		return false;
+	}
+
+	private boolean isEmpty(int x, int y, int z) {
+		int id = world.getBlockIdAt(x, y, z);
+		return id >= 0 && id < emptyBlocks.length && emptyBlocks[id];
 	}
 
 	@Override

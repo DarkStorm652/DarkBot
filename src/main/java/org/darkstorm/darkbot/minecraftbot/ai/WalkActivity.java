@@ -49,8 +49,10 @@ public class WalkActivity implements Activity {
 					return null;
 				BlockLocation ourLocation = new BlockLocation(player.getLocation());
 				PathSearch search = world.getPathFinder().provideSearch(ourLocation, target);
-				while(!search.isDone() && !Thread.interrupted())
+				while(!search.isDone() && (thread == null || !thread.isCancelled())) {
+					System.out.println("Stepping...");
 					search.step();
+				}
 				return search.getPath();
 			}
 		});
@@ -115,7 +117,7 @@ public class WalkActivity implements Activity {
 				nextStep = null;
 				return;
 			}
-		} else if(thread != null && thread.isDone()) {
+		} else if(thread != null && thread.isDone() && !thread.isCancelled()) {
 			try {
 				nextStep = thread.get();
 				System.out.println("Path found, walking...");
@@ -147,7 +149,7 @@ public class WalkActivity implements Activity {
 			double speed = this.speed;
 			BlockLocation location = nextStep.getLocation();
 			BlockLocation block = new BlockLocation(player.getLocation());
-			double x = location.getX(), y = location.getY(), z = location.getZ();
+			double x = location.getX() + 0.5, y = location.getY(), z = location.getZ() + 0.5;
 			boolean inLiquid = player.isInLiquid();
 			if(BlockType.getById(bot.getWorld().getBlockIdAt(block.offset(0, -1, 0))) == BlockType.SOUL_SAND) {
 				if(BlockType.getById(bot.getWorld().getBlockIdAt(location.offset(0, -1, 0))) == BlockType.SOUL_SAND)
@@ -179,10 +181,8 @@ public class WalkActivity implements Activity {
 	public void stop() {
 		if(thread != null && !thread.isDone())
 			thread.cancel(true);
-		thread = null;
 		nextStep = null;
 	}
-
 	public boolean isMoving() {
 		return nextStep != null;
 	}

@@ -1,6 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
 
 import java.util.*;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
@@ -15,8 +16,8 @@ public class AStarPathSearch implements PathSearch {
 
 	private PathNode first, last, complete, completeReverse;
 
-	private TreeSet<PathNode> openSet, closedSet, openSetReverse, closedSetReverse;
-	private Map<BlockLocation, PathNode> nodeWorld;
+	private Queue<PathNode> openSet, closedSet, openSetReverse, closedSetReverse;
+	private Map<BlockLocation, PathNode> nodeWorld, nodeWorldReverse;
 
 	public AStarPathSearch(AStarPathSearchProvider provider, BlockLocation start, BlockLocation end) {
 		this.provider = provider;
@@ -27,30 +28,30 @@ public class AStarPathSearch implements PathSearch {
 		physics = provider.getWorldPhysics();
 
 		nodeWorld = new HashMap<BlockLocation, PathNode>();
-
 		first = new BlockPathNode(this, start);
 		first.setCost(0);
 		first.setCostEstimate(heuristic.calculateCost(start, end));
-		openSet = new TreeSet<>(PATH_NODE_COMPARATOR);
-		closedSet = new TreeSet<>(PATH_NODE_COMPARATOR);
+		openSet = new PriorityBlockingQueue<>(64, PATH_NODE_COMPARATOR);
+		closedSet = new PriorityBlockingQueue<>(64, PATH_NODE_COMPARATOR);
 		nodeWorld.put(start, first);
-		openSet.add(first);
+		openSet.offer(first);
 
+		nodeWorldReverse = new HashMap<BlockLocation, PathNode>();
 		last = new BlockPathNode(this, end);
 		last.setCost(0);
 		last.setCostEstimate(heuristic.calculateCost(end, start));
-		openSetReverse = new TreeSet<>(PATH_NODE_COMPARATOR);
-		closedSetReverse = new TreeSet<>(PATH_NODE_COMPARATOR);
-		nodeWorld.put(end, last);
-		openSetReverse.add(last);
+		openSetReverse = new PriorityBlockingQueue<>(64, PATH_NODE_COMPARATOR);
+		closedSetReverse = new PriorityBlockingQueue<>(64, PATH_NODE_COMPARATOR);
+		nodeWorldReverse.put(end, last);
+		openSetReverse.offer(last);
 	}
+
 	@Override
 	public void step() {
 		if(isDone())
 			return;
 
-		PathNode current = openSet.first();
-		openSet.remove(current);
+		PathNode current = openSet.poll();
 
 		if(complete == null && current.getLocation().equals(end)) {
 			complete = reconstructPath(current);
@@ -61,8 +62,7 @@ public class AStarPathSearch implements PathSearch {
 		if(completeReverse != null)
 			return;
 
-		PathNode currentReverse = openSetReverse.first();
-		openSetReverse.remove(current);
+		PathNode currentReverse = openSetReverse.poll();
 
 		if(completeReverse == null && start.equals(currentReverse.getLocation()))
 			completeReverse = reconstructPath(currentReverse);
@@ -73,10 +73,11 @@ public class AStarPathSearch implements PathSearch {
 	private void calculate(PathNode current, boolean reverse) {
 		BlockLocation location = current.getLocation();
 
-		TreeSet<PathNode> openSet = (reverse ? openSetReverse : this.openSet);
-		TreeSet<PathNode> closedSet = (reverse ? closedSetReverse : this.closedSet);
+		Map<BlockLocation, PathNode> nodeWorld = (reverse ? nodeWorldReverse : this.nodeWorld);
+		Queue<PathNode> openSet = (reverse ? openSetReverse : this.openSet);
+		Queue<PathNode> closedSet = (reverse ? closedSetReverse : this.closedSet);
 
-		closedSet.add(current);
+		closedSet.offer(current);
 		for(BlockLocation adjacentLocation : physics.findAdjacent(current.getLocation())) {
 			PathNode adjacent;
 			if(!nodeWorld.containsKey(adjacentLocation)) {
@@ -98,7 +99,7 @@ public class AStarPathSearch implements PathSearch {
 			boolean contained = openSet.contains(adjacent);
 			if(!contained || cost < adjacent.getCost()) {
 				if(!contained)
-					openSet.add(adjacent);
+					openSet.offer(adjacent);
 				adjacent.setPrevious(current);
 				current.setNext(adjacent);
 				adjacent.setCost(cost);
@@ -119,7 +120,7 @@ public class AStarPathSearch implements PathSearch {
 
 	@Override
 	public boolean isDone() {
-		return complete != null || openSet.size() == 0 || (openSetReverse.size() == 0 && completeReverse == null);
+		return complete != null || openSet.isEmpty() || (openSetReverse.isEmpty() && completeReverse == null);
 	}
 
 	@Override
