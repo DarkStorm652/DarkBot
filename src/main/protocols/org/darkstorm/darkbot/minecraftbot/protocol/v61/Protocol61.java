@@ -8,7 +8,6 @@ import java.util.Arrays;
 import javax.crypto.SecretKey;
 
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.BlockPlaceEvent;
 import org.darkstorm.darkbot.minecraftbot.auth.*;
 import org.darkstorm.darkbot.minecraftbot.event.*;
 import org.darkstorm.darkbot.minecraftbot.event.io.*;

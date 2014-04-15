@@ -110,6 +110,7 @@ public class MinecraftBot implements EventListener {
 
 	@EventHandler
 	public void onHealthUpdate(HealthUpdateEvent event) {
+		System.out.println("Health updated");
 		player.setHealth(event.getHealth());
 		player.setHunger(event.getHunger());
 	}
@@ -175,28 +176,32 @@ public class MinecraftBot implements EventListener {
 	}
 
 	public synchronized void runTick() {
-		connectionHandler.process();
+		try {
+			connectionHandler.process();
 
-		if(hasSpawned) {
-			taskManager.update();
-			if(activity != null) {
-				if(activity.isActive()) {
-					activity.run();
-					if(!activity.isActive()) {
+			if(hasSpawned) {
+				taskManager.update();
+				if(activity != null) {
+					if(activity.isActive()) {
+						activity.run();
+						if(!activity.isActive()) {
+							activity.stop();
+							activity = null;
+						}
+					} else {
 						activity.stop();
 						activity = null;
 					}
-				} else {
-					activity.stop();
-					activity = null;
 				}
+
+				if(!movementDisabled)
+					updateMovement();
 			}
 
-			if(!movementDisabled)
-				updateMovement();
+			eventBus.fire(new TickEvent());
+		} catch(Exception exception) {
+			exception.printStackTrace();
 		}
-
-		eventBus.fire(new TickEvent());
 	}
 
 	public synchronized void updateMovement() {

@@ -57,7 +57,7 @@ public class ConcurrentReadWriteEventBus implements EventBus {
 
 		writeLock.lock();
 		try {
-			for(Method method : listenerClass.getMethods()) {
+			for(Method method : listenerClass.getDeclaredMethods()) {
 				if(method.getAnnotation(EventHandler.class) == null)
 					continue;
 				if(!method.isAccessible())
@@ -70,7 +70,7 @@ public class ConcurrentReadWriteEventBus implements EventBus {
 				boolean hasDelegate = false;
 				for(ConcurrentReadWriteEventDelegate<?> delegate : delegates) {
 					Class<?> delegateEventClass = delegate.getEventClass();
-					if(eventClass.isAssignableFrom(delegateEventClass))
+					if(delegateEventClass.isAssignableFrom(eventClass))
 						delegate.registerHandler(listener, method);
 					if(eventClass.equals(delegateEventClass))
 						hasDelegate = true;
