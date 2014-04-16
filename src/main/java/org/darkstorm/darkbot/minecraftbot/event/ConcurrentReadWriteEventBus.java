@@ -79,34 +79,36 @@ public class ConcurrentReadWriteEventBus implements EventBus {
 
 	@Override
 	public void register(EventListener listener) {
-		Class<? extends EventListener> listenerClass = listener.getClass();
-
 		writeLock.lock();
 		try {
-			for(Method method : listenerClass.getDeclaredMethods()) {
-				if(method.getAnnotation(EventHandler.class) == null)
-					continue;
-				if(!method.isAccessible())
-					method.setAccessible(true);
-				if(method.getParameterTypes().length != 1)
-					throw new IllegalArgumentException(String.format(	"Method %s in class %s has incorrect amount of parameters",
-																		method,
-																		listenerClass.getName()));
-				Class<? extends Event> eventClass = method.getParameterTypes()[0].asSubclass(Event.class);
-				boolean hasDelegate = false;
-				for(ConcurrentReadWriteEventDelegate<?> delegate : delegates) {
-					Class<?> delegateEventClass = delegate.getEventClass();
-					if(delegateEventClass.isAssignableFrom(eventClass))
+			Class<?> listenerClass = listener.getClass();
+			while(listenerClass != null && EventListener.class.isAssignableFrom(listenerClass)) {
+				for(Method method : listenerClass.getDeclaredMethods()) {
+					if(method.getAnnotation(EventHandler.class) == null)
+						continue;
+					if(!method.isAccessible())
+						method.setAccessible(true);
+					if(method.getParameterTypes().length != 1)
+						throw new IllegalArgumentException(String.format(	"Method %s in class %s has incorrect amount of parameters",
+																			method,
+																			listenerClass.getName()));
+					Class<? extends Event> eventClass = method.getParameterTypes()[0].asSubclass(Event.class);
+					boolean hasDelegate = false;
+					for(ConcurrentReadWriteEventDelegate<?> delegate : delegates) {
+						Class<?> delegateEventClass = delegate.getEventClass();
+						if(delegateEventClass.isAssignableFrom(eventClass))
+							delegate.registerHandler(listener, method);
+						if(eventClass.equals(delegateEventClass))
+							hasDelegate = true;
+					}
+					if(!hasDelegate) {
+						@SuppressWarnings({ "rawtypes", "unchecked" })
+						ConcurrentReadWriteEventDelegate<?> delegate = new ConcurrentReadWriteEventDelegate(eventClass);
+						delegates.add(delegate);
 						delegate.registerHandler(listener, method);
-					if(eventClass.equals(delegateEventClass))
-						hasDelegate = true;
+					}
 				}
-				if(!hasDelegate) {
-					@SuppressWarnings({ "rawtypes", "unchecked" })
-					ConcurrentReadWriteEventDelegate<?> delegate = new ConcurrentReadWriteEventDelegate(eventClass);
-					delegates.add(delegate);
-					delegate.registerHandler(listener, method);
-				}
+				listenerClass = listenerClass.getSuperclass();
 			}
 		} finally {
 			writeLock.unlock();
