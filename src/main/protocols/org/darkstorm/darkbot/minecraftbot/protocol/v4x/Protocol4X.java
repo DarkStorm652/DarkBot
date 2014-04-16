@@ -296,7 +296,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	@EventHandler
 	public void onRequestRespawn(RequestRespawnEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new PacketC16_ClientStatus(1));
+		handler.sendPacket(new PacketC16_ClientStatus(0));
 	}
 
 	@EventHandler
