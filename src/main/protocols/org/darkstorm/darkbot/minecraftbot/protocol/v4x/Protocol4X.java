@@ -179,7 +179,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 	public void onInventoryChange(InventoryChangeEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
 		int windowId = event.getInventory().getWindowId();
-		int mode = event.getSlot() == -999 && (event.getItem() == null || event.getItem().getId() == 0) ? 4 : event.isShiftHeld() ? 1 : 0;
+		int mode = event.isShiftHeld() ? 1 : 0;
 		PacketC0E_ClickWindow packet = new PacketC0E_ClickWindow(windowId, event.getSlot(), event.getButton(), event.getTransactionId(), mode, event.getItem());
 		handler.sendPacket(packet);
 	}

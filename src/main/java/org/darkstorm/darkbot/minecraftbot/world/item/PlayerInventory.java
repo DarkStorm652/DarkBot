@@ -102,7 +102,6 @@ public class PlayerInventory implements Inventory, EventListener {
 	@Override
 	public synchronized void selectItemAt(int slot, boolean leftClick) {
 		// TODO Fix: not entirely accurate, not yet sure why
-		delay();
 		MinecraftBot bot = player.getWorld().getBot();
 		ItemStack item = getItemAt(slot);
 		armorSlotCheck: while(selectedItem != null) {
@@ -129,6 +128,7 @@ public class PlayerInventory implements Inventory, EventListener {
 				selectedItem = null;
 			}
 			bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+			delay();
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -142,7 +142,6 @@ public class PlayerInventory implements Inventory, EventListener {
 				}
 			}
 		}
-		System.out.println("Selected item at " + slot + " (" + item + "," + selectedItem + ")");
 		if(leftClick) {
 			if(selectedItem != null) {
 				if(item != null) {
@@ -206,6 +205,7 @@ public class PlayerInventory implements Inventory, EventListener {
 			}
 		}
 		bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+		delay();
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -226,7 +226,6 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@Override
 	public synchronized void selectItemAtWithShift(int slot) {
-		delay();
 		// TODO Fix: not entirely accurate, not yet sure why either
 		ItemStack item = getItemAt(slot), originalItem = item;
 		int rangeStart, rangeEnd;
@@ -264,6 +263,7 @@ public class PlayerInventory implements Inventory, EventListener {
 			return;
 		MinecraftBot bot = player.getWorld().getBot();
 		bot.getEventBus().fire(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, transactionId++, originalItem, true));
+		delay();
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -310,10 +310,10 @@ public class PlayerInventory implements Inventory, EventListener {
 
 	@Override
 	public synchronized void dropSelectedItem() {
-		delay();
 		selectedItem = null;
 		MinecraftBot bot = player.getWorld().getBot();
 		bot.getEventBus().fire(new InventoryChangeEvent(this, -999, 0, transactionId++, null, true));
+		delay();
 	}
 
 	@Override
@@ -387,17 +387,15 @@ public class PlayerInventory implements Inventory, EventListener {
 	}
 
 	private int getServerSlotFor(int clientSlot) {
-		int slot = clientSlot;
 		if(clientSlot < 9)
-			slot = 36 + clientSlot;
+			return 36 + clientSlot;
 		else if(clientSlot > 43)
-			slot = clientSlot - 44;
+			return clientSlot - 44;
 		else if(clientSlot > 39)
-			slot = clientSlot - 39;
+			return clientSlot - 39;
 		else if(clientSlot > 35)
-			slot = clientSlot - 31;
-		System.out.println("Clicked at " + clientSlot + " (" + slot + ")");
-		return slot;
+			return clientSlot - 31;
+		return clientSlot;
 	}
 
 	@Override
