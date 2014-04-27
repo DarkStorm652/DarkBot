@@ -6,17 +6,18 @@ import java.util.concurrent.locks.*;
 
 import org.darkstorm.darkbot.minecraftbot.event.MultiEventException.EventException;
 
-final class ConcurrentReadWriteEventDelegate<T extends Event> {
+final class ConcurrentEventDelegate<T extends Event> {
 	private final Class<T> eventClass;
 
-	private final Map<EventHandler, EventHandlerData> eventHandlers;
+	private final Set<EventHandlerData> eventHandlers;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 	private final Lock readLock = lock.readLock(), writeLock = lock.writeLock();
 
-	public ConcurrentReadWriteEventDelegate(Class<T> eventClass) {
+	public ConcurrentEventDelegate(Class<T> eventClass) {
 		this.eventClass = eventClass;
-		eventHandlers = new TreeMap<>(new EventHandlerPriorityComparator());
+
+		eventHandlers = new TreeSet<>(new EventHandlerPriorityComparator());
 	}
 
 	public void handleEvent(T event) throws MultiEventException {
@@ -26,7 +27,7 @@ final class ConcurrentReadWriteEventDelegate<T extends Event> {
 
 		readLock.lock();
 		try {
-			for(EventHandlerData data : eventHandlers.values()) {
+			for(EventHandlerData data : eventHandlers) {
 				try {
 					if(cancelled && data.handler.ignoreCancelled())
 						continue;
@@ -59,23 +60,25 @@ final class ConcurrentReadWriteEventDelegate<T extends Event> {
 		EventHandler handler = method.getAnnotation(EventHandler.class);
 		if(handler == null)
 			return;
+		EventHandlerData data = new EventHandlerData(handler, listener, method, System.currentTimeMillis());
 
 		writeLock.lock();
 		try {
-			eventHandlers.put(handler, new EventHandlerData(handler, listener, method));
+			eventHandlers.add(data);
 		} finally {
 			writeLock.unlock();
 		}
 	}
 
-	public void unregisterHandler(Method method) {
+	public void unregisterHandler(EventListener listener, Method method) {
 		EventHandler handler = method.getAnnotation(EventHandler.class);
 		if(handler == null)
 			return;
+		EventHandlerData data = new EventHandlerData(handler, listener, method, System.currentTimeMillis());
 
 		writeLock.lock();
 		try {
-			eventHandlers.remove(handler);
+			eventHandlers.remove(data);
 		} finally {
 			writeLock.unlock();
 		}
@@ -85,7 +88,7 @@ final class ConcurrentReadWriteEventDelegate<T extends Event> {
 		readLock.lock();
 		try {
 			Map<EventListener, Collection<Method>> handlers = new HashMap<>();
-			for(EventHandlerData data : eventHandlers.values()) {
+			for(EventHandlerData data : eventHandlers) {
 				Collection<Method> methods = handlers.get(data.listener);
 				if(methods == null) {
 					methods = new ArrayList<>();
@@ -121,22 +124,47 @@ final class ConcurrentReadWriteEventDelegate<T extends Event> {
 		return eventClass;
 	}
 
-	private final class EventHandlerPriorityComparator implements Comparator<EventHandler> {
+	private final class EventHandlerPriorityComparator implements Comparator<EventHandlerData> {
 		@Override
-		public int compare(EventHandler o1, EventHandler o2) {
-			return Double.compare(o1.priority(), o2.priority());
+		public int compare(EventHandlerData data1, EventHandlerData data2) {
+			if(data1.equals(data2))
+				return 0;
+			int compare = -Double.compare(data1.handler.priority(), data2.handler.priority());
+			if(compare == 0)
+				compare = Long.compare(data1.registrationTime, data2.registrationTime);
+			return compare != 0 ? compare : -1;
 		}
 	}
 
-	private final class EventHandlerData {
+	private static final class EventHandlerData implements Cloneable {
 		private final EventHandler handler;
 		private final EventListener listener;
 		private final Method method;
+		private final long registrationTime;
 
-		public EventHandlerData(EventHandler handler, EventListener listener, Method method) {
+		public EventHandlerData(EventHandler handler, EventListener listener, Method method, long registrationTime) {
 			this.handler = handler;
 			this.listener = listener;
 			this.method = method;
+			this.registrationTime = registrationTime;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(!(obj instanceof EventHandlerData))
+				return false;
+			EventHandlerData other = (EventHandlerData) obj;
+			return Objects.equals(listener, other.listener) && Objects.equals(method, other.method) && Objects.equals(handler, other.handler);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(listener, method, handler);
+		}
+
+		@Override
+		public Object clone() {
+			return new EventHandlerData(handler, listener, method, registrationTime);
 		}
 	}
 }

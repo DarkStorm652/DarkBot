@@ -43,7 +43,7 @@ public class MinecraftBot implements EventListener {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private MinecraftBot(Builder builder) throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
 		service = Executors.newCachedThreadPool();
-		eventBus = new ConcurrentReadWriteEventBus();
+		eventBus = new ConcurrentEventBus();
 		eventBus.register(this);
 		taskManager = new BasicTaskManager(this);
 
@@ -110,7 +110,6 @@ public class MinecraftBot implements EventListener {
 
 	@EventHandler
 	public void onHealthUpdate(HealthUpdateEvent event) {
-		System.out.println("Health updated");
 		player.setHealth(event.getHealth());
 		player.setHunger(event.getHunger());
 	}
@@ -254,6 +253,7 @@ public class MinecraftBot implements EventListener {
 				} catch(InterruptedException e) {}
 			}
 			String part = message.substring(0, MAX_CHAT_LENGTH);
+			System.out.println("Attempting to say: " + message);
 			eventBus.fire(new ChatSentEvent(part));
 			message = message.substring(part.length());
 			lastMessage = System.currentTimeMillis();
@@ -265,6 +265,7 @@ public class MinecraftBot implements EventListener {
 					Thread.sleep(messageDelay - elapsed);
 				} catch(InterruptedException e) {}
 			}
+			System.out.println("Attempting to say: " + message);
 			eventBus.fire(new ChatSentEvent(message));
 			lastMessage = System.currentTimeMillis();
 		}
