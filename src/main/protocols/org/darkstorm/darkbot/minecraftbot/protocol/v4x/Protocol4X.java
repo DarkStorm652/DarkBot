@@ -140,6 +140,21 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		register(State.PLAY, PacketS25_BlockBreakAnimation.class);
 		register(State.PLAY, PacketS26_MultiChunkData.class);
 
+		register(State.PLAY, PacketS2D_OpenWindow.class);
+		register(State.PLAY, PacketS2E_CloseWindow.class);
+		register(State.PLAY, PacketS2F_SetSlot.class);
+		register(State.PLAY, PacketS30_WindowItems.class);
+		register(State.PLAY, PacketS31_WindowProperty.class);
+		register(State.PLAY, PacketS32_ConfirmTransaction.class);
+		register(State.PLAY, PacketS33_SignUpdate.class);
+		register(State.PLAY, PacketS34_MapUpdate.class);
+		register(State.PLAY, PacketS35_TileEntityUpdate.class);
+		register(State.PLAY, PacketS36_OpenTileEditor.class);
+		register(State.PLAY, PacketS37_Statistics.class);
+		register(State.PLAY, PacketS38_PlayerListItem.class);
+		register(State.PLAY, PacketS39_PlayerAbilities.class);
+		register(State.PLAY, PacketS3A_TabCompletion.class);
+
 		register(State.PLAY, PacketS40_Disconnect.class);
 
 		bot.getEventBus().register(this);
@@ -160,24 +175,20 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		bot.getConnectionHandler().sendPacket(new PacketLC00_LoginStart(event.getSession().getUsername()));
 	}
 
-	/*@EventHandler
+	@EventHandler
 	public void onInventoryChange(InventoryChangeEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		Packet102WindowClick packet = new Packet102WindowClick();
-		packet.windowId = event.getInventory().getWindowId();
-		packet.slot = event.getSlot();
-		packet.button = event.getButton();
-		packet.action = event.getTransactionId();
-		packet.item = event.getItem();
-		packet.shift = event.isShiftHeld();
+		int windowId = event.getInventory().getWindowId();
+		int mode = event.getSlot() == -999 && (event.getItem() == null || event.getItem().getId() == 0) ? 4 : event.isShiftHeld() ? 1 : 0;
+		PacketC0E_ClickWindow packet = new PacketC0E_ClickWindow(windowId, event.getSlot(), event.getButton(), event.getTransactionId(), mode, event.getItem());
 		handler.sendPacket(packet);
 	}
 
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent event) {
 		ConnectionHandler handler = bot.getConnectionHandler();
-		handler.sendPacket(new Packet101CloseWindow(event.getInventory().getWindowId()));
-	}*/
+		handler.sendPacket(new PacketC0D_CloseWindow(event.getInventory().getWindowId()));
+	}
 
 	@EventHandler
 	public void onHeldItemDrop(HeldItemDropEvent event) {
@@ -295,6 +306,7 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 
 	@EventHandler
 	public void onRequestRespawn(RequestRespawnEvent event) {
+		System.out.println("Respawn requested! :o");
 		ConnectionHandler handler = bot.getConnectionHandler();
 		handler.sendPacket(new PacketC16_ClientStatus(0));
 	}
@@ -316,12 +328,13 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 			handleEncryption((PacketLS01_EncryptionRequest) packet);
 		} else if(packet instanceof PacketLS02_LoginSuccess) {
 			handler.pauseReading();
-		}/* else if(packet instanceof Packet106Transaction) {
-			Packet106Transaction transactionPacket = (Packet106Transaction) packet;
-			bot.getEventManager().sendEvent(new WindowTransactionCompleteEvent(transactionPacket.windowId, transactionPacket.shortWindowId, transactionPacket.accepted));
-			transactionPacket.accepted = true;
-			handler.sendPacket(transactionPacket);
-			}*/
+		} else if(packet instanceof PacketS32_ConfirmTransaction) {
+			PacketS32_ConfirmTransaction transactionPacket = (PacketS32_ConfirmTransaction) packet;
+			handler.sendPacket(new PacketC0F_ConfirmTransaction(transactionPacket.getWindowId(), transactionPacket.getActionId(), true));
+			bot.getEventBus().fire(new WindowTransactionCompleteEvent(	transactionPacket.getWindowId(),
+																		(short) transactionPacket.getActionId(),
+																		transactionPacket.isAccepted()));
+		}
 	}
 
 	@EventHandler
@@ -645,6 +658,55 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 					processChunk(chunk, chunkPacket.hasSkylight(), true);
 				break;
 			}
+			case 0x2D: {
+				PacketS2D_OpenWindow windowOpenPacket = (PacketS2D_OpenWindow) packet;
+				eventBus.fire(new WindowOpenEvent(	windowOpenPacket.getWindowId(),
+													windowOpenPacket.getInventoryType(),
+													windowOpenPacket.useWindowTitle() ? windowOpenPacket.getWindowTitle() : "",
+													windowOpenPacket.getSlotCount()));
+				break;
+			}
+			case 0x2E: {
+				PacketS2E_CloseWindow windowClosePacket = (PacketS2E_CloseWindow) packet;
+				eventBus.fire(new WindowCloseEvent(windowClosePacket.getWindowId()));
+				break;
+			}
+			case 0x2F: {
+				PacketS2F_SetSlot slotPacket = (PacketS2F_SetSlot) packet;
+				eventBus.fire(new WindowSlotChangeEvent(slotPacket.getWindowId(), slotPacket.getSlot(), slotPacket.getItem()));
+				break;
+			}
+			case 0x30: {
+				PacketS30_WindowItems windowItemsPacket = (PacketS30_WindowItems) packet;
+				eventBus.fire(new WindowUpdateEvent(windowItemsPacket.getWindowId(), windowItemsPacket.getItems()));
+				break;
+			}
+			// TODO 0x31 WindowProperty
+			case 0x33: {
+				PacketS33_SignUpdate signUpdatePacket = (PacketS33_SignUpdate) packet;
+				eventBus.fire(new SignUpdateEvent(signUpdatePacket.getX(), signUpdatePacket.getY(), signUpdatePacket.getZ(), signUpdatePacket.getLines()));
+				break;
+			}
+			// TODO 0x34 MapUpdate
+			case 0x35: {
+				PacketS35_TileEntityUpdate tilePacket = (PacketS35_TileEntityUpdate) packet;
+				eventBus.fire(new TileEntityUpdateEvent(tilePacket.getX(), tilePacket.getY(), tilePacket.getZ(), tilePacket.getAction(), tilePacket.getData()));
+				break;
+			}
+			case 0x36: {
+				PacketS36_OpenTileEditor tileEditorPacket = (PacketS36_OpenTileEditor) packet;
+				eventBus.fire(new EditTileEntityEvent(tileEditorPacket.getX(), tileEditorPacket.getY(), tileEditorPacket.getZ()));
+				break;
+			}
+			case 0x38: {
+				PacketS38_PlayerListItem playerListEvent = (PacketS38_PlayerListItem) packet;
+				if(playerListEvent.isOnline())
+					eventBus.fire(new PlayerListUpdateEvent(playerListEvent.getPlayerName(), playerListEvent.getPing()));
+				else
+					eventBus.fire(new PlayerListRemoveEvent(playerListEvent.getPlayerName()));
+				break;
+			}
+			// TODO 0x39 PlayerAbilities
 			case 0x40: {
 				PacketS40_Disconnect disconnectPacket = (PacketS40_Disconnect) packet;
 				eventBus.fire(new KickEvent(disconnectPacket.getReason()));
@@ -654,7 +716,6 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 		default:
 		}
 	}
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void handleEncryption(PacketLS01_EncryptionRequest request) {
 		String serverId = request.getServerId().trim();
