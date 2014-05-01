@@ -41,7 +41,8 @@ public class ChatBackend implements Backend, EventListener {
 			int index = message.indexOf(owner);
 			if(index == -1)
 				continue;
-			executor = owner;
+			if(executor == null || index < message.indexOf(executor))
+				executor = owner;
 		}
 		if(executor == null)
 			return;
