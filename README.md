@@ -16,9 +16,10 @@
 > Select Use the New Project wizard and click Finish.  
 > In the New Project wizard, select Java Project and click Next.  
 > Type in DarkBot (exact capitalization). If you typed it in properly and all previous steps have been followed, options in the wizard should disable themselves. Click Finish if this is the case.  
-> Once cloned, expand the project in your package explorer. There will likely be a large amount of errors. Right-click "src" and click Build Path > Remove from Build Path. The folder src should move down below "JRE System Library" and all errors should disappear.  
-> Expand src, then expand each folder within src. In each of these folders, right-click each folder (named java, resources, protocols, etc.) and click Build Path > Use as Source Folder.  
-> Expand lib, right click every .jar file, and click Build Path > Add to Build Path.  
+> Once cloned, expand the project in your package explorer.  
+> At this point you should see "src/main/java" and "src/main/protocols". If you see an empty src folder and no errors, you've missed the earlier step about changing the directory of the git clone.  
+> If "src/main/resources" is not a source folder (you do not see it below the above two), then expand "src" (located below the libraries), expand "main", and right-click "resources" and click Build Path > Use as Source Folder.  
+> Ensure that Eclipse automatically added all of the jars in "lib" to "Referenced Libraries". All errors should be resolved at this point.  
 > Right-click build.xml and click Run As > Ant Build (the first option).  
 > Wait for the build to complete and run DarkBot.jar from cmd with --help for args.  
 > Hurray! The plus side to this method (though it may seem lengthier than the one below) is that you can right-click the project folder and click Team > Pull to get new updates. Make sure you run build.xml after every time you update.  
