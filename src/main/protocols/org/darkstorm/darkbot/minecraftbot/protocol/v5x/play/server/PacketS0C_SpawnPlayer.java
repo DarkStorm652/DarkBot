@@ -10,6 +10,7 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
 public class PacketS0C_SpawnPlayer extends AbstractPacketX implements ReadablePacket {
 	private int entityId;
 	private String uuid, name;
+	private PlayerProperty[] properties;
 
 	private double x, y, z, yaw, pitch;
 	private int heldItemId;
@@ -24,6 +25,14 @@ public class PacketS0C_SpawnPlayer extends AbstractPacketX implements ReadablePa
 		entityId = readVarInt(in);
 		uuid = readString(in);
 		name = readString(in);
+
+		properties = new PlayerProperty[readVarInt(in)];
+		for(int i = 0; i < properties.length; i++) {
+			String name = readString(in);
+			String value = readString(in);
+			String signature = readString(in);
+			properties[i] = new PlayerProperty(name, value, signature);
+		}
 
 		x = in.readInt() / 32D;
 		y = in.readInt() / 32D;
@@ -44,6 +53,10 @@ public class PacketS0C_SpawnPlayer extends AbstractPacketX implements ReadablePa
 
 	public String getName() {
 		return name;
+	}
+
+	public PlayerProperty[] getProperties() {
+		return properties.clone();
 	}
 
 	public double getX() {
@@ -72,5 +85,27 @@ public class PacketS0C_SpawnPlayer extends AbstractPacketX implements ReadablePa
 
 	public IntHashMap<WatchableObject> getMetadata() {
 		return metadata;
+	}
+
+	public static class PlayerProperty {
+		private final String name, value, signature;
+
+		private PlayerProperty(String name, String value, String signature) {
+			this.name = name;
+			this.value = value;
+			this.signature = signature;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public String getSignature() {
+			return signature;
+		}
 	}
 }
