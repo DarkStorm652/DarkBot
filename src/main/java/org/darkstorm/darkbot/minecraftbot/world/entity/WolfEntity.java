@@ -13,9 +13,9 @@ public class WolfEntity extends TameableEntity {
 		super.updateMetadata(metadata);
 		if(metadata.containsKey(16)) {
 			byte flags = (Byte) metadata.get(16).getObject();
-			setSitting((flags & 1) == 1);
-			setAggressive((flags & 2) == 1);
-			setTamed((flags & 4) == 1);
+			setSitting((flags & 1) != 0);
+			setAggressive((flags & 2) != 0);
+			setTamed((flags & 4) != 0);
 		}
 
 		if(metadata.containsKey(17))

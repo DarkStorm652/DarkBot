@@ -33,7 +33,7 @@ public class SheepEntity extends PassiveEntity {
 		if(metadata.containsKey(16)) {
 			byte data = (Byte) metadata.get(16).getObject();
 			setColor(data & 0xF);
-			setSheared((data & 0x10) == 1);
+			setSheared((data & 0x10) != 0);
 		}
 	}
 }

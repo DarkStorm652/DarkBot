@@ -104,11 +104,11 @@ public abstract class LivingEntity extends Entity {
 	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
 		if(metadata.containsKey(0)) {
 			byte flags = (Byte) metadata.get(0).getObject();
-			setOnFire((flags & 1) == 1);
-			setCrouching((flags & 2) == 1);
-			setRiding((flags & 4) == 1);
-			setSprinting((flags & 8) == 1);
-			setPerformingAction((flags & 16) == 1);
+			setOnFire((flags & 1) != 0);
+			setCrouching((flags & 2) != 0);
+			setRiding((flags & 4) != 0);
+			setSprinting((flags & 8) != 0);
+			setPerformingAction((flags & 16) != 0);
 		}
 
 		if(metadata.containsKey(1))
