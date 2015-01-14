@@ -106,6 +106,9 @@ public class MinecraftBot implements EventListener {
 			eventBus.fire(new SpawnEvent(player));
 			hasSpawned = true;
 		}
+		player.setVelocityX(0);
+		player.setVelocityY(0.12);
+		player.setVelocityZ(0);
 	}
 
 	@EventHandler

@@ -9,12 +9,16 @@ public final class MultiEventException extends Exception {
 
 	public MultiEventException(EventException... exceptions) {
 		this.exceptions = exceptions.clone();
+		for(EventException exception : exceptions)
+			addSuppressed(exception);
 	}
 
 	public MultiEventException(String message, EventException... exceptions) {
 		super(message);
 
 		this.exceptions = exceptions.clone();
+		for(EventException exception : exceptions)
+			addSuppressed(exception);
 	}
 
 	public EventException[] getExceptions() {

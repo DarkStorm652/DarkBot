@@ -1,5 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world;
 
+import java.util.Set;
+
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.Entity;
@@ -31,6 +33,10 @@ public interface World {
 
 	public Chunk getChunkAt(int x, int y, int z);
 	public Chunk getChunkAt(ChunkLocation location);
+	
+	public boolean isColliding(BoundingBox box);
+	public Set<Block> getCollidingBlocks(BoundingBox box);
+	public boolean isInMaterial(BoundingBox box, BlockType... materials);
 
 	public Entity[] getEntities();
 	public Entity getEntityById(int id);

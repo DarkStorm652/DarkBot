@@ -3,15 +3,12 @@ package org.darkstorm.darkbot.minecraftbot.world.block;
 import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
 
 public final class ChunkLocation {
-	private final int x, y, z, hashcode;
-	private final String string;
+	private final int x, y, z;
 
 	public ChunkLocation(int x, int y, int z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		string = "Chunk[" + x + "," + y + "," + z + "]";
-		hashcode = string.hashCode();
 	}
 
 	public ChunkLocation(BlockLocation location) {
@@ -37,21 +34,25 @@ public final class ChunkLocation {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + x;
+		result = prime * result + y;
+		result = prime * result + z;
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof ChunkLocation))
 			return false;
 		ChunkLocation location = (ChunkLocation) obj;
-		return location.getX() == x && location.getY() == y
-				&& location.getZ() == z;
+		return x == location.getX() && y == location.getY() && z == location.getZ();
 	}
 
 	@Override
 	public String toString() {
-		return string;
-	}
-
-	@Override
-	public int hashCode() {
-		return hashcode;
+		return "ChunkPos[" + x + "," + y + "," + z + "]";
 	}
 }

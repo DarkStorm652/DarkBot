@@ -24,7 +24,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		addBackend(new ChatBackend(this));
 
 		TaskManager taskManager = bot.getTaskManager();
-		taskManager.registerTask(new FallTask(bot));
 		taskManager.registerTask(new ChopTreesTask(bot));
 		taskManager.registerTask(new FollowTask(bot));
 		taskManager.registerTask(new DefendTask(bot));

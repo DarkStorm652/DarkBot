@@ -9,12 +9,14 @@ import org.darkstorm.darkbot.minecraftbot.world.World;
 public final class Chunk {
 	private final World world;
 	private final ChunkLocation location;
+	private final BlockLocation baseLocation;
 	private final byte[] blocks, metadata, light, skylight, biomes;
 	private final Map<BlockLocation, TileEntity> tileEntities;
 
 	public Chunk(World world, ChunkLocation location, byte[] blocks, byte[] metadata, byte[] light, byte[] skylight, byte[] biomes) {
 		this.world = world;
 		this.location = location;
+		this.baseLocation = new BlockLocation(location);
 		this.blocks = blocks;
 		this.metadata = metadata;
 		this.light = light;
@@ -29,6 +31,10 @@ public final class Chunk {
 
 	public ChunkLocation getLocation() {
 		return location;
+	}
+	
+	public BlockLocation getBlockBaseLocation() {
+		return baseLocation;
 	}
 
 	public TileEntity getTileEntityAt(int x, int y, int z) {
@@ -50,6 +56,20 @@ public final class Chunk {
 			tileEntities.put(location, tileEntity);
 		}
 	}
+	
+	public Block getBlockAt(BlockLocation location) {
+		return getBlockAt(location.getX(), location.getY(), location.getZ());
+	}
+	
+	public Block getBlockAt(int x, int y, int z) {
+		int id = getBlockIdAt(x, y, z);
+		if(id <= 0)
+			return null;
+		int metadata = getBlockMetadataAt(x, y, z);
+		
+		BlockType type = BlockType.getById(id);
+		return type.getBlockFactory().createBlock(world, this, baseLocation.offset(x, y, z), metadata);
+	}
 
 	public int getBlockIdAt(BlockLocation location) {
 		return getBlockIdAt(location.getX(), location.getY(), location.getZ());
@@ -57,7 +77,7 @@ public final class Chunk {
 
 	public int getBlockIdAt(int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > blocks.length)
+		if(index < 0 || index >= blocks.length)
 			return 0;
 		return blocks[index] & 0xFF;
 	}
@@ -68,12 +88,14 @@ public final class Chunk {
 
 	public void setBlockIdAt(int id, int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > blocks.length)
+		if(index < 0 || index >= blocks.length)
 			return;
-		BlockLocation location = new BlockLocation((this.location.getX() * 16) + x, (this.location.getY() * 16) + y, (this.location.getZ() * 16) + z);
-		Block oldBlock = blocks[index] != 0 ? new Block(world, this, location, blocks[index], metadata[index]) : null;
+		
+		BlockLocation location = new BlockLocation(x, y, z);
+		Block oldBlock = getBlockAt(location);
 		blocks[index] = (byte) id;
-		Block newBlock = id != 0 ? new Block(world, this, location, id, metadata[index]) : null;
+		Block newBlock = getBlockAt(location);
+		
 		EventBus eventBus = world.getBot().getEventBus();
 		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
@@ -84,7 +106,7 @@ public final class Chunk {
 
 	public int getBlockMetadataAt(int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > metadata.length)
+		if(index < 0 || index >= metadata.length)
 			return 0;
 		return metadata[index] & 0xFF;
 	}
@@ -95,12 +117,14 @@ public final class Chunk {
 
 	public void setBlockMetadataAt(int metadata, int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > this.metadata.length)
+		if(index < 0 || index >= this.metadata.length)
 			return;
-		BlockLocation location = new BlockLocation((this.location.getX() * 16) + x, (this.location.getY() * 16) + y, (this.location.getZ() * 16) + z);
-		Block oldBlock = new Block(world, this, location, blocks[index], this.metadata[index]);
+
+		BlockLocation location = new BlockLocation(x, y, z);
+		Block oldBlock = getBlockAt(location);
 		this.metadata[index] = (byte) metadata;
-		Block newBlock = new Block(world, this, location, blocks[index], metadata);
+		Block newBlock = getBlockAt(location);
+		
 		EventBus eventBus = world.getBot().getEventBus();
 		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
@@ -111,7 +135,7 @@ public final class Chunk {
 
 	public int getBlockLightAt(int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > light.length)
+		if(index < 0 || index >= light.length)
 			return 0;
 		return light[index] & 0xFF;
 	}
@@ -122,7 +146,7 @@ public final class Chunk {
 
 	public int getBlockSkylightAt(int x, int y, int z) {
 		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index > skylight.length)
+		if(index < 0 || index >= skylight.length)
 			return 0;
 		return skylight[index] & 0xFF;
 	}
@@ -133,7 +157,7 @@ public final class Chunk {
 
 	public BiomeType getBlockBiomeAt(int x, int y, int z) {
 		int index = z << 4 | x;
-		if(index < 0 || index > biomes.length)
+		if(index < 0 || index >= biomes.length)
 			return null;
 		return BiomeType.getById(biomes[index] & 0xFF);
 	}
@@ -144,7 +168,7 @@ public final class Chunk {
 
 	public void setBlockBiomeAt(BiomeType biome, int x, int y, int z) {
 		int index = z << 4 | x;
-		if(index < 0 || index > biomes.length)
+		if(index < 0 || index >= biomes.length)
 			return;
 		biomes[index] = (byte) biome.getId();
 	}

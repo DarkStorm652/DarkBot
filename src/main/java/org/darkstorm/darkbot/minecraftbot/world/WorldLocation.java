@@ -6,9 +6,9 @@ public final class WorldLocation {
 	private final double x, y, z;
 
 	public WorldLocation(double x, double y, double z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		this.x = x + 0.0;
+		this.y = y + 0.0;
+		this.z = z + 0.0;
 	}
 
 	public WorldLocation(BlockLocation location) {
@@ -35,19 +35,6 @@ public final class WorldLocation {
 		return z;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if(!(obj instanceof WorldLocation))
-			return false;
-		WorldLocation location = (WorldLocation) obj;
-		return location.getX() == x && location.getY() == y && location.getZ() == z;
-	}
-
-	@Override
-	public String toString() {
-		return "WorldLocation[" + x + "," + y + "," + z + "]";
-	}
-
 	public double getDistanceTo(WorldLocation other) {
 		return Math.sqrt(Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2) + Math.pow(z - other.z, 2));
 	}
@@ -62,5 +49,32 @@ public final class WorldLocation {
 
 	public WorldLocation offset(double x, double y, double z) {
 		return new WorldLocation(this.x + x, this.y + y, this.z + z);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(x);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(y);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(z);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof WorldLocation))
+			return false;
+		WorldLocation location = (WorldLocation) obj;
+		return x == location.getX() && y == location.getY() && z == location.getZ();
+	}
+
+	@Override
+	public String toString() {
+		return "WorldPos[" + x + "," + y + "," + z + "]";
 	}
 }

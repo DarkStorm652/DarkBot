@@ -1,7 +1,10 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
+import java.util.Set;
+
 import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
 
 public abstract class LivingEntity extends Entity {
@@ -11,6 +14,92 @@ public abstract class LivingEntity extends Entity {
 
 	public LivingEntity(World world, int id) {
 		super(world, id);
+	}
+	
+	@Override
+	protected void move() {
+		double horizFactor = 0.91;
+		if(isOnGround()) {
+			BlockType type = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y - 0.1), (int) Math.floor(z)));
+			if(type.isSolid())
+				horizFactor *= type.getFrictionCoefficient();
+		} else
+			accelerate(0, -Math.PI / 2, 0.08, 3.92);
+		
+		velocityX *= horizFactor;
+		velocityY *= 0.98;
+		velocityZ *= horizFactor;
+		
+		if(isInMaterial(BlockType.LAVA, BlockType.STATIONARY_LAVA)) {
+			velocityX *= 0.5D;
+			velocityY *= 0.5D;
+			velocityZ *= 0.5D;
+			velocityY -= 0.02D;
+		} else if(isInMaterial(BlockType.WATER, BlockType.STATIONARY_WATER)) {
+			velocityX *= 0.800000011920929D;
+			velocityY *= 0.800000011920929D;
+			velocityZ *= 0.800000011920929D;
+			velocityY -= 0.02D;
+		}
+		
+		handleSteppingUp();
+		handleCollision();
+	}
+	
+	private void handleSteppingUp() {
+		BoundingBox bounds = getBoundingBox();
+		Set<Block> currentCollisions = world.getCollidingBlocks(bounds);
+		if(velocityX >= -0.01 && velocityX <= 0.01 && velocityZ >= -0.01 && velocityZ <= 0.01) return;
+		
+		double vx = Math.signum(velocityX) * Math.min(Math.abs(velocityX), 0.05);
+		double vz = Math.signum(velocityZ) * Math.min(Math.abs(velocityZ), 0.05);
+		BoundingBox off = bounds.offset(vx, 0, vz);
+		if(collides(off, currentCollisions) && !collides(off.offset(0, 0.5, 0), off, currentCollisions)) {
+			int i = 1;
+			for(; i <= 5 && collides(off.offset(0, 0.1 * i, 0), currentCollisions); i++);
+			y += 0.1 * i;
+			velocityY = Math.max(0, velocityY);
+		}
+	}
+	
+	private void handleCollision() {
+		BoundingBox bounds = getBoundingBox();
+		Set<Block> currentCollisions = world.getCollidingBlocks(bounds);
+		final double off = 0.05;
+		
+		double velocity = 0;
+		for(double v = 0, target = Math.abs(velocityX), sign = Math.signum(velocityX);
+				v < target + off && !collides(bounds.offset(sign * v, 0, 0), currentCollisions);
+				v += off)
+			velocity = sign * Math.min(v, target);
+		velocityX = velocity;
+		
+		velocity = 0;
+		for(double v = 0, target = Math.abs(velocityZ), sign = Math.signum(velocityZ);
+				v < target + off && !collides(bounds.offset(0, 0, sign * v), currentCollisions);
+				v += off)
+			velocity = sign * Math.min(v, target);
+		velocityZ = velocity;
+		
+		velocity = 0;
+		for(double v = 0, target = Math.abs(velocityY), sign = Math.signum(velocityY);
+				v < target + off && !collides(bounds.offset(0, sign * v, 0), currentCollisions);
+				v += off)
+			velocity = sign * Math.min(v, target);
+		velocityY = velocity;
+	}
+	
+	private boolean collides(BoundingBox bounds, Set<Block> ignore) {
+		Set<Block> found = world.getCollidingBlocks(bounds);
+		found.removeAll(ignore);
+		return !found.isEmpty();
+	}
+	
+	private boolean collides(BoundingBox bounds, BoundingBox ignore, Set<Block> ignoreBlocks) {
+		Set<Block> found = world.getCollidingBlocks(bounds);
+		found.removeAll(ignoreBlocks);
+		found.removeAll(world.getCollidingBlocks(ignore));
+		return !found.isEmpty();
 	}
 
 	public int getHealth() {
@@ -98,6 +187,11 @@ public abstract class LivingEntity extends Entity {
 
 	public void setHeadYaw(double headYaw) {
 		this.headYaw = headYaw;
+	}
+	
+	@Override
+	public BoundingBox getBoundingBoxAt(double x, double y, double z) {
+		return BoundingBox.getBoundingBox(x - sizeX / 2.0, y, z - sizeZ / 2.0, x + sizeX / 2.0, y + sizeY, z + sizeZ / 2.0);
 	}
 
 	@Override

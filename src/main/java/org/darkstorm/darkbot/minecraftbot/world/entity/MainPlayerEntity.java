@@ -1,5 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.world.entity;
 
+import java.util.*;
+
 import org.darkstorm.darkbot.minecraftbot.ai.*;
 import org.darkstorm.darkbot.minecraftbot.event.EventBus;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
@@ -14,9 +16,12 @@ public class MainPlayerEntity extends PlayerEntity {
 	private double lastX, lastY, lastZ, lastYaw, lastPitch;
 	private int hunger, experienceLevel, experienceTotal;
 	private Inventory window;
+	
+	private boolean enforcingCollision = true;
 
 	public MainPlayerEntity(World world, int id, String name, GameMode gameMode) {
 		super(world, id, name);
+		
 		inventory = new PlayerInventory(this);
 		this.gameMode = gameMode;
 	}
@@ -25,6 +30,103 @@ public class MainPlayerEntity extends PlayerEntity {
 		this(world, player.getId(), player.getName(), player.getGameMode());
 
 		inventory.setDelay(player.getInventory().getDelay());
+	}
+	
+	@Override
+	public void update() {
+		move();
+		
+		super.update();
+	}
+	
+	@Override
+	protected void move() {
+		lastX = x;
+		lastY = y;
+		lastZ = z;
+		lastYaw = yaw;
+		lastPitch = pitch;
+		
+		//enforcingCollision = Boolean.FALSE;
+		if(!enforcingCollision)
+			return;
+		
+		BoundingBox bounds = getBoundingBox();
+		handlePushingOutOfBlocks(bounds);
+		if(isOnGround() && isCrouching())
+			handleSneaking(bounds);
+		
+		handlePlayerPushing(bounds);
+		
+		super.move();
+		
+		System.out.printf("Vel: <%.9f, %.9f, %.9f> Pos: <%.5f, %.5f, %.5f>%n", velocityX, velocityY, velocityZ, x, y, z);
+		BlockLocation below = new BlockLocation(getLocation().offset(0, -0.1, 0));
+		//System.out.println("Below @ " + below + ": " + world.getBlockIdAt(below));
+	}
+	
+	private void handleSneaking(BoundingBox bounds) {
+		final double off = 0.1;
+
+		double velocity = 0;
+		for(double v = 0, target = Math.abs(velocityX), sign = Math.signum(velocityX);
+				v < target + off && world.isColliding(bounds.offset(sign * v, -1, 0));
+				v += off)
+			velocity = sign * Math.min(v, target);
+		velocityX = velocity;
+		
+		velocity = 0;
+		for(double v = 0, target = Math.abs(velocityZ), sign = Math.signum(velocityZ);
+				v < target + off && world.isColliding(bounds.offset(0, -1, sign * v));
+				v += off)
+			velocity = sign * Math.min(v, target);
+		velocityZ = velocity;
+	}
+	
+	private void handlePushingOutOfBlocks(BoundingBox bounds) {
+		Set<Block> colliding = world.getCollidingBlocks(bounds);
+		if(!colliding.isEmpty()) {
+			Set<BlockLocation> checks = new TreeSet<BlockLocation>(BlockLocation.DISTANCE_COMPARATOR);
+			for(Block block : colliding) {
+				BlockLocation loc = block.getLocation();
+				checks.add(loc.offset(1, 0, 0));
+				checks.add(loc.offset(-1, 0, 0));
+				checks.add(loc.offset(0, 0, 1));
+				checks.add(loc.offset(0, 0, -1));
+			}
+			for(Block block : colliding)
+				checks.remove(block.getLocation());
+			
+			BlockLocation target = null;
+			for(BlockLocation check : checks) {
+				if(!world.isColliding(getBoundingBoxAt(check.getX() + 0.5, y, check.getZ() + 0.5))) {
+					target = check;
+					break;
+				}
+			}
+			if(target == null)
+				return;
+			
+			double angle = Math.atan2(z - target.getZ() - 0.5, x - target.getX() - 0.5);
+			accelerate(angle, 0, 0.025, 0.2);
+			
+			System.out.println("Trying to get out of " + new BlockLocation(getLocation()) + " and toward " + target);
+		}
+	}
+	
+	private void handlePlayerPushing(BoundingBox bounds) {
+		for(Entity entity : world.getEntities()) {
+			if(entity instanceof PlayerEntity && this != entity) {
+				BoundingBox otherBounds = entity.getBoundingBox();
+				if(!bounds.intersectsWith(otherBounds))
+					continue;
+				
+				double angle = Math.atan2(z - entity.z, x - entity.x);
+				accelerate(angle, 0, 0.025, 0.05);
+				
+				System.out.println("Being pushed by " + ((PlayerEntity) entity).getName());
+			}
+		}
 	}
 
 	public PlayerInventory getInventory() {
@@ -38,6 +140,10 @@ public class MainPlayerEntity extends PlayerEntity {
 
 	public GameMode getGameMode() {
 		return gameMode;
+	}
+	
+	public boolean isEnforcingCollision() {
+		return enforcingCollision;
 	}
 
 	public double getLastX() {
@@ -99,6 +205,10 @@ public class MainPlayerEntity extends PlayerEntity {
 
 	public void setGameMode(GameMode gameMode) {
 		this.gameMode = gameMode;
+	}
+	
+	public void setEnforcingCollision(boolean enforcingCollision) {
+		this.enforcingCollision = enforcingCollision;
 	}
 
 	public void setLastX(double lastX) {
@@ -203,17 +313,6 @@ public class MainPlayerEntity extends PlayerEntity {
 		double dis1 = y - (this.y + 1);
 		double dis2 = Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(z - this.z, 2));
 		return (float) ((Math.atan2(dis2, dis1) * 180D) / Math.PI) - 90F;
-	}
-
-	public boolean isOnGround() {
-		int id = world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y - 1), (int) Math.floor(z));
-		return y % 1 < 0.2 && BlockType.getById(id).isSolid();
-	}
-
-	public boolean isInLiquid() {
-		BlockType below = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z)));
-		BlockType above = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y + 1), (int) Math.floor(z)));
-		return below == BlockType.WATER || below == BlockType.LAVA || below == BlockType.STATIONARY_WATER || below == BlockType.STATIONARY_LAVA || above == BlockType.WATER || above == BlockType.LAVA || above == BlockType.STATIONARY_WATER || above == BlockType.STATIONARY_LAVA;
 	}
 
 	@Override

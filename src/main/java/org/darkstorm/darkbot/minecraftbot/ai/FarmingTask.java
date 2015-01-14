@@ -164,12 +164,12 @@ public class FarmingTask implements Task, EventListener {
 						if(!fullChests.contains(chest) && !isChestCovered(chest)) {
 							BlockLocation[] surrounding = new BlockLocation[] { chest.offset(0, 1, 0), chest.offset(-1, 0, 0), chest.offset(1, 0, 0), chest.offset(0, 0, -1), chest.offset(0, 0, 1) };
 							BlockLocation closestWalk = null;
-							int closestDistance = Integer.MAX_VALUE;
+							long closestDistance = Long.MAX_VALUE;
 							int face = 0;
 							for(BlockLocation walk : surrounding) {
 								if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
 									continue;
-								int distance = ourLocation.getDistanceToSquared(walk);
+								long distance = ourLocation.getDistanceToSquared(walk);
 								if(distance < closestDistance) {
 									closestWalk = walk;
 									closestDistance = distance;
@@ -250,12 +250,12 @@ public class FarmingTask implements Task, EventListener {
 					}
 					BlockLocation[] surrounding = new BlockLocation[] { sign.offset(0, 1, 0), sign.offset(-1, 0, 0), sign.offset(1, 0, 0), sign.offset(0, 0, -1), sign.offset(0, 0, 1), sign.offset(0, -1, 0) };
 					BlockLocation closestWalk = null;
-					int closestDistance = Integer.MAX_VALUE;
+					long closestDistance = Long.MAX_VALUE;
 					int face = 0;
 					for(BlockLocation walk : surrounding) {
 						if(BlockType.getById(world.getBlockIdAt(walk)).isSolid() || (BlockType.getById(world.getBlockIdAt(walk.offset(0, 1, 0))).isSolid() && BlockType.getById(world.getBlockIdAt(walk.offset(0, -1, 0))).isSolid()))
 							continue;
-						int distance = ourLocation.getDistanceToSquared(walk);
+						long distance = ourLocation.getDistanceToSquared(walk);
 						if(distance < closestDistance) {
 							closestWalk = walk;
 							closestDistance = distance;
@@ -319,11 +319,11 @@ public class FarmingTask implements Task, EventListener {
 			else if(id == 86 || id == 103) {
 				BlockLocation[] surrounding = new BlockLocation[] { closest.offset(0, 1, 0), closest.offset(-1, 0, 0), closest.offset(1, 0, 0), closest.offset(0, 0, -1), closest.offset(0, 0, 1) };
 				BlockLocation closestWalk = null;
-				int closestDistance = Integer.MAX_VALUE;
+				long closestDistance = Long.MAX_VALUE;
 				for(BlockLocation walk : surrounding) {
 					if(BlockType.getById(world.getBlockIdAt(walk)).isSolid())
 						continue;
-					int distance = ourLocation.getDistanceToSquared(walk);
+					long distance = ourLocation.getDistanceToSquared(walk);
 					if(distance < closestDistance) {
 						closestWalk = walk;
 						closestDistance = distance;
@@ -443,12 +443,13 @@ public class FarmingTask implements Task, EventListener {
 		// boolean hasReeds = inventory.contains(338);
 		BlockLocation ourLocation = new BlockLocation(player.getLocation());
 		List<BlockLocation> closest = new ArrayList<>();
-		int closestDistance = Integer.MAX_VALUE, actualFarmType = 0;
+		long closestDistance = Long.MAX_VALUE;
+		int actualFarmType = 0;
 		for(int x = region != null ? region.getX() - ourLocation.getX() : -radius; x < (region != null ? region.getX() + region.getWidth() - ourLocation.getX() : radius); x++) {
 			for(int y = region != null ? region.getY() - ourLocation.getY() : -radius / 2; y < (region != null ? region.getY() + region.getHeight() - ourLocation.getY() : radius / 2); y++) {
 				for(int z = region != null ? region.getZ() - ourLocation.getZ() : -radius; z < (region != null ? region.getZ() + region.getLength() - ourLocation.getZ() : radius); z++) {
 					BlockLocation location = new BlockLocation(ourLocation.getX() + x, ourLocation.getY() + y, ourLocation.getZ() + z);
-					int distance = ourLocation.getDistanceToSquared(location);
+					long distance = ourLocation.getDistanceToSquared(location);
 					if(distance <= closestDistance) {
 						// System.out.println("[" + x + "," + y + "," + z + "] "
 						// + distance + " -> " + closestDistance);
@@ -511,9 +512,9 @@ public class FarmingTask implements Task, EventListener {
 			return null;
 		BlockLocation ourLocation = new BlockLocation((int) (Math.round(player.getX() - 0.5)), (int) player.getY(), (int) (Math.round(player.getZ() - 0.5)));
 		BlockLocation closest = null;
-		int closestDistance = Integer.MAX_VALUE;
+		long closestDistance = Long.MAX_VALUE;
 		for(BlockLocation location : getBlocks(id, radius)) {
-			int distance = ourLocation.getDistanceToSquared(location);
+			long distance = ourLocation.getDistanceToSquared(location);
 			if(distance < closestDistance) {
 				closest = location;
 				closestDistance = distance;

@@ -68,7 +68,6 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		addBackend(new ChatBackend(this));
 
 		TaskManager taskManager = bot.getTaskManager();
-		taskManager.registerTask(new FallTask(bot));
 		taskManager.registerTask(new FollowTask(bot));
 		taskManager.registerTask(new DefendTask(bot));
 		taskManager.registerTask(new AttackTask(bot));
@@ -206,6 +205,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 				.withRequiredArg().describedAs("file");
 		OptionSpec<String> captchaListOption = parser.accepts("captcha-list", "File containing a list of chat baised captcha to bypass.").withRequiredArg()
 				.describedAs("file");
+		OptionSpec<?> torOption = parser.accepts("tor", "Use Tor rather than socks proxies to join");
 
 		OptionSet options;
 		try {
@@ -287,21 +287,27 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			protocol = MinecraftBot.LATEST_PROTOCOL;
 
 		final List<String> socksProxies;
-		if(options.has(socksProxyListOption))
-			socksProxies = loadProxies(options.valueOf(socksProxyListOption));
-		else if(options.has(proxyOption))
-			socksProxies = Arrays.asList(options.valueOf(proxyOption));
-		else
+		final boolean useTor;
+		if(options.has(torOption)) {
+			useTor = true;
 			socksProxies = null;
-		final boolean useProxy = socksProxies != null;
+		} else {
+			if(options.has(socksProxyListOption))
+				socksProxies = loadProxies(options.valueOf(socksProxyListOption));
+			else if(options.has(proxyOption))
+				socksProxies = Arrays.asList(options.valueOf(proxyOption));
+			else
+				socksProxies = null;
+			useTor = false;
+		}
 
 		final List<String> httpProxies;
-		if(options.has(httpProxyListOption))
+		if(options.has(httpProxyListOption)) {
 			httpProxies = loadLoginProxies(options.valueOf(httpProxyListOption));
-		else if(!offline && accounts != null) {
-			System.out.println("Option 'http-proxy-list' required if " + "option 'account-list' is supplied.");
-			printHelp(parser);
-			return;
+			/*} else if(!offline && accounts != null) {
+				System.out.println("Option 'http-proxy-list' required if " + "option 'account-list' is supplied.");
+				printHelp(parser);
+				return;*/
 		} else
 			httpProxies = null;
 
@@ -328,40 +334,37 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			}
 		}
 
-		final Queue<Runnable> lockQueue = new ArrayDeque<Runnable>();
+		final Queue<Object> lockQueue = new ArrayDeque<Object>();
 
-		ExecutorService service = Executors.newFixedThreadPool(botAmount + (loginDelay > 0 ? 1 : 0));
+		ExecutorService service = Executors.newCachedThreadPool();
 		final Object firstWait = new Object();
 		if(loginDelay > 0) {
 			service.execute(new Runnable() {
 				@Override
 				public void run() {
-					synchronized(firstWait) {
-						try {
-							firstWait.wait();
-						} catch(InterruptedException exception) {}
-					}
-					while(true) {
-						try {
-							Thread.sleep(loginDelay);
-						} catch(InterruptedException exception) {}
-						synchronized(lockQueue) {
-							if(lockQueue.size() > 0) {
-								Runnable thread = lockQueue.poll();
-								synchronized(thread) {
-									thread.notifyAll();
-								}
-								lockQueue.offer(thread);
-							} else
-								continue;
-						}
-						while(!sessions.get()) {
-							synchronized(sessions) {
+					try {
+						while(!joins.get()) {
+							synchronized(firstWait) {
 								try {
-									sessions.wait(5000);
+									firstWait.wait();
 								} catch(InterruptedException exception) {}
 							}
 						}
+						while(true) {
+							synchronized(lockQueue) {
+								if(lockQueue.size() > 0) {
+									Object thread = lockQueue.poll();
+									synchronized(thread) {
+										thread.notifyAll();
+									}
+								}
+							}
+							try {
+								Thread.sleep(loginDelay);
+							} catch(InterruptedException exception) {}
+						}
+					} catch(Throwable exception) {
+						exception.printStackTrace();
 					}
 				}
 			});
@@ -373,10 +376,6 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
-					if(loginDelay > 0)
-						synchronized(lockQueue) {
-							lockQueue.add(this);
-						}
 					Random random = new Random();
 
 					if(!offline) {
@@ -410,8 +409,10 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 									Iterator<String> iterator = workingProxies.keySet().iterator();
 									if(iterator.hasNext())
 										loginProxy = iterator.next();
+									else if(httpProxies != null)
+										loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));
 									else
-										loginProxy = httpProxies.get(random.nextInt(httpProxies.size()));;
+										loginProxy = null;
 								}
 								try {
 									session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, ProxyData.ProxyType.HTTP));
@@ -451,19 +452,31 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 									} catch(InterruptedException exception) {}
 								}
 							}
-							if(loginDelay > 0) {
-								synchronized(this) {
+							System.out.println("[" + session.getUsername() + "] Starting joins...");
+							while(loginDelay > 0) {
+								Object lock = new Object();
+								synchronized(lockQueue) {
+									lockQueue.add(lock);
+								}
+								synchronized(lock) {
 									try {
 										synchronized(firstWait) {
 											firstWait.notifyAll();
 										}
-										wait();
+										lock.wait(5000);
+										synchronized(lockQueue) {
+											if(lockQueue.contains(lock))
+												lockQueue.remove(lock);
+											else
+												break;
+										}
 									} catch(InterruptedException exception) {}
 								}
 							}
 
 							while(true) {
-								String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
+								System.out.println("[" + session.getUsername() + "] 1");
+								String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 								try {
 									CLISpamBotWrapper bot = new CLISpamBotWrapper(createBot(server,
 																							session.getUsername(),
@@ -472,7 +485,9 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 																							session,
 																							protocol,
 																							null,
-																							proxy), owner);
+																							proxy,
+																							useTor), owner);
+									System.out.println("[" + session.getUsername() + "] 2");
 									while(bot.getBot().isConnected()) {
 										try {
 											Thread.sleep(500);
@@ -480,6 +495,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 											exception.printStackTrace();
 										}
 									}
+									System.out.println("[" + session.getUsername() + "] 3");
 									if(!autoRejoin)
 										break;
 								} catch(Exception exception) {
@@ -491,7 +507,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 						}
 					} else {
 						while(true) {
-							String proxy = useProxy ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
+							String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : null;
 							try {
 								String username;
 								if(accounts != null) {
@@ -513,7 +529,8 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 										} catch(InterruptedException exception) {}
 									}
 								}
-								CLISpamBotWrapper bot = new CLISpamBotWrapper(createBot(server, username, null, null, null, protocol, null, proxy), owner);
+								CLISpamBotWrapper bot = new CLISpamBotWrapper(	createBot(server, username, null, null, null, protocol, null, proxy, useTor),
+																				owner);
 								while(bot.getBot().isConnected()) {
 									try {
 										Thread.sleep(500);
@@ -704,9 +721,13 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 											Session session,
 											int protocol,
 											String loginProxy,
-											String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+											String proxy,
+											boolean tor) throws AuthenticationException, UnsupportedProtocolException, IOException {
+		System.out.println("[" + session.getUsername() + "] create - " + server + " - " + password + " - " + protocol + " - " + loginProxy + " - " + proxy);
 		MinecraftBot.Builder builder = MinecraftBot.builder();
-		if(proxy != null && !proxy.isEmpty()) {
+		if(tor) {
+			//builder.connectProxy(new ProxyData(null, 0, ProxyType.TOR));
+		} else if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
 			ProxyType type = ProxyType.SOCKS;
 			if(proxy.contains(":")) {

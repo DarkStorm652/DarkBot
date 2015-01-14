@@ -6,6 +6,7 @@ import java.util.*;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.event.*;
 import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.darkbot.minecraftbot.event.general.TickEvent;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
@@ -45,6 +46,15 @@ public final class BasicWorld implements World, EventListener {
 		pathFinder = new AStarPathSearchProvider(new EuclideanHeuristic(), new SimpleWorldPhysics(this));
 		EventBus eventBus = bot.getEventBus();
 		eventBus.register(this);
+	}
+	
+	@EventHandler
+	public void onTick(TickEvent event) {
+		synchronized(entities) {
+			for(Entity entity : entities)
+				if(!entity.isDead())
+					entity.update();
+		}
 	}
 
 	@EventHandler
@@ -246,6 +256,7 @@ public final class BasicWorld implements World, EventListener {
 
 	@EventHandler
 	public void onBlockChange(BlockChangeEvent event) {
+		System.out.println("BLOCK CHANGE AT [" + event.getX() + ", " + event.getY() + ", " + event.getZ() + " TO " + event.getId());
 		setBlockIdAt(event.getId(), event.getX(), event.getY(), event.getZ());
 		setBlockMetadataAt(event.getMetadata(), event.getX(), event.getY(), event.getZ());
 	}
@@ -293,7 +304,6 @@ public final class BasicWorld implements World, EventListener {
 		synchronized(chunks) {
 			chunks.clear();
 		}
-		System.gc();
 	}
 
 	@Override
@@ -312,14 +322,14 @@ public final class BasicWorld implements World, EventListener {
 		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return null;
-		BlockLocation chunkBlockOffset = new BlockLocation(chunkLocation);
-		int chunkOffsetX = location.getX() - chunkBlockOffset.getX();
-		int chunkOffsetY = location.getY() - chunkBlockOffset.getY();
-		int chunkOffsetZ = location.getZ() - chunkBlockOffset.getZ();
-		int id = chunk.getBlockIdAt(chunkOffsetX, chunkOffsetY, chunkOffsetZ);
-		int metadata = chunk.getBlockMetadataAt(chunkOffsetX, chunkOffsetY, chunkOffsetZ);
-		return new Block(this, chunk, location, id, metadata);
+		
+		BlockLocation base = chunk.getBlockBaseLocation();
+		return chunk.getBlockAt(
+		                        location.getX() - base.getX(),
+		                        location.getY() - base.getY(),
+		                        location.getZ() - base.getZ());
 	}
+	
 
 	@Override
 	public int getBlockIdAt(int x, int y, int z) {
@@ -327,15 +337,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public int getBlockIdAt(BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public int getBlockIdAt(BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return 0;
-		int id = chunk.getBlockIdAt(blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
-		return id;
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		return chunk.getBlockIdAt(
+				                   location.getX() - base.getX(),
+				                   location.getY() - base.getY(),
+				                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -344,14 +356,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public void setBlockIdAt(int id, BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public void setBlockIdAt(int id, BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return;
-		chunk.setBlockIdAt(id, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		chunk.setBlockIdAt(id,
+		                   location.getX() - base.getX(),
+		                   location.getY() - base.getY(),
+		                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -360,16 +375,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public int getBlockMetadataAt(BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public int getBlockMetadataAt(BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return 0;
-		int metadata = chunk.getBlockMetadataAt(blockLocation.getX() - chunkBlockOffset.getX(),
-												blockLocation.getY() - chunkBlockOffset.getY(),
-												blockLocation.getZ() - chunkBlockOffset.getZ());
-		return metadata;
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		return chunk.getBlockMetadataAt(
+		     		                   location.getX() - base.getX(),
+		    		                   location.getY() - base.getY(),
+		    		                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -378,14 +394,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public void setBlockMetadataAt(int metadata, BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public void setBlockMetadataAt(int metadata, BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return;
-		chunk.setBlockMetadataAt(metadata, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		chunk.setBlockMetadataAt(metadata, 
+				                   location.getX() - base.getX(),
+				                   location.getY() - base.getY(),
+				                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -394,16 +413,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public TileEntity getTileEntityAt(BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public TileEntity getTileEntityAt(BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return null;
-		TileEntity tileEntity = chunk.getTileEntityAt(	blockLocation.getX() - chunkBlockOffset.getX(),
-														blockLocation.getY() - chunkBlockOffset.getY(),
-														blockLocation.getZ() - chunkBlockOffset.getZ());
-		return tileEntity;
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		return chunk.getTileEntityAt(
+		  		                   location.getX() - base.getX(),
+				                   location.getY() - base.getY(),
+				                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -412,14 +432,17 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public void setTileEntityAt(TileEntity tileEntity, BlockLocation blockLocation) {
-		ChunkLocation location = new ChunkLocation(blockLocation);
-		BlockLocation chunkBlockOffset = new BlockLocation(location);
-		Chunk chunk = getChunkAt(location);
+	public void setTileEntityAt(TileEntity tileEntity, BlockLocation location) {
+		ChunkLocation chunkLocation = new ChunkLocation(location);
+		Chunk chunk = getChunkAt(chunkLocation);
 		if(chunk == null)
 			return;
-		chunk.setTileEntityAt(tileEntity, blockLocation.getX() - chunkBlockOffset.getX(), blockLocation.getY() - chunkBlockOffset.getY(), blockLocation.getZ()
-				- chunkBlockOffset.getZ());
+
+		BlockLocation base = chunk.getBlockBaseLocation();
+		chunk.setTileEntityAt(tileEntity, 
+			                   location.getX() - base.getX(),
+			                   location.getY() - base.getY(),
+			                   location.getZ() - base.getZ());
 	}
 
 	@Override
@@ -432,6 +455,167 @@ public final class BasicWorld implements World, EventListener {
 		synchronized(chunks) {
 			return chunks.get(location);
 		}
+	}
+	
+	@Override
+	public boolean isColliding(BoundingBox box) {
+		int minX = (int) Math.floor(box.getMinX());
+		int minY = (int) Math.floor(box.getMinY());
+		int minZ = (int) Math.floor(box.getMinZ());
+		int maxX = (int) Math.ceil(box.getMaxX());
+		int maxY = (int) Math.ceil(box.getMaxY());
+		int maxZ = (int) Math.ceil(box.getMaxZ());
+		
+		synchronized(chunks) {
+			Chunk chunk = null;
+			BlockLocation chunkBase = null;
+
+			for(int x = minX; x <= maxX; x++) {
+				for(int z = minZ; z <= maxZ; z++) {
+					for(int y = minY; y <= maxY; y++) {
+						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
+							
+							chunk = getChunkAt(chunkLocation);
+							if(chunk != null)
+								chunkBase = chunk.getBlockBaseLocation();
+							else
+								chunkBase = new BlockLocation(chunkLocation);
+						}
+						
+						if(chunk != null) {
+							Block block = chunk.getBlockAt(x - chunkBase.getX(), y - chunkBase.getY(), z - chunkBase.getZ());
+							if(block == null)
+								continue;
+							
+							boolean intersects = false;
+							for(BoundingBox blockBox : block.getBoundingBoxes()) {
+								if(box.intersectsWith(blockBox)) {
+									intersects = true;
+									break;
+								}
+							}
+							if(!intersects)
+								continue;
+							
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public Set<Block> getCollidingBlocks(BoundingBox box) {
+		Set<Block> blocks = new HashSet<>();
+		int minX = (int) Math.floor(box.getMinX());
+		int minY = (int) Math.floor(box.getMinY());
+		int minZ = (int) Math.floor(box.getMinZ());
+		int maxX = (int) Math.ceil(box.getMaxX());
+		int maxY = (int) Math.ceil(box.getMaxY());
+		int maxZ = (int) Math.ceil(box.getMaxZ());
+		
+		synchronized(chunks) {
+			Chunk chunk = null;
+			BlockLocation chunkBase = null;
+
+			for(int x = minX; x <= maxX; x++) {
+				for(int z = minZ; z <= maxZ; z++) {
+					for(int y = minY; y <= maxY; y++) {
+						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
+							
+							chunk = getChunkAt(chunkLocation);
+							if(chunk != null)
+								chunkBase = chunk.getBlockBaseLocation();
+							else
+								chunkBase = new BlockLocation(chunkLocation);
+						}
+						
+						if(chunk != null) {
+							Block block = chunk.getBlockAt(x - chunkBase.getX(), y - chunkBase.getY(), z - chunkBase.getZ());
+							if(block == null)
+								continue;
+							
+							boolean intersects = false;
+							for(BoundingBox blockBox : block.getBoundingBoxes()) {
+								if(box.intersectsWith(blockBox)) {
+									intersects = true;
+									break;
+								}
+							}
+							if(!intersects)
+								continue;
+							
+							blocks.add(block);
+						}
+					}
+				}
+			}
+		}
+		return blocks;
+	}
+	
+	@Override
+	public boolean isInMaterial(BoundingBox box, BlockType... materials) {
+		int minX = (int) Math.floor(box.getMinX());
+		int minY = (int) Math.floor(box.getMinY());
+		int minZ = (int) Math.floor(box.getMinZ());
+		int maxX = (int) Math.ceil(box.getMaxX());
+		int maxY = (int) Math.ceil(box.getMaxY());
+		int maxZ = (int) Math.ceil(box.getMaxZ());
+		
+		synchronized(chunks) {
+			Chunk chunk = null;
+			BlockLocation chunkBase = null;
+
+			for(int x = minX; x <= maxX; x++) {
+				for(int z = minZ; z <= maxZ; z++) {
+					for(int y = minY; y <= maxY; y++) {
+						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
+							
+							chunk = getChunkAt(chunkLocation);
+							if(chunk != null)
+								chunkBase = chunk.getBlockBaseLocation();
+							else
+								chunkBase = new BlockLocation(chunkLocation);
+						}
+						
+						if(chunk != null) {
+							Block block = chunk.getBlockAt(x - chunkBase.getX(), y - chunkBase.getY(), z - chunkBase.getZ());
+							if(block == null)
+								continue;
+							
+							boolean matches = false;
+							for(BlockType material : materials) {
+								if(material == block.getType()) {
+									matches = true;
+									break;
+								}
+							}
+							if(!matches)
+								continue;
+							
+							boolean intersects = false;
+							for(BoundingBox blockBox : block.getBoundingBoxes()) {
+								if(box.intersectsWith(blockBox)) {
+									intersects = true;
+									break;
+								}
+							}
+							if(!intersects)
+								continue;
+							
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -81,11 +81,8 @@ public class FollowTask implements Task {
 			Activity activity = bot.getActivity();
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
-			FallTask fallTask = bot.getTaskManager().getTaskFor(FallTask.class);
 			WalkActivity walkActivity = (WalkActivity) activity;
-			if(walkActivity.isActive()
-					&& ((player.getDistanceTo(following) < 2 && (fallTask == null || !fallTask.isPreconditionMet())) || following.getDistanceTo(walkActivity
-							.getTarget()) > 3) && player.isOnGround())
+			if(walkActivity.isActive() && player.isOnGround() && (player.getDistanceTo(following) < 2 || following.getDistanceTo(walkActivity.getTarget()) > 3))
 				bot.setActivity(null);
 		}
 		return active;

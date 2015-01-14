@@ -1,188 +1,199 @@
 package org.darkstorm.darkbot.minecraftbot.world.block;
 
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.*;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.*;
+import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.INDESTRUCTABLE;
+import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.INTERACTABLE;
+import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.PLACEABLE;
+import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.SOLID;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.AXE;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.PICKAXE;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SHEARS;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SHOVEL;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SWORD;
 
+import org.darkstorm.darkbot.minecraftbot.world.BoundingBox;
 import org.darkstorm.darkbot.minecraftbot.world.item.ToolType;
 
 public enum BlockType {
-	UNKNOWN(-1),
+	UNKNOWN               (block(-1)),
 
-	AIR(0, 0),
-	STONE(1, PICKAXE),
-	GRASS(2, SHOVEL),
-	DIRT(3, SHOVEL),
-	COBBLESTONE(4, PICKAXE),
-	WOOD(5, AXE),
-	SAPLING(6, INTERACTABLE),
-	BEDROCK(7, SOLID | PLACEABLE | INDESTRUCTABLE),
-	WATER(8, INDESTRUCTABLE),
-	STATIONARY_WATER(9, INDESTRUCTABLE),
-	LAVA(10, INDESTRUCTABLE),
-	STATIONARY_LAVA(11, INDESTRUCTABLE),
-	SAND(12, SHOVEL),
-	GRAVEL(13, SHOVEL),
-	GOLD_ORE(14, PICKAXE),
-	IRON_ORE(15, PICKAXE),
-	COAL_ORE(16, PICKAXE),
-	LOG(17, AXE),
-	LEAVES(18, SHEARS),
-	SPONGE(19),
-	GLASS(20, PICKAXE),
-	LAPIS_ORE(21, PICKAXE),
-	LAPIS_BLOCK(22, PICKAXE),
-	DISPENSER(23, SOLID | INTERACTABLE | PLACEABLE, PICKAXE),
-	SANDSTONE(24, PICKAXE),
-	NOTE_BLOCK(25, SOLID | INTERACTABLE | PLACEABLE, PICKAXE),
-	BED_BLOCK(26, SOLID | INTERACTABLE | PLACEABLE),
-	POWERED_RAIL(27, PLACEABLE, PICKAXE),
-	DETECTOR_RAIL(28, PLACEABLE, PICKAXE),
-	PISTON_STICKY_BASE(29, PICKAXE),
-	WEB(30, PLACEABLE, SWORD),
-	LONG_GRASS(31, PLACEABLE),
-	DEAD_BUSH(32, PLACEABLE),
-	PISTON_BASE(33, PICKAXE),
-	PISTON_EXTENSION(34, PICKAXE),
-	WOOL(35, SWORD),
-	PISTON_MOVING_PIECE(36),
-	YELLOW_FLOWER(37, PLACEABLE),
-	RED_ROSE(38, PLACEABLE),
-	BROWN_MUSHROOM(39, PLACEABLE),
-	RED_MUSHROOM(40, PLACEABLE),
-	GOLD_BLOCK(41, PICKAXE),
-	IRON_BLOCK(42, PICKAXE),
-	DOUBLE_STEP(43, PICKAXE),
-	STEP(44, PICKAXE),
-	BRICK(45, PICKAXE),
-	TNT(46),
-	BOOKSHELF(47, AXE),
-	MOSSY_COBBLESTONE(48, PICKAXE),
-	OBSIDIAN(49, PICKAXE),
-	TORCH(50, PLACEABLE),
-	FIRE(51, INDESTRUCTABLE),
-	MOB_SPAWNER(52, PICKAXE),
-	WOOD_STAIRS(53, AXE),
-	CHEST(54, SOLID | INTERACTABLE | PLACEABLE, AXE),
-	REDSTONE_WIRE(55, PLACEABLE),
-	DIAMOND_ORE(56, PICKAXE),
-	DIAMOND_BLOCK(57, PICKAXE),
-	WORKBENCH(58, SOLID | INTERACTABLE | PLACEABLE, AXE),
-	CROPS(59, PLACEABLE),
-	SOIL(60, SHOVEL),
-	FURNACE(61, SOLID | INTERACTABLE | PLACEABLE, PICKAXE),
-	BURNING_FURNACE(62, SOLID | INTERACTABLE | PLACEABLE, PICKAXE),
-	SIGN_POST(63, PLACEABLE, 16, AXE),
-	WOODEN_DOOR(64, SOLID | INTERACTABLE | PLACEABLE, AXE),
-	LADDER(65, PLACEABLE),
-	RAILS(66, PLACEABLE, PICKAXE),
-	COBBLESTONE_STAIRS(67, PICKAXE),
-	WALL_SIGN(68, PLACEABLE, AXE),
-	LEVER(69, INTERACTABLE | PLACEABLE),
-	STONE_PLATE(70, PLACEABLE, PICKAXE),
-	IRON_DOOR_BLOCK(71, PICKAXE),
-	WOOD_PLATE(72, PLACEABLE, AXE),
-	REDSTONE_ORE(73, PICKAXE),
-	GLOWING_REDSTONE_ORE(74, PICKAXE),
-	REDSTONE_TORCH_OFF(75, PLACEABLE),
-	REDSTONE_TORCH_ON(76, PLACEABLE),
-	STONE_BUTTON(77, INTERACTABLE | PLACEABLE, PICKAXE),
-	SNOW(78, PLACEABLE, SHOVEL),
-	ICE(79, PICKAXE),
-	SNOW_BLOCK(80, SHOVEL),
-	CACTUS(81),
-	CLAY(82, SHOVEL),
-	SUGAR_CANE_BLOCK(83, PLACEABLE),
-	JUKEBOX(84, PICKAXE),
-	FENCE(85, AXE),
-	PUMPKIN(86, AXE),
-	NETHERRACK(87, PICKAXE),
-	SOUL_SAND(88, SHOVEL),
-	GLOWSTONE(89, PICKAXE),
-	PORTAL(90, PLACEABLE | INDESTRUCTABLE),
-	JACK_O_LANTERN(91, AXE),
-	CAKE_BLOCK(92),
-	DIODE_BLOCK_OFF(93, INTERACTABLE | PLACEABLE),
-	DIODE_BLOCK_ON(94, INTERACTABLE | PLACEABLE),
-	LOCKED_CHEST(95, AXE),
-	TRAP_DOOR(96, AXE),
-	MONSTER_EGGS(97),
-	SMOOTH_BRICK(98, PICKAXE),
-	HUGE_MUSHROOM_1(99, AXE),
-	HUGE_MUSHROOM_2(100, AXE),
-	IRON_FENCE(101, PICKAXE),
-	THIN_GLASS(102, PICKAXE),
-	MELON_BLOCK(103, AXE),
-	PUMPKIN_STEM(104, PLACEABLE),
-	MELON_STEM(105, PLACEABLE),
-	VINE(106, PLACEABLE),
-	FENCE_GATE(107, AXE),
-	BRICK_STAIRS(108, PICKAXE),
-	SMOOTH_STAIRS(109, PICKAXE),
-	MYCEL(110, SHOVEL),
-	WATER_LILY(111),
-	NETHER_BRICK(112, PICKAXE),
-	NETHER_FENCE(113, PICKAXE),
-	NETHER_BRICK_STAIRS(114, PICKAXE),
-	NETHER_WARTS(115, PLACEABLE),
-	ENCHANTMENT_TABLE(116, PICKAXE),
-	BREWING_STAND(117, PICKAXE),
-	CAULDRON(118, PICKAXE),
-	ENDER_PORTAL(119, INDESTRUCTABLE),
-	ENDER_PORTAL_FRAME(120, INDESTRUCTABLE | SOLID | PLACEABLE),
-	ENDER_STONE(121, PICKAXE),
-	DRAGON_EGG(122, SOLID | INTERACTABLE),
-	REDSTONE_LAMP_OFF(123, PICKAXE),
-	REDSTONE_LAMP_ON(124, PICKAXE),
-	WOOD_DOUBLE_STEP(125, AXE),
-	WOOD_STEP(126, AXE),
-	COCOA(127),
-	SANDSTONE_STAIRS(128, PICKAXE),
-	EMERALD_ORE(129, PICKAXE),
-	ENDER_CHEST(130, INDESTRUCTABLE | INTERACTABLE | SOLID | PLACEABLE),
-	TRIPWIRE_HOOK(131, INTERACTABLE | PLACEABLE),
-	TRIPWIRE(132, PLACEABLE),
-	EMERALD_BLOCK(133, PICKAXE),
-	SPRUCE_WOOD_STAIRS(134, AXE),
-	BIRCH_WOOD_STAIRS(135, AXE),
-	JUNGLE_WOOD_STAIRS(136, AXE),
-	COMMAND(137),
-	BEACON(138),
-	COBBLE_WALL(139, PICKAXE),
-	FLOWER_POT(140),
-	CARROT(141, PLACEABLE),
-	POTATO(142, PLACEABLE),
-	WOOD_BUTTON(143, INTERACTABLE | PLACEABLE, AXE),
-	SKULL(144),
-	ANVIL(145, PICKAXE);
-
+	AIR                   (block(0).flags(0)),
+	STONE                 (block(1).toolType(PICKAXE)),
+	GRASS                 (block(2).toolType(SHOVEL)),
+	DIRT                  (block(3).toolType(SHOVEL)),
+	COBBLESTONE           (block(4).toolType(PICKAXE)),
+	WOOD                  (block(5).toolType(AXE)),
+	SAPLING               (block(6).flags(INTERACTABLE)),
+	BEDROCK               (block(7).flags(SOLID | PLACEABLE | INDESTRUCTABLE)),
+	WATER                 (block(8).flags(INDESTRUCTABLE)),
+	STATIONARY_WATER      (block(9).flags(INDESTRUCTABLE)),
+	LAVA                  (block(10).flags(INDESTRUCTABLE)),
+	STATIONARY_LAVA       (block(11).flags(INDESTRUCTABLE)),
+	SAND                  (block(12).toolType(SHOVEL)),
+	GRAVEL                (block(13).toolType(SHOVEL)),
+	GOLD_ORE              (block(14).toolType(PICKAXE)),
+	IRON_ORE              (block(15).toolType(PICKAXE)),
+	COAL_ORE              (block(16).toolType(PICKAXE)),
+	LOG                   (block(17).toolType(AXE)),
+	LEAVES                (block(18).toolType(SHEARS)),
+	SPONGE                (block(19)),
+	GLASS                 (block(20).toolType(PICKAXE)),
+	LAPIS_ORE             (block(21).toolType(PICKAXE)),
+	LAPIS_BLOCK           (block(22).toolType(PICKAXE)),
+	DISPENSER             (block(23).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	SANDSTONE             (block(24).toolType(PICKAXE)),
+	NOTE_BLOCK            (block(25).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	BED_BLOCK             (block(26).flags(SOLID | INTERACTABLE | PLACEABLE)),
+	POWERED_RAIL          (block(27).flags(PLACEABLE).toolType(PICKAXE)),
+	DETECTOR_RAIL         (block(28).flags(PLACEABLE).toolType(PICKAXE)),
+	PISTON_STICKY_BASE    (block(29).toolType(PICKAXE)),
+	WEB                   (block(30).flags(PLACEABLE).toolType(SWORD)),
+	LONG_GRASS            (block(31).flags(PLACEABLE)),
+	DEAD_BUSH             (block(32).flags(PLACEABLE)),
+	PISTON_BASE           (block(33).toolType(PICKAXE)),
+	PISTON_EXTENSION      (block(34).toolType(PICKAXE)),
+	WOOL                  (block(35).toolType(SWORD)),
+	PISTON_MOVING_PIECE   (block(36)),
+	YELLOW_FLOWER         (block(37).flags(PLACEABLE)),
+	RED_ROSE              (block(38).flags(PLACEABLE)),
+	BROWN_MUSHROOM        (block(39).flags(PLACEABLE)),
+	RED_MUSHROOM          (block(40).flags(PLACEABLE)),
+	GOLD_BLOCK            (block(41).toolType(PICKAXE)),
+	IRON_BLOCK            (block(42).toolType(PICKAXE)),
+	DOUBLE_STEP           (block(43).toolType(PICKAXE)),
+	STEP                  (block(44).toolType(PICKAXE).factory(singleBoundingBox(0, 0, 0, 1, 0.5, 1))),
+	BRICK                 (block(45).toolType(PICKAXE)),
+	TNT                   (block(46)),
+	BOOKSHELF             (block(47).toolType(AXE)),
+	MOSSY_COBBLESTONE     (block(48).toolType(PICKAXE)),
+	OBSIDIAN              (block(49).toolType(PICKAXE)),
+	TORCH                 (block(50).flags(PLACEABLE)),
+	FIRE                  (block(51).flags(INDESTRUCTABLE)),
+	MOB_SPAWNER           (block(52).toolType(PICKAXE)),
+	WOOD_STAIRS           (block(53).toolType(AXE)),
+	CHEST                 (block(54).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
+	REDSTONE_WIRE         (block(55).flags(PLACEABLE)),
+	DIAMOND_ORE           (block(56).toolType(PICKAXE)),
+	DIAMOND_BLOCK         (block(57).toolType(PICKAXE)),
+	WORKBENCH             (block(58).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
+	CROPS                 (block(59).flags(PLACEABLE)),
+	SOIL                  (block(60).toolType(SHOVEL)),
+	FURNACE               (block(61).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	BURNING_FURNACE       (block(62).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	SIGN_POST             (block(63).flags(PLACEABLE).maxStack(16).toolType(AXE)),
+	WOODEN_DOOR           (block(64).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
+	LADDER                (block(65).flags(PLACEABLE)),
+	RAILS                 (block(66).flags(PLACEABLE).toolType(PICKAXE)),
+	COBBLESTONE_STAIRS    (block(67).toolType(PICKAXE)),
+	WALL_SIGN             (block(68).flags(PLACEABLE).toolType(AXE)),
+	LEVER                 (block(69).flags(INTERACTABLE | PLACEABLE)),
+	STONE_PLATE           (block(70).flags(PLACEABLE).toolType(PICKAXE)),
+	IRON_DOOR_BLOCK       (block(71).toolType(PICKAXE)),
+	WOOD_PLATE            (block(72).flags(PLACEABLE).toolType(AXE)),
+	REDSTONE_ORE          (block(73).toolType(PICKAXE)),
+	GLOWING_REDSTONE_ORE  (block(74).toolType(PICKAXE)),
+	REDSTONE_TORCH_OFF    (block(75).flags(PLACEABLE)),
+	REDSTONE_TORCH_ON     (block(76).flags(PLACEABLE)),
+	STONE_BUTTON          (block(77).flags(INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	SNOW                  (block(78).flags(PLACEABLE).toolType(SHOVEL)),
+	ICE                   (block(79).toolType(PICKAXE)),
+	SNOW_BLOCK            (block(80).toolType(SHOVEL)),
+	CACTUS                (block(81)),
+	CLAY                  (block(82).toolType(SHOVEL)),
+	SUGAR_CANE_BLOCK      (block(83).flags(PLACEABLE)),
+	JUKEBOX               (block(84).toolType(PICKAXE)),
+	FENCE                 (block(85).toolType(AXE)),
+	PUMPKIN               (block(86).toolType(AXE)),
+	NETHERRACK            (block(87).toolType(PICKAXE)),
+	SOUL_SAND             (block(88).toolType(SHOVEL)),
+	GLOWSTONE             (block(89).toolType(PICKAXE)),
+	PORTAL                (block(90).flags(PLACEABLE | INDESTRUCTABLE)),
+	JACK_O_LANTERN        (block(91).toolType(AXE)),
+	CAKE_BLOCK            (block(92)),
+	DIODE_BLOCK_OFF       (block(93).flags(INTERACTABLE | PLACEABLE)),
+	DIODE_BLOCK_ON        (block(94).flags(INTERACTABLE | PLACEABLE)),
+	LOCKED_CHEST          (block(95).toolType(AXE)),
+	TRAP_DOOR             (block(96).toolType(AXE)),
+	MONSTER_EGGS          (block(97)),
+	SMOOTH_BRICK          (block(98).toolType(PICKAXE)),
+	HUGE_MUSHROOM_1       (block(99).toolType(AXE)),
+	HUGE_MUSHROOM_2       (block(100).toolType(AXE)),
+	IRON_FENCE            (block(101).toolType(PICKAXE)),
+	THIN_GLASS            (block(102).toolType(PICKAXE)),
+	MELON_BLOCK           (block(103).toolType(AXE)),
+	PUMPKIN_STEM          (block(104).flags(PLACEABLE)),
+	MELON_STEM            (block(105).flags(PLACEABLE)),
+	VINE                  (block(106).flags(PLACEABLE)),
+	FENCE_GATE            (block(107).toolType(AXE)),
+	BRICK_STAIRS          (block(108).toolType(PICKAXE)),
+	SMOOTH_STAIRS         (block(109).toolType(PICKAXE)),
+	MYCEL                 (block(110).toolType(SHOVEL)),
+	WATER_LILY            (block(111)),
+	NETHER_BRICK          (block(112).toolType(PICKAXE)),
+	NETHER_FENCE          (block(113).toolType(PICKAXE)),
+	NETHER_BRICK_STAIRS   (block(114).toolType(PICKAXE)),
+	NETHER_WARTS          (block(115).flags(PLACEABLE)),
+	ENCHANTMENT_TABLE     (block(116).toolType(PICKAXE)),
+	BREWING_STAND         (block(117).toolType(PICKAXE)),
+	CAULDRON              (block(118).toolType(PICKAXE)),
+	ENDER_PORTAL          (block(119).flags(INDESTRUCTABLE)),
+	ENDER_PORTAL_FRAME    (block(120).flags(INDESTRUCTABLE | SOLID | PLACEABLE)),
+	ENDER_STONE           (block(121).toolType(PICKAXE)),
+	DRAGON_EGG            (block(122).flags(SOLID | INTERACTABLE)),
+	REDSTONE_LAMP_OFF     (block(123).toolType(PICKAXE)),
+	REDSTONE_LAMP_ON      (block(124).toolType(PICKAXE)),
+	WOOD_DOUBLE_STEP      (block(125).toolType(AXE)),
+	WOOD_STEP             (block(126).toolType(AXE).factory(singleBoundingBox(0, 0, 0, 1, 0.5, 1))),
+	COCOA                 (block(127)),
+	SANDSTONE_STAIRS      (block(128).toolType(PICKAXE)),
+	EMERALD_ORE           (block(129).toolType(PICKAXE)),
+	ENDER_CHEST           (block(130).flags(INDESTRUCTABLE | INTERACTABLE | SOLID | PLACEABLE)),
+	TRIPWIRE_HOOK         (block(131).flags(INTERACTABLE | PLACEABLE)),
+	TRIPWIRE              (block(132).flags(PLACEABLE)),
+	EMERALD_BLOCK         (block(133).toolType(PICKAXE)),
+	SPRUCE_WOOD_STAIRS    (block(134).toolType(AXE)),
+	BIRCH_WOOD_STAIRS     (block(135).toolType(AXE)),
+	JUNGLE_WOOD_STAIRS    (block(136).toolType(AXE)),
+	COMMAND               (block(137)),
+	BEACON                (block(138)),
+	COBBLE_WALL           (block(139).toolType(PICKAXE)),
+	FLOWER_POT            (block(140)),
+	CARROT                (block(141).flags(PLACEABLE)),
+	POTATO                (block(142).flags(PLACEABLE)),
+	WOOD_BUTTON           (block(143).flags(INTERACTABLE | PLACEABLE).toolType(AXE)),
+	SKULL                 (block(144)),
+	ANVIL                 (block(145).toolType(PICKAXE)),
+	TRAPPED_CHEST         (block(146).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
+	GOLD_PRESSURE_PLATE   (block(147).flags(PLACEABLE).toolType(PICKAXE)),
+	IRON_PRESSURE_PLATE   (block(148).flags(PLACEABLE).toolType(PICKAXE)),
+	LIGHT_SENSOR          (block(151).toolType(PICKAXE)),
+	REDSTONE_BLOCK        (block(152).toolType(PICKAXE)),
+	NETHER_QUARTZ_ORE     (block(153).toolType(PICKAXE)),
+	HOPPER                (block(154).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	QUARTZ_BLOCK          (block(155).toolType(PICKAXE)),
+	QUARTZ_STAIRS         (block(156).toolType(PICKAXE)),
+	ACTIVATOR_RAIL        (block(157).flags(PLACEABLE).toolType(PICKAXE)),
+	DROPPER               (block(158).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
+	STAINED_CLAY          (block(159).toolType(PICKAXE)),
+	CARPET                (block(171).flags(PLACEABLE).toolType(SWORD)),
+	HARDENED_CLAY         (block(172).toolType(PICKAXE)),
+	COAL_BLOCK            (block(173).toolType(PICKAXE)),
+	PACKED_ICE            (block(174).toolType(PICKAXE));
+	
 	private final int id, maxStack, flags;
+	private final float frictionCoefficient;
 	private final ToolType toolType;
-
-	private BlockType(int id) {
-		this(id, SOLID | PLACEABLE);
-	}
-
-	private BlockType(int id, ToolType toolType) {
-		this(id, SOLID | PLACEABLE, 64, toolType);
-	}
-
-	private BlockType(int id, int flags) {
-		this(id, flags, 64);
-	}
-
-	private BlockType(int id, int flags, ToolType toolType) {
-		this(id, flags, 64, toolType);
-	}
-
-	private BlockType(int id, int flags, int maxStack) {
-		this(id, flags, maxStack, null);
-	}
-
-	private BlockType(int id, int flags, int maxStack, ToolType toolType) {
-		this.id = id;
-		this.flags = flags;
-		this.maxStack = maxStack;
-		this.toolType = toolType;
+	private final BlockFactory blockFactory;
+	
+	private BlockType(Builder builder) {
+		this.id = builder.id;
+		this.flags = builder.flags;
+		this.maxStack = builder.maxStack;
+		this.frictionCoefficient = builder.friction;
+		this.toolType = builder.toolType;
+		this.blockFactory = builder.factory.provide(this);
+		
+		if(id >= 0 && id < 256)
+			Registry.registry[id] = this;
 	}
 
 	public int getId() {
@@ -208,19 +219,98 @@ public enum BlockType {
 	public boolean isIndestructable() {
 		return (flags & INDESTRUCTABLE) == INDESTRUCTABLE;
 	}
+	
+	public float getFrictionCoefficient() {
+		return frictionCoefficient;
+	}
 
 	public ToolType getToolType() {
 		return toolType;
 	}
+	
+	public BlockFactory getBlockFactory() {
+		return blockFactory;
+	}
 
 	public static BlockType getById(int id) {
-		for(BlockType type : values())
-			if(type.getId() == id)
-				return type;
-		return UNKNOWN;
+		if(id < 0 || id >= 256)
+			return UNKNOWN;
+		BlockType type = Registry.registry[id];
+		return type != null ? type : UNKNOWN;
 	}
 
 	protected static final class Flag {
 		public static final int SOLID = 1, INTERACTABLE = 2, PLACEABLE = 4, INDESTRUCTABLE = 8;
+	}
+	
+	protected static final class Registry {
+		public static final BlockType[] registry = new BlockType[256];
+	}
+	
+	private static Builder block(int id) {
+		return new Builder(id);
+	}
+	
+	protected static final class Builder {
+		private final int id;
+		private int maxStack = 64;
+		private int flags = SOLID | PLACEABLE;
+		private float friction = 1.0F;
+		private ToolType toolType = null;
+		private BlockFactoryProvider factory = BlockFactoryProvider.DEFAULT;
+		
+		public Builder(int id) {
+			this.id = id;
+		}
+		
+		public Builder maxStack(int maxStack) {
+			this.maxStack = maxStack;
+			return this;
+		}
+		
+		public Builder flags(int flags) {
+			this.flags = flags;
+			if((flags & SOLID) != SOLID)
+				factory = BlockFactoryProvider.TRANSPARENT;
+			return this;
+		}
+		
+		public Builder toolType(ToolType toolType) {
+			this.toolType = toolType;
+			return this;
+		}
+		
+		public Builder friction(float friction) {
+			this.friction = friction;
+			return this;
+		}
+		
+		public Builder factory(BlockFactoryProvider factory) {
+			this.factory = factory;
+			return this;
+		}
+	}
+	
+	private static BlockFactoryProvider singleBoundingBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		final BoundingBox bounds = BoundingBox.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+		return new BlockFactoryProvider() {
+			@Override public BlockFactory provide(BlockType type) {
+				return RectangularBlockFactory.getInstance(type, bounds);
+			}
+		};
+	}
+	
+	protected static interface BlockFactoryProvider {
+		BlockFactoryProvider DEFAULT = new BlockFactoryProvider() {
+			@Override public BlockFactory provide(BlockType type) {
+				return RectangularBlockFactory.getInstance(type);
+			}
+		};
+		BlockFactoryProvider TRANSPARENT = new BlockFactoryProvider() {
+			@Override public BlockFactory provide(BlockType type) {
+				return TransparentBlockFactory.getInstance(type);
+			}
+		};
+		public BlockFactory provide(BlockType type);
 	}
 }
