@@ -14,6 +14,7 @@
 		<delete file="${deployJar}" failonerror="false" />
 		<delete dir="${outputDir}" failonerror="false" />
 		<delete dir="${tempDir}" failonerror="false" />
+		<delete dir="${protocolsDir}" failonerror="false" />
 	</target>
 
 	<target name="compile" depends="clean">
@@ -75,6 +76,11 @@
 				</fileset>
 			</classpath>
 		</javac>
+		<copy todir="${protocolsDir}">
+			<fileset dir="src/main/protocols">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
 		<propertyregex property="protocolsFolder" input="src.main.protocols.${protocolsPackage}" global="true" regexp="\." replace="/" />
 		<pathconvert property="files" pathsep="${line.separator}">
 			<map from="${protocolsFolder}{$file.separator}" to="" />
