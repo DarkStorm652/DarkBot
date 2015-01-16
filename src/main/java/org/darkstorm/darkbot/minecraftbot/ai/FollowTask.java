@@ -53,6 +53,8 @@ public class FollowTask implements Task {
 		if(following == null || player == null)
 			return;
 		BlockLocation location = new BlockLocation(following.getLocation());
+		if((int) Math.ceil(following.getY()) != location.getY() && following.isOnGround())
+			location = location.offset(0, 1, 0);
 		if(lastLocation == null || !lastLocation.equals(location)) {
 			lastLocation = location;
 			System.out.println("Checking location " + location);

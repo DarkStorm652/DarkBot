@@ -18,24 +18,26 @@ public abstract class LivingEntity extends Entity {
 	
 	@Override
 	protected void move() {
+		boolean inWater = isInMaterial(BlockType.WATER, BlockType.STATIONARY_WATER);
+		boolean inLava = isInMaterial(BlockType.LAVA, BlockType.STATIONARY_LAVA);
 		double horizFactor = 0.91;
 		if(isOnGround()) {
 			BlockType type = BlockType.getById(world.getBlockIdAt((int) Math.floor(x), (int) Math.floor(y - 0.1), (int) Math.floor(z)));
 			if(type.isSolid())
 				horizFactor *= type.getFrictionCoefficient();
-		} else
+		} else if(!inWater && !inLava)
 			accelerate(0, -Math.PI / 2, 0.08, 3.92);
 		
 		velocityX *= horizFactor;
 		velocityY *= 0.98;
 		velocityZ *= horizFactor;
 		
-		if(isInMaterial(BlockType.LAVA, BlockType.STATIONARY_LAVA)) {
+		if(inLava) {
 			velocityX *= 0.5D;
 			velocityY *= 0.5D;
 			velocityZ *= 0.5D;
 			velocityY -= 0.02D;
-		} else if(isInMaterial(BlockType.WATER, BlockType.STATIONARY_WATER)) {
+		} else if(inWater) {
 			velocityX *= 0.800000011920929D;
 			velocityY *= 0.800000011920929D;
 			velocityZ *= 0.800000011920929D;
@@ -44,6 +46,8 @@ public abstract class LivingEntity extends Entity {
 		
 		handleSteppingUp();
 		handleCollision();
+		
+		super.move();
 	}
 	
 	private void handleSteppingUp() {
@@ -54,18 +58,33 @@ public abstract class LivingEntity extends Entity {
 		double vx = Math.signum(velocityX) * Math.min(Math.abs(velocityX), 0.05);
 		double vz = Math.signum(velocityZ) * Math.min(Math.abs(velocityZ), 0.05);
 		BoundingBox off = bounds.offset(vx, 0, vz);
-		if(collides(off, currentCollisions) && !collides(off.offset(0, 0.5, 0), off, currentCollisions)) {
-			int i = 1;
-			for(; i <= 5 && collides(off.offset(0, 0.1 * i, 0), currentCollisions); i++);
-			y += 0.1 * i;
-			velocityY = Math.max(0, velocityY);
+		
+		if(collides(off, currentCollisions)) {
+			System.out.println("Detecting step...");
+			for(int i = 1; i <= 5; i++) {
+				if(!collides(off.offset(0, 0.105 * i, 0), currentCollisions)) {
+					y += 0.105 * i;
+					velocityY = 0.05;
+					System.out.println("Detected step!");
+					break;
+				}
+			}
+		} else if(!currentCollisions.isEmpty()) {
+			for(int i = 1; i <= 5; i++) {
+				if(!world.isColliding(bounds.offset(0, 0.105 * i, 0))) {
+					y += 0.105 * i;
+					velocityY = 0.05;
+					System.out.println("Detected ontop of step!");
+					break;
+				}
+			}
 		}
 	}
 	
 	private void handleCollision() {
 		BoundingBox bounds = getBoundingBox();
 		Set<Block> currentCollisions = world.getCollidingBlocks(bounds);
-		final double off = 0.05;
+		final double off = 0.01;
 		
 		double velocity = 0;
 		for(double v = 0, target = Math.abs(velocityX), sign = Math.signum(velocityX);
@@ -87,6 +106,15 @@ public abstract class LivingEntity extends Entity {
 				v += off)
 			velocity = sign * Math.min(v, target);
 		velocityY = velocity;
+		
+		if(collides(bounds.offset(velocityX, 0, 0), currentCollisions))
+			velocityX = 0;
+		if(collides(bounds.offset(0, 0, velocityZ), currentCollisions))
+			velocityZ = 0;
+		if(collides(bounds.offset(0, velocityY, 0), currentCollisions))
+			velocityY = 0;
+		if(collides(bounds.offset(velocityX, velocityY, velocityZ), currentCollisions))
+			velocityX = velocityY = velocityZ = 0;
 	}
 	
 	private boolean collides(BoundingBox bounds, Set<Block> ignore) {
@@ -95,12 +123,12 @@ public abstract class LivingEntity extends Entity {
 		return !found.isEmpty();
 	}
 	
-	private boolean collides(BoundingBox bounds, BoundingBox ignore, Set<Block> ignoreBlocks) {
+	/*private boolean collides(BoundingBox bounds, BoundingBox ignore, Set<Block> ignoreBlocks) {
 		Set<Block> found = world.getCollidingBlocks(bounds);
 		found.removeAll(ignoreBlocks);
 		found.removeAll(world.getCollidingBlocks(ignore));
 		return !found.isEmpty();
-	}
+	}*/
 
 	public int getHealth() {
 		return health;

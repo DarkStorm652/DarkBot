@@ -10,7 +10,7 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
 
 public class WalkActivity implements Activity {
-	private static double defaultSpeed = 0.15, defaultJumpFactor = 3, defaultFallFactor = 4, defaultLiquidFactor = 0.5;
+	private static double defaultSpeed = 0.17, defaultJumpFactor = 3, defaultFallFactor = 4, defaultLiquidFactor = 0.5;
 	private static int defaultTimeout = 60000;
 
 	private final MinecraftBot bot;
@@ -51,10 +51,8 @@ public class WalkActivity implements Activity {
 					return null;
 				BlockLocation ourLocation = new BlockLocation(player.getLocation());
 				PathSearch search = world.getPathFinder().provideSearch(ourLocation, target);
-				while(!search.isDone() && (thread == null || !thread.isCancelled())) {
-					System.out.println("Stepping...");
+				while(!search.isDone() && (thread == null || !thread.isCancelled()))
 					search.step();
-				}
 				return search.getPath();
 			}
 		});
@@ -70,7 +68,7 @@ public class WalkActivity implements Activity {
 	}
 
 	/**
-	 * Walk speed, in blocks/tick. Default is 0.15.
+	 * Walk speed, in blocks/tick. Default is 0.17.
 	 */
 	public double getSpeed() {
 		return speed;
@@ -139,55 +137,16 @@ public class WalkActivity implements Activity {
 				return;
 			}
 			ticksSinceStepChange++;
-			if(ticksSinceStepChange > 80) {
+			if(ticksSinceStepChange > 80 || player.getWorld().isColliding(player.getBoundingBox())) {
 				nextStep = null;
 				return;
 			}
 			
-			/*double speed = this.speed;
-			WorldLocation playerLocation = player.getLocation();
-			BlockLocation playerBlock = new BlockLocation(playerLocation);
-			boolean inLiquid = player.isInMaterial(BlockType.WATER, BlockType.LAVA, BlockType.STATIONARY_WATER, BlockType.STATIONARY_LAVA);
-
-			double verticalSpeed = speed;
-			if(!inLiquid && !bot.getWorld().getPathFinder().getWorldPhysics().canClimb(playerBlock)) {
-				if(player.getY() < y)
-					verticalSpeed *= jumpFactor;
-				else if(player.getY() > y)
-					verticalSpeed *= fallFactor;
-			} else if(inLiquid)
-				verticalSpeed *= liquidFactor;
-			
-			double offsetY = verticalOffset(bot.getWorld(), playerLocation);
-			if(offsetY != 0) {
-				double targetOffsetY = location.equals(playerBlock) ? offsetY : verticalOffset(bot.getWorld(), new WorldLocation(location));
-				if(offsetY == targetOffsetY) {
-					y += offsetY;
-				} else {
-					y += Math.max(offsetY, targetOffsetY);
-					if(y != playerLocation.getY()) {
-						x = playerLocation.getX();
-						z = playerLocation.getZ();
-					}
-				}
-			}
-			
-			player.setY(moveToward(player.getY(), y, verticalSpeed));
-
-			double horizontalSpeed = speed;
-			if(inLiquid || checkOver(bot.getWorld(), playerLocation, BlockType.SOUL_SAND, -1))
-				horizontalSpeed *= liquidFactor;
-			player.setX(moveToward(player.getX(), x, horizontalSpeed));
-			player.setZ(moveToward(player.getZ(), z, horizontalSpeed));*/
-			
-			/*WorldLocation next = getNextStep();
-			if(next != null) {
-				WorldLocation target = new WorldLocation(this.target);
-				double dist = player.getLocation().getDistanceTo(target);
-				double dist 
-			}*/
 
 			WorldLocation nextStepTarget = getNextStep(1);
+			if(nextStepTarget != null && nextStepTarget.getY() > stepTarget.getY() && nextStepTarget.getX() == stepTarget.getX() && nextStepTarget.getY() == stepTarget.getY() && !player.getWorld().isInMaterial(player.getBoundingBoxAt(nextStepTarget.getX() + 0.5, nextStepTarget.getY(), nextStepTarget.getZ() + 0.5), BlockType.WATER, BlockType.STATIONARY_WATER, BlockType.LAVA, BlockType.STATIONARY_LAVA, BlockType.LADDER, BlockType.VINE))
+				nextStepTarget = getNextStep(2);
+			
 			if(nextStepTarget != null) {
 				BoundingBox bounds = player.getBoundingBox();
 				if(nextStepTarget.getY() > player.getY() && nextStepTarget.getY() - player.getY() > 0.5) {
@@ -199,17 +158,22 @@ public class WalkActivity implements Activity {
 					}
 				}
 			}
-			if(player.getDistanceTo(stepTarget) < 0.3 || (nextStepTarget != null && player.getDistanceTo(nextStepTarget) < stepTarget.getDistanceTo(nextStepTarget))) {
+			
+			if(player.getDistanceTo(stepTarget.getX(), Math.abs(player.getY() - stepTarget.getY()) < 1 ? player.getY() : stepTarget.getY(), stepTarget.getZ()) < 0.3
+					|| (nextStepTarget != null && player.getDistanceTo(nextStepTarget) < stepTarget.getDistanceTo(nextStepTarget))) {
 				setNextStep(nextStep.getNext());
 				if(nextStep == null)
 					return;
 				stepTarget = nextStepTarget;
 			}
 
+			//System.out.println("   ::> Targeting " + stepTarget + " [" + player.isOnGround() + "]");
 			double x = stepTarget.getX(), y = stepTarget.getY(), z = stepTarget.getZ();
-			player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, speed / 4, speed);
-			if(player.isOnGround() && y - player.getY() > 0.5)
-				player.accelerate(0, Math.PI / 2, speed * jumpFactor, speed * jumpFactor);
+			player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, speed / 4, Math.min(player.getDistanceTo(stepTarget), speed));
+			if(y != player.getY() && player.isInMaterial(BlockType.WATER, BlockType.STATIONARY_WATER, BlockType.LAVA, BlockType.STATIONARY_LAVA, BlockType.LADDER, BlockType.VINE))
+				player.accelerate(0, Math.signum(y - player.getY()) * Math.PI / 2, 0.1, Math.min(Math.abs(y - player.getY()), 0.15));
+			else if(y - player.getY() > 0.5 && player.isOnGround())
+				player.accelerate(0, Math.PI / 2, 0.42, 0.42);
 			
 		}
 	}

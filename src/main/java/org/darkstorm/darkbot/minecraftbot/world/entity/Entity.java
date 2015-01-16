@@ -244,14 +244,14 @@ public abstract class Entity {
 	}
 
 	public double getDistanceToSquared(WorldLocation location) {
-		return getDistanceTo(location.getX(), location.getY(), location.getZ());
+		return getDistanceToSquared(location.getX(), location.getY(), location.getZ());
 	}
 
 	public double getDistanceTo(BlockLocation location) {
-		return getDistanceTo(location.getX(), location.getY(), location.getZ());
+		return getDistanceTo(location.getX() + 0.5, location.getY(), location.getZ() + 0.5);
 	}
 
 	public double getDistanceToSquared(BlockLocation location) {
-		return getDistanceTo(location.getX(), location.getY(), location.getZ());
+		return getDistanceToSquared(location.getX() + 0.5, location.getY(), location.getZ() + 0.5);
 	}
 }

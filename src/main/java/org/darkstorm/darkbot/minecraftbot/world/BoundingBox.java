@@ -72,6 +72,11 @@ public final class BoundingBox {
 		return offset(location.getX(), location.getY(), location.getZ());
 	}
 	
+	public BoundingBox include(double x, double y, double z) {
+		return getBoundingBox(Math.min(minX, x), Math.min(minY, y), Math.min(minZ, z),
+		                      Math.max(maxX, x), Math.max(maxY, y), Math.max(maxZ, z));
+	}
+	
 	public double boundedShiftX(BoundingBox other, double offX) {
 		if(minY >= other.getMaxY() || maxY <= other.getMinY() || minZ >= other.getMaxZ() || maxZ <= other.getMinZ())
 			return offX;
@@ -131,11 +136,14 @@ public final class BoundingBox {
 	}
 	
 	public boolean contains(WorldLocation location) {
-		if(minX >= location.getX() || maxX <= location.getX())
+		return contains(location.getX(), location.getY(), location.getZ());
+	}
+	public boolean contains(double x, double y, double z) {
+		if(minX >= x || maxX <= x)
 			return false;
-		if(minY >= location.getY() || maxY <= location.getY())
+		if(minY >= y || maxY <= y)
 			return false;
-		if(minZ >= location.getZ() || maxZ <= location.getZ())
+		if(minZ >= z || maxZ <= z)
 			return false;
 		return true;
 	}
@@ -170,6 +178,18 @@ public final class BoundingBox {
 	
 	public WorldLocation getMax() {
 		return new WorldLocation(maxX, maxY, maxZ);
+	}
+	
+	public double getWidth() {
+		return maxX - minX;
+	}
+	
+	public double getLength() {
+		return maxZ - minZ;
+	}
+	
+	public double getHeight() {
+		return maxY - minY;
 	}
 	
 	@Override

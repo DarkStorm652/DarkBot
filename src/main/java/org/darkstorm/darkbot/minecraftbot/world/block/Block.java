@@ -10,4 +10,5 @@ public interface Block {
 	public Chunk getChunk();
 	public BlockLocation getLocation();
 	public BoundingBox[] getBoundingBoxes();
+	public BoundingBox getConvexBoundingBox();
 }

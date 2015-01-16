@@ -2,7 +2,7 @@ package org.darkstorm.darkbot.minecraftbot.world.block;
 
 import org.darkstorm.darkbot.minecraftbot.world.*;
 
-public class TransparentBlockFactory implements BlockFactory {
+public class TransparentBlockFactory implements BlockFactory<Block> {
 	private static class BasicBlock extends AbstractBlock {
 		public BasicBlock(World world, Chunk chunk, BlockLocation location, int id, int metadata) {
 			super(world, chunk, location, id, metadata);
@@ -12,7 +12,14 @@ public class TransparentBlockFactory implements BlockFactory {
 		public BoundingBox[] getBoundingBoxes() {
 			return new BoundingBox[0];
 		}
+		
+		@Override
+		public BoundingBox getConvexBoundingBox() {
+			return EMPTY;
+		}
 	}
+	
+	private static final BoundingBox EMPTY = BoundingBox.getBoundingBox(0, 0, 0, 0, 0, 0);
 	
 	private final BlockType type;
 	

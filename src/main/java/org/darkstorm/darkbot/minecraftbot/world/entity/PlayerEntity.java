@@ -12,9 +12,9 @@ public class PlayerEntity extends LivingEntity {
 		super(world, id);
 		this.name = name;
 		
-		sizeX = 0.8;
+		sizeX = 0.6;
 		sizeY = 1.8;
-		sizeZ = 0.8;
+		sizeZ = 0.6;
 	}
 
 	public String getName() {

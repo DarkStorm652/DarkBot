@@ -460,7 +460,7 @@ public final class BasicWorld implements World, EventListener {
 	@Override
 	public boolean isColliding(BoundingBox box) {
 		int minX = (int) Math.floor(box.getMinX());
-		int minY = (int) Math.floor(box.getMinY());
+		int minY = (int) Math.floor(box.getMinY() - 1);
 		int minZ = (int) Math.floor(box.getMinZ());
 		int maxX = (int) Math.ceil(box.getMaxX());
 		int maxY = (int) Math.ceil(box.getMaxY());
@@ -470,10 +470,10 @@ public final class BasicWorld implements World, EventListener {
 			Chunk chunk = null;
 			BlockLocation chunkBase = null;
 
-			for(int x = minX; x <= maxX; x++) {
-				for(int z = minZ; z <= maxZ; z++) {
-					for(int y = minY; y <= maxY; y++) {
-						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+			for(int x = minX; x < maxX; x++) {
+				for(int z = minZ; z < maxZ; z++) {
+					for(int y = minY; y < maxY; y++) {
+						if(chunkBase == null || x < chunkBase.getX() || y < chunkBase.getY() || z < chunkBase.getZ() || x - chunkBase.getX() >= 16 || y - chunkBase.getY() >= 16 || z - chunkBase.getZ() >= 16) {
 							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
 							
 							chunk = getChunkAt(chunkLocation);
@@ -511,7 +511,7 @@ public final class BasicWorld implements World, EventListener {
 	public Set<Block> getCollidingBlocks(BoundingBox box) {
 		Set<Block> blocks = new HashSet<>();
 		int minX = (int) Math.floor(box.getMinX());
-		int minY = (int) Math.floor(box.getMinY());
+		int minY = (int) Math.floor(box.getMinY() - 1);
 		int minZ = (int) Math.floor(box.getMinZ());
 		int maxX = (int) Math.ceil(box.getMaxX());
 		int maxY = (int) Math.ceil(box.getMaxY());
@@ -521,10 +521,10 @@ public final class BasicWorld implements World, EventListener {
 			Chunk chunk = null;
 			BlockLocation chunkBase = null;
 
-			for(int x = minX; x <= maxX; x++) {
-				for(int z = minZ; z <= maxZ; z++) {
-					for(int y = minY; y <= maxY; y++) {
-						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+			for(int x = minX; x < maxX; x++) {
+				for(int z = minZ; z < maxZ; z++) {
+					for(int y = minY; y < maxY; y++) {
+						if(chunkBase == null || x < chunkBase.getX() || y < chunkBase.getY() || z < chunkBase.getZ() || x - chunkBase.getX() >= 16 || y - chunkBase.getY() >= 16 || z - chunkBase.getZ() >= 16) {
 							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
 							
 							chunk = getChunkAt(chunkLocation);
@@ -561,7 +561,7 @@ public final class BasicWorld implements World, EventListener {
 	@Override
 	public boolean isInMaterial(BoundingBox box, BlockType... materials) {
 		int minX = (int) Math.floor(box.getMinX());
-		int minY = (int) Math.floor(box.getMinY());
+		int minY = (int) Math.floor(box.getMinY() - 1);
 		int minZ = (int) Math.floor(box.getMinZ());
 		int maxX = (int) Math.ceil(box.getMaxX());
 		int maxY = (int) Math.ceil(box.getMaxY());
@@ -571,10 +571,10 @@ public final class BasicWorld implements World, EventListener {
 			Chunk chunk = null;
 			BlockLocation chunkBase = null;
 
-			for(int x = minX; x <= maxX; x++) {
-				for(int z = minZ; z <= maxZ; z++) {
-					for(int y = minY; y <= maxY; y++) {
-						if(chunkBase == null || chunkBase.getY() - y >= 16 || chunkBase.getX() - x >= 16 || chunkBase.getZ() - z >= 16) {
+			for(int x = minX; x < maxX; x++) {
+				for(int z = minZ; z < maxZ; z++) {
+					for(int y = minY; y < maxY; y++) {
+						if(chunkBase == null || x < chunkBase.getX() || y < chunkBase.getY() || z < chunkBase.getZ() || x - chunkBase.getX() >= 16 || y - chunkBase.getY() >= 16 || z - chunkBase.getZ() >= 16) {
 							ChunkLocation chunkLocation = new ChunkLocation(new BlockLocation(x, y, z));
 							
 							chunk = getChunkAt(chunkLocation);
@@ -599,12 +599,13 @@ public final class BasicWorld implements World, EventListener {
 							if(!matches)
 								continue;
 							
-							boolean intersects = false;
+							boolean intersects = true;
 							for(BoundingBox blockBox : block.getBoundingBoxes()) {
 								if(box.intersectsWith(blockBox)) {
 									intersects = true;
 									break;
-								}
+								} else
+									intersects = false;
 							}
 							if(!intersects)
 								continue;

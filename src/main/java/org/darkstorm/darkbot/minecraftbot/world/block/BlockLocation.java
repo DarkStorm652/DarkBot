@@ -5,13 +5,6 @@ import java.util.Comparator;
 import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
 
 public final class BlockLocation {
-	public static final Comparator<BlockLocation> DISTANCE_COMPARATOR = new Comparator<BlockLocation>() {
-		@Override
-		public int compare(BlockLocation o1, BlockLocation o2) {
-			return o1.equals(o2) ? 0 : o1.getDistanceToSquared(o2) < 0 ? -1 : 1;
-		}
-	};
-	
 	private final int x, y, z;
 
 	public BlockLocation(int x, int y, int z) {

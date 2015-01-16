@@ -46,6 +46,18 @@ public class SimpleWorldPhysics implements WorldPhysics {
 			return false;
 
 		boolean valid = true;
+		/*valid = valid && !collides(x2, y2, z2);
+		valid = valid && !collidesBetween(x, y, z, x2, y2, z2);
+		
+		if(valid) {
+			boolean curInAir = isGrounded(x, y, z);
+			boolean nextInAir = isGrounded(x2, y2, z2);
+		}*/
+		
+		
+		
+		
+		
 		valid = valid && isEmpty(x2, y2, z2); // Block at must be non-solid
 		valid = valid && isEmpty(x2, y2 + 1, z2); // Block above must be non-solid
 
@@ -108,6 +120,22 @@ public class SimpleWorldPhysics implements WorldPhysics {
 				return true;
 		}
 		return false;
+	}
+	
+	private boolean isGrounded(int x, int y, int z) {
+		return collidesExact(x + 0.5, y - 0.1, z + 0.5);
+	}
+	
+	private boolean collides(int x, int y, int z) {
+		return collidesExact(x + 0.5, y, z + 0.5);
+	}
+	
+	private boolean collidesBetween(int x1, int y1, int z1, int x2, int y2, int z2) {
+		return collidesExact((x1 + 0.5) + (x2 - x1) / 2.0, y1 + (y2 - y1) / 2.0, (z1 + 0.5) + (z2 - z1) / 2.0);
+	}
+	
+	private boolean collidesExact(double x, double y, double z) {
+		return world.isColliding(world.getBot().getPlayer().getBoundingBoxAt(x + 0.5, y, z + 0.5));
 	}
 
 	private boolean isEmpty(int x, int y, int z) {

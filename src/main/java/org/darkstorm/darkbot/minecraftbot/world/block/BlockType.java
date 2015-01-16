@@ -1,16 +1,9 @@
 package org.darkstorm.darkbot.minecraftbot.world.block;
 
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.INDESTRUCTABLE;
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.INTERACTABLE;
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.PLACEABLE;
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.SOLID;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.AXE;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.PICKAXE;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SHEARS;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SHOVEL;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.SWORD;
+import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.*;
+import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.*;
 
-import org.darkstorm.darkbot.minecraftbot.world.BoundingBox;
+import org.darkstorm.darkbot.minecraftbot.world.*;
 import org.darkstorm.darkbot.minecraftbot.world.item.ToolType;
 
 public enum BlockType {
@@ -101,7 +94,9 @@ public enum BlockType {
 	CLAY                  (block(82).toolType(SHOVEL)),
 	SUGAR_CANE_BLOCK      (block(83).flags(PLACEABLE)),
 	JUKEBOX               (block(84).toolType(PICKAXE)),
-	FENCE                 (block(85).toolType(AXE)),
+	FENCE                 (block(85).toolType(AXE).factory(new FenceBlockFactoryProvider(0.25, FenceBlockFactoryProvider.WOOD))) {
+		@Override public BlockFactory<FenceBlock> getBlockFactory() { return getBlockFactoryTyped(); }
+	},
 	PUMPKIN               (block(86).toolType(AXE)),
 	NETHERRACK            (block(87).toolType(PICKAXE)),
 	SOUL_SAND             (block(88).toolType(SHOVEL)),
@@ -123,13 +118,17 @@ public enum BlockType {
 	PUMPKIN_STEM          (block(104).flags(PLACEABLE)),
 	MELON_STEM            (block(105).flags(PLACEABLE)),
 	VINE                  (block(106).flags(PLACEABLE)),
-	FENCE_GATE            (block(107).toolType(AXE)),
+	FENCE_GATE            (block(107).toolType(AXE).factory(new FenceGateBlockFactoryProvider())) {
+		@Override public BlockFactory<FenceGateBlock> getBlockFactory() { return getBlockFactoryTyped(); }
+	},
 	BRICK_STAIRS          (block(108).toolType(PICKAXE)),
 	SMOOTH_STAIRS         (block(109).toolType(PICKAXE)),
 	MYCEL                 (block(110).toolType(SHOVEL)),
 	WATER_LILY            (block(111)),
 	NETHER_BRICK          (block(112).toolType(PICKAXE)),
-	NETHER_FENCE          (block(113).toolType(PICKAXE)),
+	NETHER_FENCE          (block(113).toolType(PICKAXE).factory(new FenceBlockFactoryProvider(0.25, FenceBlockFactoryProvider.NETHERBRICK))) {
+		@Override public BlockFactory<FenceBlock> getBlockFactory() { return getBlockFactoryTyped(); }
+	},
 	NETHER_BRICK_STAIRS   (block(114).toolType(PICKAXE)),
 	NETHER_WARTS          (block(115).flags(PLACEABLE)),
 	ENCHANTMENT_TABLE     (block(116).toolType(PICKAXE)),
@@ -155,7 +154,9 @@ public enum BlockType {
 	JUNGLE_WOOD_STAIRS    (block(136).toolType(AXE)),
 	COMMAND               (block(137)),
 	BEACON                (block(138)),
-	COBBLE_WALL           (block(139).toolType(PICKAXE)),
+	COBBLE_WALL           (block(139).toolType(PICKAXE).factory(new FenceBlockFactoryProvider(0.5, FenceBlockFactoryProvider.COBBLESTONE))) {
+		@Override public BlockFactory<FenceBlock> getBlockFactory() { return getBlockFactoryTyped(); }
+	},
 	FLOWER_POT            (block(140)),
 	CARROT                (block(141).flags(PLACEABLE)),
 	POTATO                (block(142).flags(PLACEABLE)),
@@ -182,7 +183,7 @@ public enum BlockType {
 	private final int id, maxStack, flags;
 	private final float frictionCoefficient;
 	private final ToolType toolType;
-	private final BlockFactory blockFactory;
+	private final BlockFactory<?> blockFactory;
 	
 	private BlockType(Builder builder) {
 		this.id = builder.id;
@@ -207,6 +208,10 @@ public enum BlockType {
 	public boolean isSolid() {
 		return (flags & SOLID) == SOLID;
 	}
+	
+	public boolean isOpaque() {
+		return (flags & OPAQUE) == OPAQUE;
+	}
 
 	public boolean isInteractable() {
 		return (flags & INTERACTABLE) == INTERACTABLE;
@@ -228,8 +233,13 @@ public enum BlockType {
 		return toolType;
 	}
 	
-	public BlockFactory getBlockFactory() {
+	public BlockFactory<? extends Block> getBlockFactory() {
 		return blockFactory;
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <T extends Block> BlockFactory<T> getBlockFactoryTyped() {
+		return (BlockFactory<T>) blockFactory;
 	}
 
 	public static BlockType getById(int id) {
@@ -240,7 +250,7 @@ public enum BlockType {
 	}
 
 	protected static final class Flag {
-		public static final int SOLID = 1, INTERACTABLE = 2, PLACEABLE = 4, INDESTRUCTABLE = 8;
+		public static final int SOLID = 0x01, INTERACTABLE = 0x02, PLACEABLE = 0x04, INDESTRUCTABLE = 0x08, OPAQUE = 0x10;
 	}
 	
 	protected static final class Registry {
@@ -254,10 +264,10 @@ public enum BlockType {
 	protected static final class Builder {
 		private final int id;
 		private int maxStack = 64;
-		private int flags = SOLID | PLACEABLE;
+		private int flags = SOLID | OPAQUE | PLACEABLE;
 		private float friction = 1.0F;
 		private ToolType toolType = null;
-		private BlockFactoryProvider factory = BlockFactoryProvider.DEFAULT;
+		private BlockFactoryProvider<?> factory = BlockFactoryProvider.DEFAULT;
 		
 		public Builder(int id) {
 			this.id = id;
@@ -285,32 +295,216 @@ public enum BlockType {
 			return this;
 		}
 		
-		public Builder factory(BlockFactoryProvider factory) {
+		public Builder factory(BlockFactoryProvider<?> factory) {
 			this.factory = factory;
 			return this;
 		}
 	}
 	
-	private static BlockFactoryProvider singleBoundingBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	private static BlockFactoryProvider<Block> singleBoundingBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		final BoundingBox bounds = BoundingBox.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
-		return new BlockFactoryProvider() {
-			@Override public BlockFactory provide(BlockType type) {
+		return new BlockFactoryProvider<Block>() {
+			@Override public Class<Block> getBlockClass() { return Block.class; }
+			@Override public BlockFactory<Block> provide(BlockType type) {
 				return RectangularBlockFactory.getInstance(type, bounds);
 			}
 		};
 	}
 	
-	protected static interface BlockFactoryProvider {
-		BlockFactoryProvider DEFAULT = new BlockFactoryProvider() {
-			@Override public BlockFactory provide(BlockType type) {
+	protected static interface BlockFactoryProvider<T extends Block> {
+		BlockFactoryProvider<Block> DEFAULT = new BlockFactoryProvider<Block>() {
+			@Override public Class<Block> getBlockClass() { return Block.class; }
+			@Override public BlockFactory<Block> provide(BlockType type) {
 				return RectangularBlockFactory.getInstance(type);
 			}
 		};
-		BlockFactoryProvider TRANSPARENT = new BlockFactoryProvider() {
-			@Override public BlockFactory provide(BlockType type) {
+		BlockFactoryProvider<Block> TRANSPARENT = new BlockFactoryProvider<Block>() {
+			@Override public Class<Block> getBlockClass() { return Block.class; }
+			@Override public BlockFactory<Block> provide(BlockType type) {
 				return TransparentBlockFactory.getInstance(type);
 			}
 		};
-		public BlockFactory provide(BlockType type);
+		public Class<T> getBlockClass();
+		public BlockFactory<T> provide(BlockType type);
+	}
+	
+	protected static class FenceBlockFactoryProvider implements BlockFactoryProvider<FenceBlock> {
+		private static class FenceBlockImpl extends AbstractBlock implements FenceBlock {
+			private final int x, y, z;
+			private final BoundingBox unconnected, connectedPX, connectedNX, connectedPZ, connectedNZ;
+			
+			private FenceBlockImpl(World world, Chunk chunk, BlockLocation location, int id, int metadata, double diameter) {
+				super(world, chunk, location, id, metadata);
+				
+				x = location.getX();
+				y = location.getY();
+				z = location.getZ();
+				
+				double minX = (1 - diameter) / 2, minY = 0, minZ = (1 - diameter) / 2;
+				double maxX = 1 - minX, maxY = 1.5, maxZ = 1 - minZ;
+				
+				minX += x;
+				minY += y;
+				minZ += z;
+				maxX += x;
+				maxY += y;
+				maxZ += z;
+				
+				unconnected = BoundingBox.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+				connectedPX = BoundingBox.getBoundingBox(minX, minY, minZ, x + 1, maxY, maxZ);
+				connectedNX = BoundingBox.getBoundingBox(x, minY, minZ, maxX, maxY, maxZ);
+				connectedPZ = BoundingBox.getBoundingBox(minX, minY, minZ, maxX, maxY, z + 1);
+				connectedNZ = BoundingBox.getBoundingBox(minX, minY, z, maxX, maxY, maxZ);
+			}
+			
+			@Override
+			public BoundingBox[] getBoundingBoxes() {
+				boolean px = connectsTo(1, 0, 0);
+				boolean nx = connectsTo(-1, 0, 0);
+				boolean pz = connectsTo(0, 0, 1);
+				boolean nz = connectsTo(0, 0, -1);
+				
+				int size = 1 + (px ? 1 : 0) + (nx ? 1 : 0) + (pz ? 1 : 0) + (nz ? 1 : 0), idx = 0;
+				BoundingBox[] boxes = new BoundingBox[size];
+				boxes[idx++] = unconnected;
+				if(px) boxes[idx++] = connectedPX;
+				if(nx) boxes[idx++] = connectedNX;
+				if(pz) boxes[idx++] = connectedPZ;
+				if(nz) boxes[idx++] = connectedNZ;
+				return boxes;
+			}
+			
+			public boolean isConnected(Direction direction) {
+				switch(direction) {
+				case NORTH:
+				case SOUTH:
+				case EAST:
+				case WEST:
+					return connectsTo(direction.getBlockOffsetX(), direction.getBlockOffsetY(), direction.getBlockOffsetZ());
+				default:
+					return false;
+				}
+			}
+			
+			private boolean connectsTo(int offX, int offY, int offZ) {
+				Block block = getWorld().getBlockAt(x + offX, y + offY, z + offZ);
+				if(block == null)
+					return false;
+				
+				BlockType type = block.getType();
+				if(type == UNKNOWN)
+					return true;
+				
+				if(type == getType())
+					return true;
+				
+				if(type == BlockType.MELON_BLOCK || type == BlockType.PUMPKIN)
+					return false;
+				
+				if(block instanceof FenceGateBlock)
+					return true;
+				
+				return type.isSolid() && type.isOpaque();
+			}
+		}
+		
+		public static final int WOOD = 0, COBBLESTONE = 1, NETHERBRICK = 2;
+		
+		private final double diameter;
+		//private final int material;
+		
+		public FenceBlockFactoryProvider(double diameter, int material) {
+			this.diameter = diameter;
+			//this.material = material;
+		}
+		
+		@Override
+		public Class<FenceBlock> getBlockClass() {
+			return FenceBlock.class;
+		}
+		
+		@Override
+		public BlockFactory<FenceBlock> provide(final BlockType type) {
+			return new BlockFactory<FenceBlock>() {
+				@Override public BlockType getType() { return type; }
+				
+				@Override
+				public FenceBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
+					return new FenceBlockImpl(world, chunk, location, type.getId(), metadata, diameter);
+				}
+			};
+		}
+	}
+	
+	protected static class FenceGateBlockFactoryProvider implements BlockFactoryProvider<FenceGateBlock> {
+		private static class FenceGateBlockImpl extends AbstractBlock implements FenceGateBlock {
+			private static final BoundingBox BOUNDS_X = BoundingBox.getBoundingBox(0, 0, 0.375, 1, 1.5, 0.625);
+			private static final BoundingBox BOUNDS_Z = BoundingBox.getBoundingBox(0.375, 0, 0, 0.625, 1.5, 1);
+			
+			private final Direction direction;
+			private final BoundingBox bounds;
+			private final boolean open;
+			
+			public FenceGateBlockImpl(World world, Chunk chunk, BlockLocation location, int id, int metadata) {
+				super(world, chunk, location, id, metadata);
+				
+				switch(metadata & 0x3) {
+				default:
+				case 0: direction = Direction.NORTH; break;
+				case 1: direction = Direction.EAST; break;
+				case 2: direction = Direction.SOUTH; break;
+				case 3: direction = Direction.WEST; break;
+				}
+				open = (metadata & 0x4) != 0;
+				
+				if(!open) {
+					switch(direction) {
+					case NORTH:
+					case SOUTH:
+						bounds = BOUNDS_X.offset(location);
+						break;
+					case EAST:
+					case WEST:
+						bounds = BOUNDS_Z.offset(location);
+						break;
+					default:
+						bounds = null;
+					}
+				} else
+					bounds = null;
+			}
+			
+			@Override
+			public Direction getDirection() {
+				return direction;
+			}
+			
+			@Override
+			public boolean isOpen() {
+				return open;
+			}
+			
+			@Override
+			public BoundingBox[] getBoundingBoxes() {
+				return bounds != null ? new BoundingBox[] { bounds } : new BoundingBox[0];
+			}
+		}
+		
+		@Override
+		public Class<FenceGateBlock> getBlockClass() {
+			return FenceGateBlock.class;
+		}
+		
+		@Override
+		public BlockFactory<FenceGateBlock> provide(final BlockType type) {
+			return new BlockFactory<FenceGateBlock>() {
+				@Override public BlockType getType() { return type; }
+				
+				@Override
+				public FenceGateBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
+					return new FenceGateBlockImpl(world, chunk, location, type.getId(), metadata);
+				}
+			};
+		}
 	}
 }

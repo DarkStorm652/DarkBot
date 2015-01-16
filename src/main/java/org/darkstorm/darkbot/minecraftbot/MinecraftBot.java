@@ -109,6 +109,7 @@ public class MinecraftBot implements EventListener {
 		player.setVelocityX(0);
 		player.setVelocityY(0.12);
 		player.setVelocityZ(0);
+		System.out.println("TELEPORTED! " + player.getLocation());
 	}
 
 	@EventHandler

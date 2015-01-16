@@ -3,6 +3,8 @@ package org.darkstorm.darkbot.minecraftbot.world.block;
 import org.darkstorm.darkbot.minecraftbot.world.*;
 
 public abstract class AbstractBlock implements Block {
+	private static final BoundingBox EMPTY = BoundingBox.getBoundingBox(0, 0, 0, 0, 0, 0);
+	
 	private final World world;
 	private final Chunk chunk;
 	private final BlockLocation location;
@@ -46,6 +48,25 @@ public abstract class AbstractBlock implements Block {
 	@Override
 	public int getMetadata() {
 		return metadata;
+	}
+	
+	@Override
+	public BoundingBox getConvexBoundingBox() {
+		double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+		double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE, maxZ = Double.MIN_VALUE;
+		
+		for(BoundingBox box : getBoundingBoxes()) {
+			minX = Math.min(minX, box.getMinX());
+			minY = Math.min(minY, box.getMinY());
+			minZ = Math.min(minZ, box.getMinZ());
+			maxX = Math.max(maxX, box.getMaxX());
+			maxY = Math.max(maxY, box.getMaxY());
+			maxZ = Math.max(maxZ, box.getMaxZ());
+		}
+		
+		if(minX > maxX || minY > maxY || minZ > maxZ)
+			return EMPTY;
+		return BoundingBox.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 	
 	@Override

@@ -2,7 +2,7 @@ package org.darkstorm.darkbot.minecraftbot.world.block;
 
 import org.darkstorm.darkbot.minecraftbot.world.*;
 
-public class RectangularBlockFactory implements BlockFactory {
+public class RectangularBlockFactory implements BlockFactory<Block> {
 	private static class BasicBlock extends AbstractBlock {
 		private final BoundingBox boundingBox;
 		
@@ -15,6 +15,11 @@ public class RectangularBlockFactory implements BlockFactory {
 		@Override
 		public BoundingBox[] getBoundingBoxes() {
 			return new BoundingBox[] { boundingBox };
+		}
+		
+		@Override
+		public BoundingBox getConvexBoundingBox() {
+			return boundingBox;
 		}
 	}
 	

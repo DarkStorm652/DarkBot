@@ -60,42 +60,135 @@ public class MainPlayerEntity extends PlayerEntity {
 		
 		super.move();
 		
-		System.out.printf("Vel: <%.9f, %.9f, %.9f> Pos: <%.5f, %.5f, %.5f>%n", velocityX, velocityY, velocityZ, x, y, z);
-		BlockLocation below = new BlockLocation(getLocation().offset(0, -0.1, 0));
-		//System.out.println("Below @ " + below + ": " + world.getBlockIdAt(below));
+		/*System.out.printf("Vel: <%.9f, %.9f, %.9f> Pos: <%.5f, %.5f, %.5f> Colliding: %s%n", velocityX, velocityY, velocityZ, x, y, z, world.isColliding(bounds) ? "YES" : "NO");
+		//System.out.println("Below: " + world.getCollidingBlocks(bounds.offset(0, -0.1, 0)));
+		
+		
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');
+		System.out.println('+');
+		
+		int px = (int) Math.floor(x);
+		int py = (int) Math.floor(y);
+		int pz = (int) Math.floor(z);
+		Set<Block> intersecting = new HashSet<>();
+		
+		for(int x = px - 8; x <= px + 8; x++) {
+			System.out.print('|');
+			for(int y = py + 1; y >= py - 1; y--) {
+				for(int z = pz - 8; z <= pz + 8; z++) {
+					if(x == px && z == pz) {
+						System.out.print('X');
+						continue;
+					}
+					Block block = world.getBlockAt(x, y, z);
+					if(block != null && block.getBoundingBoxes().length > 0) {
+						boolean intersects = false;
+						for(BoundingBox box : block.getBoundingBoxes()) {
+							if(bounds.intersectsWith(box)) {
+								intersects = true;
+								break;
+							}
+						}
+						if(intersects) {
+							System.out.print('I');
+							intersecting.add(block);
+							continue;
+						}
+						
+						double off = block.getConvexBoundingBox().getMaxY() - y;
+						if(off > 1)
+							System.out.print('#');
+						else if(off > 0.5)
+							System.out.print('=');
+						else if(off > 0)
+							System.out.print('-');
+						else
+							System.out.print('.');
+					} else
+						System.out.print(' ');
+				}
+				System.out.print('|');
+			}
+			System.out.println();
+		}
+		
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');		
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');
+		System.out.print('+');
+		for(int i = 0; i <= 16; i++)
+			System.out.print('-');
+		System.out.println('+');
+		if(!intersecting.isEmpty()) {
+			System.out.println("INTERSECTING!");
+			for(Block block : intersecting)
+				System.out.println("  > " + block + " <> " + block.getConvexBoundingBox());
+		}*/
 	}
 	
 	private void handleSneaking(BoundingBox bounds) {
+		Set<Block> currentCollisions = world.getCollidingBlocks(bounds);
 		final double off = 0.1;
 
 		double velocity = 0;
 		for(double v = 0, target = Math.abs(velocityX), sign = Math.signum(velocityX);
-				v < target + off && world.isColliding(bounds.offset(sign * v, -1, 0));
+				v < target + off && collides(bounds.offset(sign * v, -0.1, 0), currentCollisions);
 				v += off)
 			velocity = sign * Math.min(v, target);
 		velocityX = velocity;
 		
 		velocity = 0;
 		for(double v = 0, target = Math.abs(velocityZ), sign = Math.signum(velocityZ);
-				v < target + off && world.isColliding(bounds.offset(0, -1, sign * v));
+				v < target + off && collides(bounds.offset(0, -0.1, sign * v), currentCollisions);
 				v += off)
 			velocity = sign * Math.min(v, target);
 		velocityZ = velocity;
 	}
 	
+	private boolean collides(BoundingBox bounds, Set<Block> ignore) {
+		Set<Block> found = world.getCollidingBlocks(bounds);
+		found.removeAll(ignore);
+		return !found.isEmpty();
+	}
+	
 	private void handlePushingOutOfBlocks(BoundingBox bounds) {
 		Set<Block> colliding = world.getCollidingBlocks(bounds);
 		if(!colliding.isEmpty()) {
-			Set<BlockLocation> checks = new TreeSet<BlockLocation>(BlockLocation.DISTANCE_COMPARATOR);
+			final WorldLocation location = getLocation();
+			Set<BlockLocation> checks = new TreeSet<BlockLocation>(new Comparator<BlockLocation>() {
+				public int compare(BlockLocation loc1, BlockLocation loc2) {
+					return loc1.equals(loc2) ? 0 : distSq(loc1) < distSq(loc2) ? -1 : 1;
+				}
+				
+				private double distSq(BlockLocation loc) {
+					return Math.pow(location.getX() - (loc.getX() + 0.5), 2) + Math.pow(location.getY() - loc.getY(), 2) + Math.pow(location.getZ() - (loc.getZ() + 0.5), 2);
+				}
+			});
+			
+			int floorY = (int) Math.floor(getY());
 			for(Block block : colliding) {
 				BlockLocation loc = block.getLocation();
-				checks.add(loc.offset(1, 0, 0));
-				checks.add(loc.offset(-1, 0, 0));
-				checks.add(loc.offset(0, 0, 1));
-				checks.add(loc.offset(0, 0, -1));
+				checks.add(new BlockLocation(loc.getX() + 1, floorY, loc.getZ()));
+				checks.add(new BlockLocation(loc.getX() - 1, floorY, loc.getZ()));
+				checks.add(new BlockLocation(loc.getX(), floorY, loc.getZ() + 1));
+				checks.add(new BlockLocation(loc.getX(), floorY, loc.getZ() - 1));
 			}
-			for(Block block : colliding)
-				checks.remove(block.getLocation());
+			for(Block block : colliding) {
+				BlockLocation loc = block.getLocation();
+				checks.remove(new BlockLocation(loc.getX(), floorY, loc.getZ()));
+				checks.remove(loc);
+			}
 			
 			BlockLocation target = null;
 			for(BlockLocation check : checks) {
@@ -107,10 +200,10 @@ public class MainPlayerEntity extends PlayerEntity {
 			if(target == null)
 				return;
 			
-			double angle = Math.atan2(z - target.getZ() - 0.5, x - target.getX() - 0.5);
-			accelerate(angle, 0, 0.025, 0.2);
+			double angle = Math.atan2((target.getZ() + 0.5) - z, (target.getX() + 0.5) - x);
+			accelerate(angle, 0, 0.04, 0.05);
 			
-			System.out.println("Trying to get out of " + new BlockLocation(getLocation()) + " and toward " + target);
+			System.out.println("Trying to get out of " + new BlockLocation(location) + " and toward " + target);
 		}
 	}
 	
