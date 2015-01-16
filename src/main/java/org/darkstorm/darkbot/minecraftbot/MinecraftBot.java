@@ -36,7 +36,7 @@ public class MinecraftBot implements EventListener {
 	private World world;
 
 	private boolean hasSpawned = false, movementDisabled = false;
-	private int messageDelay = 2000, inventoryDelay = 15;
+	private int messageDelay, inventoryDelay;
 	private long lastMessage;
 	private Activity activity;
 

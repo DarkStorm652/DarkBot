@@ -26,6 +26,9 @@ public abstract class MinecraftBotWrapper implements EventListener {
 
 	public MinecraftBotWrapper(MinecraftBot bot) {
 		this.bot = bot;
+		
+		bot.setMessageDelay(2000);
+		bot.setInventoryDelay(15);
 
 		commandManager = new BasicCommandManager(this);
 		bot.getEventBus().register(this);
@@ -66,13 +69,6 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		TaskManager taskManager = bot.getTaskManager();
 		taskManager.stopAll();
 		bot.setActivity(null);
-	}
-
-	@EventHandler
-	public void onSpawn(SpawnEvent event) {
-		MainPlayerEntity player = event.getPlayer();
-		PlayerInventory inventory = player.getInventory();
-		inventory.setDelay(250);
 	}
 
 	@EventHandler

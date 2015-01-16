@@ -28,8 +28,6 @@ public class MainPlayerEntity extends PlayerEntity {
 
 	public MainPlayerEntity(World world, MainPlayerEntity player) {
 		this(world, player.getId(), player.getName(), player.getGameMode());
-
-		inventory.setDelay(player.getInventory().getDelay());
 	}
 	
 	@Override
