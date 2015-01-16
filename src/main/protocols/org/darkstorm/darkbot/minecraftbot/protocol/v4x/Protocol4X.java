@@ -633,9 +633,9 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 					int id = (data >> 4) & 0xFFF;
 					int metadata = data & 0xF;
 
-					int x = chunkX + (data >> 28) & 0xF;
+					int x = chunkX + ((data >> 28) & 0xF);
 					int y = (data >> 16) & 0xFF;
-					int z = chunkZ + (data >> 24) & 0xF;
+					int z = chunkZ + ((data >> 24) & 0xF);
 
 					eventBus.fire(new BlockChangeEvent(id, metadata, x, y, z));
 				}
