@@ -36,7 +36,7 @@ public class MinecraftBot implements EventListener {
 	private World world;
 
 	private boolean hasSpawned = false, movementDisabled = false;
-	private int messageDelay = 2000;
+	private int messageDelay = 2000, inventoryDelay = 15;
 	private long lastMessage;
 	private Activity activity;
 
@@ -109,7 +109,6 @@ public class MinecraftBot implements EventListener {
 		player.setVelocityX(0);
 		player.setVelocityY(0.12);
 		player.setVelocityZ(0);
-		System.out.println("TELEPORTED! " + player.getLocation());
 	}
 
 	@EventHandler
@@ -360,6 +359,14 @@ public class MinecraftBot implements EventListener {
 
 	public void setMessageDelay(int messageDelay) {
 		this.messageDelay = messageDelay;
+	}
+	
+	public int getInventoryDelay() {
+		return inventoryDelay;
+	}
+	
+	public void setInventoryDelay(int inventoryDelay) {
+		this.inventoryDelay = inventoryDelay;
 	}
 
 	public MainPlayerEntity getPlayer() {

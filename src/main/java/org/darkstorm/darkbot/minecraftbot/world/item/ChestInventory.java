@@ -5,23 +5,20 @@ import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.WindowCloseEvent;
 
-public class ChestInventory implements Inventory {
-	private final MinecraftBot bot;
+public class ChestInventory extends AbstractInventory {
 	private final ItemStack[] items;
 	private final ItemStack[] inventory = new ItemStack[36];
-	private final int id;
 
 	private ItemStack selectedItem = null;
 
 	public ChestInventory(MinecraftBot bot, int id, boolean large) {
-		this.bot = bot;
-		this.id = id;
+		super(bot, id);
 		items = new ItemStack[large ? 54 : 27];
 	}
 
 	@EventHandler
 	public synchronized void onWindowClose(WindowCloseEvent event) {
-		if(id == event.getWindowId())
+		if(getWindowId() == event.getWindowId())
 			selectedItem = null;
 	}
 
@@ -55,7 +52,6 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void selectItemAt(int slot, boolean leftClick) {
-		delay();
 		ItemStack item = getItemAt(slot);
 		ItemStack oldSelected = selectedItem;
 		if(leftClick) {
@@ -121,7 +117,7 @@ public class ChestInventory implements Inventory {
 			}
 		}
 		System.out.println("Clicked at " + slot + " | left: " + leftClick + " item: " + item + " selected: " + oldSelected);
-		bot.getEventBus().fire(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
+		perform(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -138,7 +134,6 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void selectItemAtWithShift(int slot) {
-		delay();
 		ItemStack item = getItemAt(slot);
 		int rangeStart, rangeEnd;
 		if(item == null)
@@ -166,7 +161,7 @@ public class ChestInventory implements Inventory {
 		}
 		if(!slotFound)
 			return;
-		bot.getEventBus().fire(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
+		perform(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
 	}
 
 	@Override
@@ -176,33 +171,7 @@ public class ChestInventory implements Inventory {
 
 	@Override
 	public synchronized void dropSelectedItem() {
-		delay();
 		selectedItem = null;
-		bot.getEventBus().fire(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
-	}
-
-	@Override
-	public synchronized void close() {
-		bot.getEventBus().fire(new InventoryCloseEvent(this));
-	}
-
-	private void delay() {
-		int delay = bot.getPlayer().getInventory().getDelay();
-		if(delay > 0) {
-			try {
-				Thread.sleep(delay);
-			} catch(InterruptedException exception) {
-				exception.printStackTrace();
-			}
-		}
-	}
-
-	public MinecraftBot getBot() {
-		return bot;
-	}
-
-	@Override
-	public int getWindowId() {
-		return id;
+		perform(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
 	}
 }

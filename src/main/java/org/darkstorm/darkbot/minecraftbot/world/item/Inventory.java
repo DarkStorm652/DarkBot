@@ -20,4 +20,6 @@ public interface Inventory {
 	public void close();
 
 	public int getWindowId();
+	
+	public boolean hasActionsQueued();
 }
