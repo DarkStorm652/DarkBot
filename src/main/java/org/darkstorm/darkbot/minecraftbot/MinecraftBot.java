@@ -35,6 +35,7 @@ public class MinecraftBot implements EventListener {
 	private MainPlayerEntity player;
 	private World world;
 
+	private double lastX, lastY, lastZ, lastYaw, lastPitch;
 	private boolean hasSpawned = false, movementDisabled = false;
 	private int messageDelay, inventoryDelay;
 	private long lastMessage;
@@ -181,7 +182,7 @@ public class MinecraftBot implements EventListener {
 		try {
 			connectionHandler.process();
 
-			if(hasSpawned) {
+			if(hasSpawned && !player.getInventory().hasActionsQueued() && (player.getWindow() == null || !player.getWindow().hasActionsQueued())) {
 				taskManager.update();
 				if(activity != null) {
 					if(activity.isActive()) {
@@ -195,12 +196,14 @@ public class MinecraftBot implements EventListener {
 						activity = null;
 					}
 				}
-
-				if(!movementDisabled)
-					updateMovement();
 			}
-
+		} catch(Exception exception) {
+			exception.printStackTrace();
+		}
+		try {
 			eventBus.fire(new TickEvent());
+			if(hasSpawned && !movementDisabled)
+				updateMovement();
 		} catch(Exception exception) {
 			exception.printStackTrace();
 		}
@@ -208,8 +211,8 @@ public class MinecraftBot implements EventListener {
 
 	public synchronized void updateMovement() {
 		double x = player.getX(), y = player.getY(), z = player.getZ(), yaw = player.getYaw(), pitch = player.getPitch();
-		boolean move = x != player.getLastX() || y != player.getLastY() || z != player.getLastZ();
-		boolean rotate = yaw != player.getLastYaw() || pitch != player.getLastPitch();
+		boolean move = x != lastX || y != lastY || z != lastZ;
+		boolean rotate = yaw != lastYaw || pitch != lastPitch;
 		boolean onGround = player.isOnGround();
 
 		PlayerUpdateEvent event;
@@ -223,11 +226,11 @@ public class MinecraftBot implements EventListener {
 			event = new PlayerUpdateEvent(player, onGround);
 		eventBus.fire(event);
 
-		player.setLastX(player.getX());
-		player.setLastY(player.getY());
-		player.setLastZ(player.getZ());
-		player.setLastYaw(player.getYaw());
-		player.setLastPitch(player.getPitch());
+		lastX = x;
+		lastY = y;
+		lastZ = z;
+		lastYaw = yaw;
+		lastPitch = pitch;
 	}
 
 	@EventHandler

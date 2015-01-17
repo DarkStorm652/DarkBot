@@ -23,8 +23,7 @@ public class PlayerEntity extends LivingEntity {
 
 	@Override
 	public ItemStack getWornItemAt(int slot) {
-		return slot == 0 ? heldItem
-				: slot > 0 && slot <= armor.length ? armor[slot - 1] : null;
+		return slot == 0 ? heldItem : slot > 0 && slot <= armor.length ? armor[slot - 1] : null;
 	}
 
 	@Override

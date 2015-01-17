@@ -34,7 +34,6 @@ import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.PacketS0B_Ani
 import org.darkstorm.darkbot.minecraftbot.protocol.v4x.play.server.PacketS21_ChunkData.ChunkData;
 import org.darkstorm.darkbot.minecraftbot.util.ChatColor;
 import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
@@ -278,18 +277,15 @@ public final class Protocol4X extends AbstractProtocolX implements EventListener
 
 	@EventHandler
 	public void onPlayerUpdate(PlayerUpdateEvent event) {
-		MainPlayerEntity player = event.getEntity();
-		double x = player.getX(), y = player.getY(), z = player.getZ(), yaw = player.getYaw(), pitch = player.getPitch();
+		double x = event.getX(), y = event.getY(), z = event.getZ(), yaw = event.getYaw(), pitch = event.getPitch();
 		double eyeY = BigDecimal.valueOf(y).add(STANCE_CONSTANT_PRECISE).doubleValue();
-		boolean move = x != player.getLastX() || y != player.getLastY() || z != player.getLastZ();
-		boolean rotate = yaw != player.getLastYaw() || pitch != player.getLastPitch();
-		boolean onGround = player.isOnGround();
+		boolean onGround = event.isOnGround();
 		PacketC03_PlayerUpdate packet;
-		if(move && rotate)
+		if(event instanceof PlayerMoveRotateEvent)
 			packet = new PacketC06_PositionRotationUpdate(x, y, z, eyeY, yaw, pitch, onGround);
-		else if(move)
+		else if(event instanceof PlayerMoveEvent)
 			packet = new PacketC04_PositionUpdate(x, y, z, eyeY, onGround);
-		else if(rotate)
+		else if(event instanceof PlayerRotateEvent)
 			packet = new PacketC05_RotationUpdate(yaw, pitch, onGround);
 		else
 			packet = new PacketC03_PlayerUpdate(onGround);

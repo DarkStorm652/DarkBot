@@ -1,7 +1,7 @@
 package org.darkstorm.darkbot.minecraftbot.protocol.v61;
 
 import java.io.*;
-import java.math.BigInteger;
+import java.math.*;
 import java.security.*;
 import java.util.Arrays;
 
@@ -28,7 +28,6 @@ import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.*;
 import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.Packet18Animation.Animation;
 import org.darkstorm.darkbot.minecraftbot.protocol.v61.packets.Packet19EntityAction.Action;
 import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.*;
 
 public final class Protocol61 extends AbstractProtocol implements EventListener {
@@ -240,20 +239,18 @@ public final class Protocol61 extends AbstractProtocol implements EventListener 
 				eventBus.fire(new EditCommandBlockEvent(new BlockLocation(event.getX(), event.getY(), event.getZ())));
 		}
 	}
-
+	
 	@EventHandler
 	public void onPlayerUpdate(PlayerUpdateEvent event) {
-		MainPlayerEntity player = event.getEntity();
-		double x = player.getX(), y = player.getY(), z = player.getZ(), yaw = player.getYaw(), pitch = player.getPitch();
-		boolean move = x != player.getLastX() || y != player.getLastY() || z != player.getLastZ();
-		boolean rotate = yaw != player.getLastYaw() || pitch != player.getLastPitch();
-		boolean onGround = player.isOnGround();
+		double x = event.getX(), y = event.getY(), z = event.getZ(), yaw = event.getYaw(), pitch = event.getPitch();
+		double eyeY = y + 1.62000000476837;
+		boolean onGround = event.isOnGround();
 		Packet10Flying packet;
-		if(move && rotate)
-			packet = new Packet13PlayerLookMove(x, y, y + 1.62000000476837, z, (float) yaw, (float) pitch, onGround);
-		else if(move)
-			packet = new Packet11PlayerPosition(x, y, y + 1.62000000476837, z, onGround);
-		else if(rotate)
+		if(event instanceof PlayerMoveRotateEvent)
+			packet = new Packet13PlayerLookMove(x, y, eyeY, z, (float) yaw, (float) pitch, onGround);
+		else if(event instanceof PlayerMoveEvent)
+			packet = new Packet11PlayerPosition(x, y, eyeY, z, onGround);
+		else if(event instanceof PlayerRotateEvent)
 			packet = new Packet12PlayerLook((float) yaw, (float) pitch, onGround);
 		else
 			packet = new Packet10Flying(onGround);

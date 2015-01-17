@@ -13,7 +13,6 @@ public class MainPlayerEntity extends PlayerEntity {
 	private PlayerInventory inventory;
 	private GameMode gameMode;
 
-	private double lastX, lastY, lastZ, lastYaw, lastPitch;
 	private int hunger, experienceLevel, experienceTotal;
 	private Inventory window;
 	
@@ -39,12 +38,6 @@ public class MainPlayerEntity extends PlayerEntity {
 	
 	@Override
 	protected void move() {
-		lastX = x;
-		lastY = y;
-		lastZ = z;
-		lastYaw = yaw;
-		lastPitch = pitch;
-		
 		//enforcingCollision = Boolean.FALSE;
 		if(!enforcingCollision)
 			return;
@@ -163,26 +156,6 @@ public class MainPlayerEntity extends PlayerEntity {
 		return enforcingCollision;
 	}
 
-	public double getLastX() {
-		return lastX;
-	}
-
-	public double getLastY() {
-		return lastY;
-	}
-
-	public double getLastZ() {
-		return lastZ;
-	}
-
-	public double getLastYaw() {
-		return lastYaw;
-	}
-
-	public double getLastPitch() {
-		return lastPitch;
-	}
-
 	public int getHunger() {
 		return hunger;
 	}
@@ -226,26 +199,6 @@ public class MainPlayerEntity extends PlayerEntity {
 	
 	public void setEnforcingCollision(boolean enforcingCollision) {
 		this.enforcingCollision = enforcingCollision;
-	}
-
-	public void setLastX(double lastX) {
-		this.lastX = lastX;
-	}
-
-	public void setLastY(double lastY) {
-		this.lastY = lastY;
-	}
-
-	public void setLastZ(double lastZ) {
-		this.lastZ = lastZ;
-	}
-
-	public void setLastYaw(double lastYaw) {
-		this.lastYaw = lastYaw;
-	}
-
-	public void setLastPitch(double lastPitch) {
-		this.lastPitch = lastPitch;
 	}
 
 	public void setHunger(int hunger) {
@@ -323,13 +276,13 @@ public class MainPlayerEntity extends PlayerEntity {
 	private float getRotationX(double x, double y, double z) {
 		double d = this.x - x;
 		double d1 = this.z - z;
-		return (float) (((Math.atan2(d1, d) * 180D) / Math.PI) + 90) % 360;
+		return (float) (Math.toDegrees(Math.atan2(d1, d)) + 90) % 360;
 	}
 
 	private float getRotationY(double x, double y, double z) {
-		double dis1 = y - (this.y + 1);
-		double dis2 = Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(z - this.z, 2));
-		return (float) ((Math.atan2(dis2, dis1) * 180D) / Math.PI) - 90F;
+		double dis1 = y - (this.y + 1.5);
+		double dis2 = Math.hypot(x - this.x, z - this.z);
+		return (float) Math.toDegrees(Math.atan2(dis2, dis1)) - 90F;
 	}
 
 	@Override
@@ -467,5 +420,14 @@ public class MainPlayerEntity extends PlayerEntity {
 
 	public void walkTo(BlockLocation location) {
 		world.getBot().setActivity(new WalkActivity(world.getBot(), location));
+	}
+	
+	public void jump() {
+		boolean grounded = isOnGround();
+		if(!grounded && !isInMaterial(BlockType.WATER, BlockType.STATIONARY_WATER, BlockType.LAVA, BlockType.STATIONARY_LAVA, BlockType.LADDER, BlockType.VINE))
+			return;
+		if(grounded)
+			setVelocityY(0);
+		accelerate(0, Math.PI / 2, 0.42, 0.42);
 	}
 }
