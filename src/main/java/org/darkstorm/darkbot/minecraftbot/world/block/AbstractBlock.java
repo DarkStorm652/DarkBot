@@ -53,7 +53,7 @@ public abstract class AbstractBlock implements Block {
 	@Override
 	public BoundingBox getConvexBoundingBox() {
 		double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
-		double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE, maxZ = Double.MIN_VALUE;
+		double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
 		
 		for(BoundingBox box : getBoundingBoxes()) {
 			minX = Math.min(minX, box.getMinX());
