@@ -1,7 +1,5 @@
 package org.darkstorm.darkbot.minecraftbot.world.block;
 
-import java.util.Comparator;
-
 import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
 
 public final class BlockLocation {

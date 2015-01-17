@@ -15,7 +15,7 @@ public enum BlockType {
 	DIRT                  (block(3).toolType(SHOVEL)),
 	COBBLESTONE           (block(4).toolType(PICKAXE)),
 	WOOD                  (block(5).toolType(AXE)),
-	SAPLING               (block(6).flags(INTERACTABLE)),
+	SAPLING               (block(6).flags(PLACEABLE)),
 	BEDROCK               (block(7).flags(SOLID | PLACEABLE | INDESTRUCTABLE)),
 	WATER                 (block(8).flags(INDESTRUCTABLE)),
 	STATIONARY_WATER      (block(9).flags(INDESTRUCTABLE)),
@@ -62,7 +62,9 @@ public enum BlockType {
 	TORCH                 (block(50).flags(PLACEABLE)),
 	FIRE                  (block(51).flags(INDESTRUCTABLE)),
 	MOB_SPAWNER           (block(52).toolType(PICKAXE)),
-	WOOD_STAIRS           (block(53).toolType(AXE)),
+	WOOD_STAIRS           (block(53).toolType(AXE).factory(new StairBlockFactoryProvider(StairBlock.Material.OAK_WOOD))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	CHEST                 (block(54).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
 	REDSTONE_WIRE         (block(55).flags(PLACEABLE)),
 	DIAMOND_ORE           (block(56).toolType(PICKAXE)),
@@ -503,6 +505,140 @@ public enum BlockType {
 				@Override
 				public FenceGateBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
 					return new FenceGateBlockImpl(world, chunk, location, type.getId(), metadata);
+				}
+			};
+		}
+	}
+	
+	protected static class StairBlockFactoryProvider implements BlockFactoryProvider<StairBlock> {
+		private static class StairBlockImpl extends AbstractBlock implements StairBlock {
+			private final int x, y, z;
+			private final BoundingBox bottom, topPXPZ, topPXNZ, topNXPZ, topNXNZ;
+			
+			private final Material material;
+			private final Direction direction;
+			private final boolean upsideDown;
+			
+			
+			private StairBlockImpl(World world, Chunk chunk, BlockLocation location, int id, int metadata, Material material) {
+				super(world, chunk, location, id, metadata);
+				
+				this.material = material;
+				switch(metadata & 0x3) {
+				default:
+				case 0: direction = Direction.NORTH; break;
+				case 1: direction = Direction.SOUTH; break;
+				case 2: direction = Direction.EAST; break;
+				case 3: direction = Direction.WEST; break;
+				}
+				upsideDown = (metadata & 0x4) != 0;
+				
+				x = location.getX();
+				y = location.getY();
+				z = location.getZ();
+				
+				double by = y, ty = y + 0.5;
+				if(upsideDown) {
+					by = y + 0.5;
+					ty = y;
+				}
+				
+				bottom =  BoundingBox.getBoundingBox(x,       by, z,       x + 1,   by + 0.5, z + 1);
+				topPXPZ = BoundingBox.getBoundingBox(x,       ty, z,       x + 0.5, ty + 0.5, z + 0.5);
+				topPXNZ = BoundingBox.getBoundingBox(x,       ty, z + 0.5, x + 0.5, ty + 0.5, z + 1);
+				topNXPZ = BoundingBox.getBoundingBox(x + 0.5, ty, z,       x + 1,   ty + 0.5, z + 0.5);
+				topNXNZ = BoundingBox.getBoundingBox(x + 0.5, ty, z + 0.5, x + 1,   ty + 0.5, z + 1);
+			}
+			
+			@Override
+			public BoundingBox[] getBoundingBoxes() {
+				boolean pxpz = true, pxnz = true, nxnz = false, nxpz = false;
+				
+				boolean connectedLeft = checkStair(Direction.WEST, Direction.NORTH);
+				boolean connectedRight = checkStair(Direction.EAST, Direction.NORTH);
+				if(!connectedLeft && checkStair(Direction.NORTH, Direction.EAST))
+					pxpz = false;
+				else if(!connectedRight && checkStair(Direction.NORTH, Direction.WEST))
+					pxnz = false;
+				else if(!connectedLeft && checkStair(Direction.SOUTH, Direction.WEST))
+					nxpz = true;
+				else if(!connectedRight && checkStair(Direction.SOUTH, Direction.EAST))
+					nxnz = true;
+				
+				int rotation = (4 - rotation(direction) + 2) % 4;
+				for(; rotation > 0; rotation--) {
+					boolean temp = pxpz;
+					pxpz = nxpz;
+					nxpz = nxnz;
+					nxnz = pxnz;
+					pxnz = temp;
+				}
+				
+				int size = 1 + (pxpz ? 1 : 0) + (pxnz ? 1 : 0) + (nxpz ? 1 : 0) + (nxnz ? 1 : 0), idx = 0;
+				BoundingBox[] boxes = new BoundingBox[size];
+				boxes[idx++] = bottom;
+				if(pxpz) boxes[idx++] = topPXPZ;
+				if(pxnz) boxes[idx++] = topPXNZ;
+				if(nxpz) boxes[idx++] = topNXPZ;
+				if(nxnz) boxes[idx++] = topNXNZ;
+				return boxes;
+			}
+			private boolean checkStair(Direction direction, Direction facing) {
+				direction = rotate(this.direction, rotation(direction));
+				facing = rotate(this.direction, rotation(facing));
+				
+				Block block = getWorld().getBlockAt(x + direction.getBlockOffsetX(), y + direction.getBlockOffsetY(), z + direction.getBlockOffsetZ());
+				if(block == null || !(block instanceof StairBlock) || upsideDown != ((StairBlock) block).isUpsideDown())
+					return false;
+				return facing == ((StairBlock) block).getDirection();
+			}
+			
+			private int rotation(Direction direction) {
+				switch(direction) {
+				default:
+				case NORTH: return 0;
+				case EAST: return 1;
+				case SOUTH: return 2;
+				case WEST: return 3;
+				}
+			}
+			private Direction rotate(Direction direction, int rotation) {
+				for(; rotation > 0; rotation--) {
+					switch(direction) {
+					default:
+					case NORTH: direction = Direction.EAST; break;
+					case EAST: direction = Direction.SOUTH; break;
+					case SOUTH: direction = Direction.WEST; break;
+					case WEST: direction = Direction.NORTH; break;
+					}
+				}
+				return direction;
+			}
+			
+			@Override public Material getMaterial() { return material; }
+			@Override public Direction getDirection() { return direction; }
+			@Override public boolean isUpsideDown() { return upsideDown; }
+		}
+		
+		private final StairBlock.Material material;
+		
+		public StairBlockFactoryProvider(StairBlock.Material material) {
+			this.material = material;
+		}
+		
+		@Override
+		public Class<StairBlock> getBlockClass() {
+			return StairBlock.class;
+		}
+		
+		@Override
+		public BlockFactory<StairBlock> provide(final BlockType type) {
+			return new BlockFactory<StairBlock>() {
+				@Override public BlockType getType() { return type; }
+				
+				@Override
+				public StairBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
+					return new StairBlockImpl(world, chunk, location, type.getId(), metadata, material);
 				}
 			};
 		}
