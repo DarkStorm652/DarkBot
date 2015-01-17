@@ -37,6 +37,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		taskManager.registerTask(new AvoidDeathTask(bot));
 		taskManager.registerTask(new DestroyingTask(bot));
 		taskManager.registerTask(new DerpTask(bot));
+		taskManager.registerTask(new TwerkTask(bot));
 
 		commandManager.register(new AttackAllCommand(this));
 		commandManager.register(new AttackCommand(this));
@@ -66,6 +67,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new ToolCommand(this));
 		commandManager.register(new WalkCommand(this));
 		commandManager.register(new DerpCommand(this));
+		commandManager.register(new TwerkCommand(this));
 		commandManager.register(new CrouchCommand(this));
 	}
 

@@ -5,13 +5,14 @@ import java.util.Random;
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
-public class DerpTask implements Task {
+public class TwerkTask implements Task {
 	private final MinecraftBot bot;
 	private final Random random = new Random();
-
+	
 	private boolean active;
+	private int timer;
 
-	public DerpTask(MinecraftBot bot) {
+	public TwerkTask(MinecraftBot bot) {
 		this.bot = bot;
 	}
 
@@ -33,9 +34,13 @@ public class DerpTask implements Task {
 
 	@Override
 	public void run() {
+		if(timer > 0) {
+			timer--;
+			return;
+		}
+		timer += 1 + random.nextInt(2);
 		MainPlayerEntity player = bot.getPlayer();
-		player.setYaw(random.nextDouble() * 360);
-		player.setPitch(random.nextDouble() * 360);
+		player.setCrouching(!player.isCrouching());
 	}
 
 	@Override
@@ -60,7 +65,7 @@ public class DerpTask implements Task {
 
 	@Override
 	public String getName() {
-		return "Derp";
+		return "Twerk";
 	}
 
 	@Override

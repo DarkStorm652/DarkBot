@@ -33,14 +33,16 @@ public class WalkCommand extends AbstractCommand {
 			World world = bot.getWorld();
 			int botY = (int) Math.floor(bot.getPlayer().getY());
 			for(int ty = botY + 1; ty > 0; ty--) {
-				if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))) {
+				if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))
+						&& world.isColliding(player.getBoundingBoxAt(x + 0.5, ty - 1, z + 0.5))) {
 					y = ty;
 					break;
 				}
 			}
 			if(y == -1) {
 				for(int ty = botY; ty < 256; ty++) {
-					if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))) {
+					if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))
+							&& world.isColliding(player.getBoundingBoxAt(x + 0.5, ty - 1, z + 0.5))) {
 						y = ty;
 						break;
 					}
