@@ -9,12 +9,13 @@ import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public class BlockPlaceActivity implements Activity {
-	public static final int DEFAULT_TIMEOUT = 100;
+	public static final int DEFAULT_TIMEOUT = 40;
 
 	private final MinecraftBot bot;
 
-	private BlockLocation location;
-	private int lastId, ticksWait;
+	private BlockLocation location, target;
+	private int lastId, timeout, face;
+	private boolean placing;
 
 	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location) {
 		this(bot, location, DEFAULT_TIMEOUT);
@@ -30,129 +31,81 @@ public class BlockPlaceActivity implements Activity {
 
 	public BlockPlaceActivity(MinecraftBot bot, BlockLocation location, int timeout, byte face) {
 		this.location = location;
-		lastId = bot.getWorld().getBlockIdAt(location);
+		this.lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
+		this.timeout = timeout;
+		this.face = face;
+		
 		MainPlayerEntity player = bot.getPlayer();
-		if(player == null)
+		if(player == null) {
+			timeout = 0;
 			return;
-		PlayerInventory inventory = player.getInventory();
+		}
+		
 		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
 		System.out.println("Placing with face: " + face);
-		if(face == -1)
+		if(face == -1) {
+			timeout = 0;
 			return;
-		location = getOffsetBlock(location, face);
-		if(location == null)
+		}
+		
+		this.target = getOffsetBlock(location, face);
+		if(target == null) {
+			timeout = 0;
 			return;
-		int x = location.getX(), y = location.getY(), z = location.getZ();
+		}
+		int x = target.getX(), y = target.getY(), z = target.getZ();
 		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
-		EventBus eventBus = bot.getEventBus();
-		eventBus.fire(new PlayerRotateEvent(player));
-		eventBus.fire(new ArmSwingEvent());
-		eventBus.fire(new BlockPlaceEvent(inventory.getCurrentHeldItem(), x, y, z, face));
-		ticksWait = timeout;
 	}
 
 	@Override
 	public void run() {
-		if(ticksWait > 0) {
+		MainPlayerEntity player = bot.getPlayer();
+		int originalX = location.getX(), originalY = location.getY(), originalZ = location.getZ();
+		int x = target.getX(), y = target.getY(), z = target.getZ();
+		player.face(x + ((originalX - x) / 2.0D) + 0.5, y + ((originalY - y) / 2.0D), z + ((originalZ - z) / 2.0D) + 0.5);
+		
+		if(!placing) {
+			PlayerInventory inventory = player.getInventory();
+			EventBus eventBus = bot.getEventBus();
+			eventBus.fire(new ArmSwingEvent());
+			eventBus.fire(new BlockPlaceEvent(inventory.getCurrentHeldItem(), x, y, z, face));
+			placing = true;
+		}
+		
+		if(timeout > 0) {
 			if(lastId != bot.getWorld().getBlockIdAt(location))
-				ticksWait = 1;
-			ticksWait--;
+				timeout = 0;
+			else
+				timeout--;
 		}
 	}
 
 	@Override
 	public boolean isActive() {
-		return ticksWait > 0;
+		return timeout > 0 && target != null;
 	}
 
 	@Override
 	public void stop() {
-		ticksWait = 0;
+		timeout = 0;
 	}
 
 	private static byte getPlacementBlockFaceAt(World world, BlockLocation location) {
-		// Stack<Integer> blockFaces = new Stack<>();
 		int x = location.getX(), y = location.getY(), z = location.getZ();
 		if(isPlaceable(world.getBlockIdAt(x, y - 1, z)))
 			return 1;
-		else if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
-			return 2;
-		else if(isPlaceable(world.getBlockIdAt(x, y, z - 1)))
-			return 3;
 		else if(isPlaceable(world.getBlockIdAt(x + 1, y, z)))
 			return 4;
 		else if(isPlaceable(world.getBlockIdAt(x - 1, y, z)))
 			return 5;
+		else if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
+			return 2;
+		else if(isPlaceable(world.getBlockIdAt(x, y, z - 1)))
+			return 3;
 		else if(isPlaceable(world.getBlockIdAt(x, y + 1, z)))
 			return 0;
 		return -1;
-		/*if(z > z1) {
-			
-		}
-		if(z == z1) {
-			if(isPlaceable(world.getBlockIdAt(x, y, z - 1)))
-				blockFaces.push(3);
-			if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
-				blockFaces.push(2);
-		}
-		if(x == x1) {
-			if(isPlaceable(world.getBlockIdAt(x - 1, y, z)))
-				blockFaces.push(5);
-			if(isPlaceable(world.getBlockIdAt(x + 1, y, z)))
-				blockFaces.push(4);
-		}
-		if(z > z1) {
-			if(isPlaceable(world.getBlockIdAt(x, y, z - 1)))
-				blockFaces.push(3);
-			if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
-				blockFaces.push(2);
-		} else if(z < z1) {
-			if(isPlaceable(world.getBlockIdAt(x, y, z + 1)))
-				blockFaces.push(2);
-			if(isPlaceable(world.getBlockIdAt(x, y, z - 1)))
-				blockFaces.push(3);
-		}
-		if(y > y1) {
-			if(isPlaceable(world.getBlockIdAt(x, y - 1, z)))
-				blockFaces.push(1);
-			if(isPlaceable(world.getBlockIdAt(x, y + 1, z)))
-				blockFaces.push(0);
-		} else {
-			if(isPlaceable(world.getBlockIdAt(x, y + 1, z)))
-				blockFaces.push(0);
-			if(isPlaceable(world.getBlockIdAt(x, y - 1, z)))
-				blockFaces.push(1);
-		}
-		if(x > x1) {
-			if(isPlaceable(world.getBlockIdAt(x - 1, y, z)))
-				blockFaces.push(5);
-			if(isPlaceable(world.getBlockIdAt(x + 1, y, z)))
-				blockFaces.push(4);
-		}
-		if(x < x1) {
-			if(isPlaceable(world.getBlockIdAt(x + 1, y, z)))
-				blockFaces.push(4);
-			if(isPlaceable(world.getBlockIdAt(x - 1, y, z)))
-				blockFaces.push(5);
-		}
-		if(blockFaces.isEmpty())
-			return -1;
-		return blockFaces.pop();*/
-		/*if(isPlaceable(world.getBlockIdAt(x, y - 1, z))) {
-			return 1;
-		} else if(isPlaceable(world.getBlockIdAt(x, y, z + 1))) {
-			return 2;
-		} else if(isPlaceable(world.getBlockIdAt(x + 1, y, z))) {
-			return 4;
-		} else if(isPlaceable(world.getBlockIdAt(x, y, z - 1))) {
-			return 3;
-		} else if(isPlaceable(world.getBlockIdAt(x - 1, y, z))) {
-			return 5;
-		} else if(isPlaceable(world.getBlockIdAt(x, y + 1, z))) {
-			return 0;
-		} else
-			return -1;*/
 	}
 
 	private static boolean isPlaceable(int id) {

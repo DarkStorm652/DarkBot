@@ -12,10 +12,7 @@ import org.darkstorm.darkbot.minecraftbot.event.*;
 import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
 import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.event.world.SpawnEvent;
 import org.darkstorm.darkbot.minecraftbot.util.Util;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
 
 public abstract class MinecraftBotWrapper implements EventListener {
 	protected final MinecraftBot bot;
@@ -28,7 +25,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		this.bot = bot;
 		
 		bot.setMessageDelay(2000);
-		bot.setInventoryDelay(15);
+		bot.setInventoryDelay(4);
 
 		commandManager = new BasicCommandManager(this);
 		bot.getEventBus().register(this);

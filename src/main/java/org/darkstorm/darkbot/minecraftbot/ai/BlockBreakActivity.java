@@ -6,12 +6,14 @@ import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
 import org.darkstorm.darkbot.minecraftbot.world.World;
 import org.darkstorm.darkbot.minecraftbot.world.block.*;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.darkbot.minecraftbot.world.item.ToolType;
 
 public class BlockBreakActivity implements Activity {
 	private final MinecraftBot bot;
 
 	private BlockLocation location;
 	private int lastId, timeout, wait;
+	private boolean breaking;
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location) {
 		this(bot, location, 10 * 20);
@@ -19,35 +21,55 @@ public class BlockBreakActivity implements Activity {
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location, int timeout) {
 		this.location = location;
-		lastId = bot.getWorld().getBlockIdAt(location);
+		this.lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
-		int x = location.getX(), y = location.getY(), z = location.getZ();
+		this.timeout = timeout;
+		
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
-		if(player == null)
+		if(player == null || world == null)
 			return;
 		int face = getBreakBlockFaceAt(location);
 		if(face == -1)
 			return;
+		
+		int x = location.getX(), y = location.getY(), z = location.getZ();
 		player.face(x + 0.5, y + 0.5, z + 0.5);
+		
 		int idAbove = world.getBlockIdAt(x, y + 1, z);
 		if(idAbove == 12 || idAbove == 13)
-			wait = 30;
-		player.switchTools(BlockType.getById(world.getBlockIdAt(location)).getToolType());
-		EventBus eventBus = bot.getEventBus();
-		eventBus.fire(new PlayerRotateEvent(player));
-		eventBus.fire(new ArmSwingEvent());
-		eventBus.fire(new BlockBreakStartEvent(x, y, z, face));
-		eventBus.fire(new BlockBreakCompleteEvent(x, y, z, face));
-		this.timeout = timeout;
+			wait = 10;
+		
+		ToolType toolType = BlockType.getById(world.getBlockIdAt(location)).getToolType();
+		if(toolType != null)
+			player.switchTools(toolType);
+		
 	}
 
 	@Override
 	public void run() {
+		MainPlayerEntity player = bot.getPlayer();
+		int x = location.getX(), y = location.getY(), z = location.getZ();
+		player.face(x + 0.5, y + 0.5, z + 0.5);
+		
+		if(!breaking) {
+			int face = getBreakBlockFaceAt(location);
+			if(face == -1) {
+				timeout = wait = 0;
+				return;
+			}
+			EventBus eventBus = bot.getEventBus();
+			eventBus.fire(new ArmSwingEvent());
+			eventBus.fire(new BlockBreakStartEvent(x, y, z, face));
+			eventBus.fire(new BlockBreakCompleteEvent(x, y, z, face));
+			breaking = true;
+		}
+		
 		if(timeout > 0) {
 			if(lastId != bot.getWorld().getBlockIdAt(location))
-				timeout = 1;
-			timeout--;
+				timeout = 0;
+			else if(--timeout == 0)
+				wait = 0;
 		} else if(wait > 0)
 			wait--;
 	}
@@ -83,6 +105,6 @@ public class BlockBreakActivity implements Activity {
 
 	private boolean isEmpty(int id) {
 		BlockType type = BlockType.getById(id);
-		return !type.isSolid() && !type.isInteractable() && !type.isPlaceable();
+		return !type.isSolid();
 	}
 }
