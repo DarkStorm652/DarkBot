@@ -17,7 +17,7 @@ public class WalkCommand extends AbstractCommand {
 		MainPlayerEntity player = bot.getPlayer();
 		BlockLocation location = new BlockLocation(player.getLocation());
 		boolean relativeX = args[0].charAt(0) == '+', relativeZ = args[args.length - 1].charAt(0) == '+';
-		int x, y, z;
+		int x, y = -1, z;
 
 		if(relativeX)
 			x = location.getX() + Integer.parseInt(args[0].substring(1));
@@ -31,10 +31,20 @@ public class WalkCommand extends AbstractCommand {
 
 		if(args.length < 3) {
 			World world = bot.getWorld();
-			for(y = 256; y > 0; y--) {
-				int id = world.getBlockIdAt(x, y - 1, z);
-				if(BlockType.getById(id).isSolid())
+			int botY = (int) Math.floor(bot.getPlayer().getY());
+			for(int ty = botY + 1; ty > 0; ty--) {
+				if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))) {
+					y = ty;
 					break;
+				}
+			}
+			if(y == -1) {
+				for(int ty = botY; ty < 256; ty++) {
+					if(!world.isColliding(player.getBoundingBoxAt(x + 0.5, ty, z + 0.5))) {
+						y = ty;
+						break;
+					}
+				}
 			}
 			if(y <= 0) {
 				controller.say("No appropriate walkable y value!");

@@ -52,6 +52,7 @@ public class FollowTask implements Task {
 		MainPlayerEntity player = bot.getPlayer();
 		if(following == null || player == null)
 			return;
+		player.face(following.getX(), following.getY() + 1, following.getZ());
 		BlockLocation location = new BlockLocation(following.getLocation());
 		if((int) Math.ceil(following.getY()) != location.getY() && following.isOnGround())
 			location = location.offset(0, 1, 0);
@@ -79,11 +80,12 @@ public class FollowTask implements Task {
 			MainPlayerEntity player = bot.getPlayer();
 			if(player == null)
 				return true;
-			player.face(following.getX(), following.getY() + 1, following.getZ());
 			Activity activity = bot.getActivity();
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
 			WalkActivity walkActivity = (WalkActivity) activity;
+			if(walkActivity.isMoving())
+				player.face(following.getX(), following.getY() + 1, following.getZ());
 			if(walkActivity.isActive() && player.isOnGround() && (player.getDistanceTo(following) < 2 || following.getDistanceTo(walkActivity.getTarget()) > 3))
 				bot.setActivity(null);
 		}

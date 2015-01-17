@@ -256,7 +256,6 @@ public final class BasicWorld implements World, EventListener {
 
 	@EventHandler
 	public void onBlockChange(BlockChangeEvent event) {
-		System.out.println("BLOCK CHANGE AT [" + event.getX() + ", " + event.getY() + ", " + event.getZ() + " TO " + event.getId());
 		setBlockIdAt(event.getId(), event.getX(), event.getY(), event.getZ());
 		setBlockMetadataAt(event.getMetadata(), event.getX(), event.getY(), event.getZ());
 	}

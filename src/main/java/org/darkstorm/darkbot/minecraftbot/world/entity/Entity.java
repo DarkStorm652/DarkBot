@@ -170,7 +170,7 @@ public abstract class Entity {
 	
 	public boolean isOnGround() {
 		BoundingBox bounds = getBoundingBox();
-		Set<Block> colliding = world.getCollidingBlocks(bounds.offset(0, -0.1, 0));
+		Set<Block> colliding = world.getCollidingBlocks(bounds.offset(0, -0.05, 0));
 		colliding.removeAll(world.getCollidingBlocks(bounds));
 		return !colliding.isEmpty();
 	}
