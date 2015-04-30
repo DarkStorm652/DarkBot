@@ -36,7 +36,7 @@ public class MinecraftBot implements EventListener {
 	private World world;
 
 	private double lastX, lastY, lastZ, lastYaw, lastPitch;
-	private boolean hasSpawned = false, movementDisabled = false;
+	private boolean hasSpawned, movementDisabled, muted;
 	private int messageDelay, inventoryDelay;
 	private long lastMessage;
 	private Activity activity;
@@ -251,6 +251,8 @@ public class MinecraftBot implements EventListener {
 	}
 
 	public synchronized void say(String message) {
+		if(muted)
+			return;
 		while(message.length() > MAX_CHAT_LENGTH) {
 			long elapsed = System.currentTimeMillis() - lastMessage;
 			if(elapsed < messageDelay) {
@@ -354,6 +356,14 @@ public class MinecraftBot implements EventListener {
 
 	public void setMovementDisabled(boolean movementDisabled) {
 		this.movementDisabled = movementDisabled;
+	}
+	
+	public boolean isMuted() {
+		return muted;
+	}
+	
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 	public int getMessageDelay() {
