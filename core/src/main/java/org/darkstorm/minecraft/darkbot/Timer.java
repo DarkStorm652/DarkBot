@@ -1,4 +1,4 @@
-package org.darkstorm.minecraft.darkbot.util;
+package org.darkstorm.minecraft.darkbot;
 
 public class Timer {
 	private int frames;

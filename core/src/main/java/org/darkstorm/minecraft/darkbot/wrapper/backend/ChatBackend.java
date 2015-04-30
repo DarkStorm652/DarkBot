@@ -1,9 +1,8 @@
 package org.darkstorm.minecraft.darkbot.wrapper.backend;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.ChatReceivedEvent;
-import org.darkstorm.minecraft.darkbot.util.Util;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.CommandException;
 

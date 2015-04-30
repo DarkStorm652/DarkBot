@@ -14,7 +14,6 @@ import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
 import org.darkstorm.minecraft.darkbot.event.world.SpawnEvent;
 import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.*;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.*;

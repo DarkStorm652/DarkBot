@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.darkstorm.minecraft.darkbot.util;
+package org.darkstorm.minecraft.darkbot;
 
 import java.util.*;
 

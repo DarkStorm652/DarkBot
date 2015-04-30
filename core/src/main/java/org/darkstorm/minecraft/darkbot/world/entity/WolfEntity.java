@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.World;
 
 public class WolfEntity extends TameableEntity {

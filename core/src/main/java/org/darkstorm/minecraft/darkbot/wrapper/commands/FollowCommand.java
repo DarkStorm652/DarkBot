@@ -1,7 +1,7 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
+import org.darkstorm.minecraft.darkbot.Util;
 import org.darkstorm.minecraft.darkbot.ai.FollowTask;
-import org.darkstorm.minecraft.darkbot.util.Util;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 

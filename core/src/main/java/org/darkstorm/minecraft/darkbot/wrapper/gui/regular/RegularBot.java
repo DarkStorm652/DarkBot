@@ -8,13 +8,13 @@ import javax.naming.AuthenticationException;
 
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestRespawnEvent;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
-import org.darkstorm.minecraft.darkbot.util.*;
-import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.commands.*;
 
 public class RegularBot implements EventListener {

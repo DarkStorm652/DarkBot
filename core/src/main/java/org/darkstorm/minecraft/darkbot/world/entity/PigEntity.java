@@ -1,8 +1,7 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.EntityUseEvent;
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.World;
 
 public class PigEntity extends PassiveEntity {

@@ -15,15 +15,13 @@ import javax.swing.Timer;
 
 import joptsimple.*;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.auth.*;
 import org.darkstorm.minecraft.darkbot.event.EventHandler;
 import org.darkstorm.minecraft.darkbot.event.general.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.ChatReceivedEvent;
 import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.*;
-import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;

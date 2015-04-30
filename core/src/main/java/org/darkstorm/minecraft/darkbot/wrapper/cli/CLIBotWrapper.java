@@ -6,12 +6,12 @@ import java.util.regex.*;
 
 import joptsimple.*;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.auth.*;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.*;
-import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;

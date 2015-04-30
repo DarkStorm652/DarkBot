@@ -8,8 +8,7 @@ import org.apache.http.*;
 import org.apache.http.auth.Credentials;
 import org.apache.http.impl.client.ProxyClient;
 import org.apache.http.params.HttpConnectionParams;
-import org.darkstorm.minecraft.darkbot.util.ProxyData;
-import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 
 public class Connection {
 	private static final ProxyClient proxyClient = createClient();

@@ -15,7 +15,6 @@ import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
 import org.darkstorm.minecraft.darkbot.event.io.*;
 import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.*;
 
 public class SocketConnectionHandler implements ConnectionHandler, EventListener {
 	private final MinecraftBot bot;

@@ -38,7 +38,7 @@ public class RegularBotOptionsUI extends BotOptionsUI {
 		initComponents();
 		tasks = new HashMap<String, Class<? extends Task>>();
 		try {
-			for(Class<?> c : org.darkstorm.minecraft.darkbot.util.Util
+			for(Class<?> c : org.darkstorm.minecraft.darkbot.Util
 					.getClassesInPackage(Task.class.getPackage().getName())) {
 				try {
 					if(Task.class.isAssignableFrom(c) && !Task.class.equals(c))

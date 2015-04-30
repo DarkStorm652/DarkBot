@@ -8,7 +8,7 @@ import java.util.*;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.darkstorm.minecraft.darkbot.auth.YggdrasilSession.Profile;
-import org.darkstorm.minecraft.darkbot.util.ProxyData;
+import org.darkstorm.minecraft.darkbot.connection.ProxyData;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
