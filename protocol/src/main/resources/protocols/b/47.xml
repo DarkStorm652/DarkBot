@@ -1,0 +1,973 @@
+<protocol version="47" family="type-b">
+	<packets>
+		<state name="handshake" initial="true">
+			<outbound>
+				<packet name="handshake" id="00">
+					<field name="protocol-version" type="varint" />
+					<field name="server-host" type="string" />
+					<field name="server-port" type="ushort" />
+					<field name="next-state" type="varint" />
+				</packet>
+			</outbound>
+		</state>
+		
+		<state name="status">
+			<inbound>
+				<packet name="response" id="00">
+					<field name="status">
+						<type name="string">
+							<limit>32767</limit>
+						</type>
+					</field>
+				</packet>
+				<packet name="ping" id="01">
+					<field name="time" type="long" />
+				</packet>
+			</inbound>
+			
+			<outbound>
+				<packet name="request" id="00" />
+				<packet name="ping" id="01">
+					<field name="time" type="long" />
+				</packet>
+			</outbound>
+		</state>
+		
+		<state name="login">
+			<inbound>
+				<packet name="disconnect" id="00">
+					<field name="reason" type="string" />
+				</packet>
+				<packet name="encryption-request" id="01">
+					<field name="server-id" type="string" />
+					<field name="public-key">
+						<type name="array">
+							<array-type>byte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+					<field name="verify-token">
+						<type name="array">
+							<array-type>byte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="login-success" id="02">
+					<field name="uuid" type="string" />
+					<field name="username" type="string" />
+				</packet>
+				<packet name="set-compression" id="03">
+					<field name="threshold" type="varint" />
+				</packet>
+			</inbound>
+			
+			<outbound>
+				<packet name="login-start" id="00">
+					<field name="username" type="string" />
+				</packet>
+				<packet name="encryption-response" id="01">
+					<field name="shared-secret">
+						<type name="array">
+							<array-type>byte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+					<field name="verify-token">
+						<type name="array">
+							<array-type>byte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+			</outbound>
+		</state>
+		
+		<state name="play">
+			<inbound>
+				<packet name="ping" id="00">
+					<field name="id" type="varint" />
+				</packet>
+				<packet name="join-game" id="01">
+					<field name="entity-id" type="int" />
+					<field name="game-mode" type="ubyte" />
+					<field name="dimension" type="byte" />
+					<field name="difficulty" type="ubyte" />
+					<field name="max-players" type="ubyte" />
+					<field name="level-type" type="string" />
+					<field name="reduced-debug-info" type="boolean" />
+				</packet>
+				<packet name="send-chat-message" id="02">
+					<field name="message">
+						<type name="string">
+							<limit>32767</limit>
+							<trim>true</trim>
+						</type>
+					</field>
+					<field name="position" type="byte" />
+				</packet>
+				<packet name="set-time" id="03">
+					<field name="age" type="long" />
+					<field name="time" type="long" />
+				</packet>
+				<packet name="set-entity-equipment" id="04">
+					<field name="entity-id" type="varint" />
+					<field name="slot" type="short" />
+					<field name="item" type="slot" />
+				</packet>
+				<packet name="set-spawn-position" id="05">
+					<field name="location" type="position" />
+				</packet>
+				<packet name="set-health" id="06">
+					<field name="health" type="float" />
+					<field name="food" type="varint" />
+					<field name="saturation" type="float" />
+				</packet>
+				<packet name="respawn" id="07">
+					<field name="dimension" type="int" />
+					<field name="difficulty" type="ubyte" />
+					<field name="game-mode" type="ubyte" />
+					<field name="level-type" type="string" />
+				</packet>
+				<packet name="set-position" id="08">
+					<field name="x" type="double" />
+					<field name="y" type="double" />
+					<field name="z" type="double" />
+					<field name="yaw" type="float" />
+					<field name="pitch" type="float" />
+					<field name="rel-flags" type="byte" />
+				</packet>
+				<packet name="set-held-item" id="09">
+					<field name="slot" type="byte" />
+				</packet>
+				<packet name="enter-bed" id="0A">
+					<field name="entity-id" type="varint" />
+					<field name="location" type="position" />
+				</packet>
+				<packet name="show-animation" id="0B">
+					<field name="entity-id" type="varint" />
+					<field name="animation" type="ubyte" />
+				</packet>
+				<packet name="spawn-player" id="0C">
+					<field name="entity-id" type="varint" />
+					<field name="player-uuid" type="uuid" />
+					<field name="x" type="fixed-point" />
+					<field name="y" type="fixed-point" />
+					<field name="z" type="fixed-point" />
+					<field name="yaw" type="byte" />
+					<field name="pitch" type="byte" />
+					<field name="current-item" type="short" />
+					<field name="metadata" type="metadata" />
+				</packet>
+				<packet name="collect-item" id="0D">
+					<field name="collected-entity-id" type="varint" />
+					<field name="collector-entity-id" type="varint" />
+				</packet>
+				<packet name="spawn-object" id="0E">
+					<field name="entity-id" type="varint" />
+					<field name="type" type="byte" />
+					<field name="x" type="fixed-point" />
+					<field name="y" type="fixed-point" />
+					<field name="z" type="fixed-point" />
+					<field name="pitch" type="angle" />
+					<field name="yaw" type="angle" />
+					<field name="object-data" type="int" />
+					<if>
+						<condition>
+							<not><equals field="data-flag">0</equals></not>
+						</condition>
+						<field name="velocity-x" type="velocity" />
+						<field name="velocity-y" type="velocity" />
+						<field name="velocity-z" type="velocity" />
+					</if>
+				</packet>
+				<packet name="spawn-mob" id="0F">
+					<field name="entity-id" type="varint" />
+					<field name="type" type="ubyte" />
+					<field name="x" type="int" />
+					<field name="y" type="int" />
+					<field name="z" type="int" />
+					<field name="yaw" type="byte" />
+					<field name="pitch" type="byte" />
+					<field name="head-pitch" type="byte" />
+					<field name="velocity-x" type="velocity" />
+					<field name="velocity-y" type="velocity" />
+					<field name="velocity-z" type="velocity" />
+					<field name="metadata" type="metadata" />
+				</packet>
+				<packet name="spawn-painting" id="10">
+					<field name="entity-id" type="varint" />
+					<field name="title">
+						<type name="string">
+							<limit>13</limit>
+						</type>
+					</field>
+					<field name="location" type="position" />
+					<field name="direction" type="ubyte" />
+				</packet>
+				<packet name="spawn-exp-orb" id="11">
+					<field name="entity-id" type="varint" />
+					<field name="x" type="fixed-point" />
+					<field name="y" type="fixed-point" />
+					<field name="z" type="fixed-point" />
+					<field name="exp" type="short" />
+				</packet>
+				<packet name="entity-velocity" id="12">
+					<field name="entity-id" type="varint" />
+					<field name="velocity-x" type="velocity" />
+					<field name="velocity-y" type="velocity" />
+					<field name="velocity-z" type="velocity" />
+				</packet>
+				<packet name="destroy-entities" id="13">
+					<field name="entity-ids">
+						<type name="array">
+							<array-type>varint</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="update-entity" id="14">
+					<field name="entity-id" type="varint" />
+				</packet>
+				<packet name="set-entity-movement" id="15">
+					<field name="entity-id" type="varint" />
+					<field name="x-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="y-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="z-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-entity-rotation" id="16">
+					<field name="entity-id" type="varint" />
+					<field name="yaw" type="angle" />
+					<field name="pitch" type="angle" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-entity-movement-rotation" id="17">
+					<field name="x-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="y-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="z-off">
+						<type name="fixed-point">
+							<base-type>byte</base-type>
+						</type>
+					</field>
+					<field name="yaw" type="angle" />
+					<field name="pitch" type="angle" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-entity-position" id="18">
+					<field name="entity-id" type="varint" />
+					<field name="x" type="fixed-point" />
+					<field name="y" type="fixed-point" />
+					<field name="z" type="fixed-point" />
+					<field name="yaw" type="angle" />
+					<field name="pitch" type="angle" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-entity-head-rotation" id="19">
+					<field name="entity-id" type="varint" />
+					<field name="head-yaw" type="angle" />
+				</packet>
+				<packet name="show-entity-status" id="1A">
+					<field name="entity-id" type="varint" />
+					<field name="status" type="byte" />
+				</packet>
+				<packet name="attach-entity" id="1B">
+					<field name="entity-id" type="int" />
+					<field name="vehicle-id" type="int" />
+					<field name="leash" type="boolean" />
+				</packet>
+				<packet name="set-entity-metadata" id="1C">
+					<field name="entity-id" type="varint" />
+					<field name="metadata" type="metadata" />
+				</packet>
+				<packet name="add-entity-effect" id="1D">
+					<field name="entity-id" type="varint" />
+					<field name="effect-id" type="byte" />
+					<field name="amplifier" type="byte" />
+					<field name="duration" type="varint" />
+					<field name="hide-particles" type="boolean" />
+				</packet>
+				<packet name="remove-entity-effect" id="1E">
+					<field name="entity-id" type="varint" />
+					<field name="effect-id" type="byte" />
+				</packet>
+				<packet name="set-experience" id="1C">
+					<field name="experience-bar" type="float" />
+					<field name="level" type="varint" />
+					<field name="total-experience" type="varint" />
+				</packet>
+				<packet name="set-entity-properties" id="20">
+					<field name="entity-id" type="varint" />
+					<field name="properties">
+						<type name="array">
+							<array-compound>
+								<field name="key" type="string" />
+								<field name="value" type="double" />
+								<field name="modifiers">
+									<type name="array">
+										<array-compound>
+											<field name="uuid" type="uuid" />
+											<field name="amount" type="double" />
+											<field name="operation" type="byte" />
+										</array-compound>
+										<length-type>varint</length-type>
+									</type>
+								</field>
+							</array-compound>
+							<length-type>int</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-chunk" id="21">
+					<field name="x" type="int" />
+					<field name="z" type="int" />
+					<field name="all-sections" type="boolean" />
+					<field name="section-mask" type="ushort" />
+					<field name="data">
+						<type name="array">
+							<array-type>byte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-blocks" id="22">
+					<field name="chunk-x" type="int" />
+					<field name="chunk-z" type="int" />
+					<field name="blocks">
+						<type name="array">
+							<array-compound>
+								<field name="horizontal-pos" type="ubyte" />
+								<field name="y" type="ubyte" />
+								<field name="block-type" type="varint" />
+							</array-compound>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-block" id="23">
+					<field name="location" type="position" />
+					<field name="block-type" type="varint" />
+				</packet>
+				<packet name="show-block-action" id="24">
+					<field name="location" type="position" />
+					<field name="data-a" type="ubyte" />
+					<field name="data-b" type="ubyte" />
+					<field name="block-type" type="varint" />
+				</packet>
+				<packet name="show-block-break-animation" id="25">
+					<field name="entity-id" type="varint" />
+					<field name="location" type="position" />
+					<field name="destroy-stage" type="byte" />
+				</packet>
+				<packet name="set-chunks" id="26">
+					<field name="has-skylight" type="boolean" />
+					<field name="count" type="varint" />
+					<field name="meta">
+						<type name="array">
+							<array-compound>
+								<field name="x" type="int" />
+								<field name="z" type="int" />
+								<field name="section-mask" type="ushort" />
+							</array-compound>
+							<length-field>chunk-count</length-field>
+						</type>
+					</field>
+					<field name="data" type="remaining-buffer" />
+				</packet>
+				<packet name="spawn-explosion" id="27">
+					<field name="x" type="float" />
+					<field name="y" type="float" />
+					<field name="z" type="float" />
+					<field name="radius" type="float" />
+					<field name="blocks">
+						<type name="array">
+							<array-compound>
+								<field name="x-off" type="byte" />
+								<field name="y-off" type="byte" />
+								<field name="z-off" type="byte" />
+							</array-compound>
+							<length-type>int</length-type>
+						</type>
+					</field>
+					<field name="player-velocity-x" type="float" />
+					<field name="player-velocity-y" type="float" />
+					<field name="player-velocity-z" type="float" />
+				</packet>
+				<packet name="spawn-effect" id="28">
+					<field name="effect-id" type="int" />
+					<field name="location" type="position" />
+					<field name="data" type="int" />
+					<field name="fixed-volume" type="boolean" />
+				</packet>
+				<packet name="play-sound-effect" id="29">
+					<field name="sound-name" type="string" />
+					<field name="x">
+						<type name="fixed-point">
+							<divisor>8</divisor>
+						</type>
+					</field>
+					<field name="y">
+						<type name="fixed-point">
+							<divisor>8</divisor>
+						</type>
+					</field>
+					<field name="z">
+						<type name="fixed-point">
+							<divisor>8</divisor>
+						</type>
+					</field>
+					<field name="volume" type="float" />
+					<field name="pitch" type="ubyte" />
+				</packet>
+				<packet name="spawn-particle" id="2A">
+					<field name="particle-id" type="int" />
+					<field name="long-distance" type="boolean" />
+					<field name="x" type="float" />
+					<field name="y" type="float" />
+					<field name="z" type="float" />
+					<field name="x-random-off" type="float" />
+					<field name="y-random-off" type="float" />
+					<field name="z-random-off" type="float" />
+					<field name="particle-data" type="float" />
+					<field name="data">
+						<type name="array">
+							<array-type>varint</array-type>
+							<length-type>int</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="change-game-state" id="2B">
+					<field name="state" type="ubyte" />
+					<field name="value" type="float" />
+				</packet>
+				<packet name="spawn-global-entity" id="2C">
+					<field name="entity-id" type="varint" />
+					<field name="type" type="byte" />
+					<field name="x" type="fixed-point" />
+					<field name="y" type="fixed-point" />
+					<field name="z" type="fixed-point" />
+				</packet>
+				<packet name="open-window" id="2D">
+					<field name="window-id" type="ubyte" />
+					<field name="type" type="string" />
+					<field name="title" type="string" />
+					<field name="slot-count" type="ubyte" />
+					<field name="entity-id" type="int">
+						<condition>
+							<equals field="type">EntityHorse</equals>
+						</condition>
+					</field>
+				</packet>
+				<packet name="close-window" id="2E">
+					<field name="window-id" type="ubyte" />
+				</packet>
+				<packet name="set-window-item" id="2F">
+					<field name="window-id" type="ubyte" />
+					<field name="slot" type="short" />
+					<field name="item" type="slot" />
+				</packet>
+				<packet name="set-window-items" id="30">
+					<field name="window-id" type="ubyte" />
+					<field name="items">
+						<type name="array">
+							<array-type>slot</array-type>
+							<length-type>short</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-window-property" id="31">
+					<field name="window-id" type="ubyte" />
+					<field name="property" type="short" />
+					<field name="value" type="short" />
+				</packet>
+				<packet name="confirm-transaction" id="32">
+					<field name="window-id" type="byte" />
+					<field name="action" type="short" />
+					<field name="accepted" type="boolean" />
+				</packet>
+				<packet name="set-sign" id="33">
+					<field name="location" type="position" />
+					<field name="lines">
+						<type name="array">
+							<array-type>string</array-type>
+							<length-value>4</length-value>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-map" id="34">
+					<field name="map-id" type="varint" />
+					<field name="scale" type="byte" />
+					<field name="icons">
+						<type name="array">
+							<array-compound>
+								<field name="direction-and-type" type="byte" />
+								<field name="x" type="byte" />
+								<field name="z" type="byte" />
+							</array-compound>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+					<field name="columns" type="byte" />
+					<if>
+						<condition>
+							<greater-than field="columns">0</greater-than>
+						</condition>
+						<field name="rows" type="byte" />
+						<field name="x" type="byte" />
+						<field name="z" type="byte" />
+						<field name="data">
+							<type name="array">
+								<array-type>ubyte</array-type>
+								<length-type>varint</length-type>
+							</type>
+						</field>
+					</if>
+				</packet>
+				<packet name="update-block-entity" id="35">
+					<field name="location" type="position" />
+					<field name="action" type="ubyte" />
+					<field name="data" type="nbt" />
+				</packet>
+				<packet name="open-sign-editor" id="36">
+					<field name="location" type="position" />
+				</packet>
+				<packet name="set-statistics" id="37">
+					<field name="statistics">
+						<type name="array">
+							<array-compound>
+								<field name="name" type="string" />
+								<field name="value" type="varint" />
+							</array-compound>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="update-player-list-item" id="38">
+					<field name="action" type="varint" />
+					<field name="players">
+						<type name="array">
+							<array-compound>
+								<field name="uuid" type="uuid" />
+								<if>
+									<condition>
+										<equals field="action">0</equals>
+									</condition>
+									<field name="name" type="string" />
+									<field name="properties">
+										<type name="array">
+											<array-compound>
+												<field name="name" type="string" />
+												<field name="value" type="string" />
+												<field name="signed" type="boolean" />
+												<field name="signature" type="string">
+													<condition>
+														<equals field="signed">true</equals>
+													</condition>
+												</field>
+											</array-compound>
+											<length-type>varint</length-type>
+										</type>
+									</field>
+									<field name="game-mode" type="varint" />
+									<field name="ping" type="varint" />
+									<field name="has-display-name" type="boolean" />
+									<field name="display-name" type="string">
+										<condition>
+											<equals field="has-display-name">true</equals>
+										</condition>
+									</field>
+								</if>
+								<if>
+									<condition>
+										<equals field="action">1</equals>
+									</condition>
+									<field name="game-mode" type="varint" />
+								</if>
+								<if>
+									<condition>
+										<equals field="action">2</equals>
+									</condition>
+									<field name="ping" type="varint" />
+								</if>
+								<if>
+									<condition>
+										<equals field="action">3</equals>
+									</condition>
+									<field name="has-display-name" type="boolean" />
+									<field name="display-name" type="string">
+										<condition>
+											<equals field="has-display-name">true</equals>
+										</condition>
+									</field>
+								</if>
+							</array-compound>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-player-abilities" id="39">
+					<field name="flags" type="byte" />
+					<field name="flying-speed" type="float" />
+					<field name="walking-speed" type="float" />
+				</packet>
+				<packet name="set-tab-completion" id="3A">
+					<field name="matches">
+						<type name="array">
+							<array-type>string</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+				</packet>
+				<packet name="update-scoreboard-objective" id="3B">
+					<field name="name" type="string" />
+					<field name="mode" type="byte" />
+					<if>
+						<condition>
+							<or>
+								<equals field="mode">0</equals>
+								<equals field="mode">2</equals>
+							</or>
+						</condition>
+						<field name="value" type="string" />
+						<field name="type" type="string" />
+					</if>
+				</packet>
+				<packet name="update-score" id="3C">
+					<field name="name" type="string" />
+					<field name="action" type="byte" />
+					<field name="objective-name" type="string" />
+					<field name="value" type="varint">
+						<condition>
+							<not><equals field="action">1</equals></not>
+						</condition>
+					</field>
+				</packet>
+				<packet name="display-scoreboard" id="3D">
+					<field name="position" type="byte" />
+					<field name="score-name" type="string" />
+				</packet>
+				<packet name="update-team" id="3E">
+					<field name="name" type="string" />
+					<field name="mode" type="byte" />
+					<if>
+						<condition>
+							<or>
+								<equals field="mode">0</equals>
+								<equals field="mode">2</equals>
+							</or>
+						</condition>
+						<field name="display-name" type="string" />
+						<field name="prefix" type="string" />
+						<field name="suffix" type="string" />
+						<field name="friendly-fire" type="byte" />
+						<field name="name-tag-visibility" type="string" />
+						<field name="color" type="byte" />
+					</if>
+					<if>
+						<condition>
+							<or>
+								<equals field="mode">0</equals>
+								<equals field="mode">3</equals>
+								<equals field="mode">4</equals>
+							</or>
+						</condition>
+						<field name="players">
+							<type name="array">
+								<array-type>string</array-type>
+								<length-type>varint</length-type>
+							</type>
+						</field>
+					</if>
+				</packet>
+				<packet name="send-plugin-message" id="3F">
+					<field name="channel" type="string" />
+					<field name="data" type="remaining-buffer" />
+				</packet>
+				<packet name="disconnect" id="40">
+					<field name="reason" type="string" />
+				</packet>
+				<packet name="set-difficulty" id="41">
+					<field name="difficulty" type="ubyte" />
+				</packet>
+				<packet name="update-combat" id="42">
+					<field name="event" type="varint" />
+					<field name="duration" type="varint">
+						<condition>
+							<equals field="event">1</equals>
+						</condition>
+					</field>
+					<field name="player-id" type="varint">
+						<condition>
+							<equals field="event">2</equals>
+						</condition>
+					</field>
+					<field name="entity-id" type="varint">
+						<condition>
+							<or>
+								<equals field="event">1</equals>
+								<equals field="event">2</equals>
+							</or>
+						</condition>
+					</field>
+					<field name="message" type="string">
+						<condition>
+							<equals field="event">2</equals>
+						</condition>
+					</field>
+				</packet>
+				<packet name="update-camera" id="43">
+					<field name="camera-id" type="varint" />
+				</packet>
+				<packet name="set-world-border" id="44">
+					<field name="action" type="varint" />
+					<if>
+						<condition>
+							<equals field="action">0</equals>
+						</condition>
+						<field name="radius" type="double" />
+					</if>
+					<if>
+						<condition>
+							<equals field="action">1</equals>
+						</condition>
+						<field name="old-radius" type="double" />
+						<field name="new-radius" type="double" />
+						<field name="speed" type="varlong" />
+					</if>
+					<if>
+						<condition>
+							<equals field="action">2</equals>
+						</condition>
+						<field name="x" type="double" />
+						<field name="z" type="double" />
+					</if>
+					<if>
+						<condition>
+							<equals field="action">3</equals>
+						</condition>
+						<field name="x" type="double" />
+						<field name="z" type="double" />
+						<field name="old-radius" type="double" />
+						<field name="new-radius" type="double" />
+						<field name="speed" type="varlong" />
+						<field name="portal-teleport-boundary" type="varint" />
+						<field name="warning-time" type="varint" />
+						<field name="warning-blocks" type="varint" />
+					</if>
+					<if>
+						<condition>
+							<equals field="action">4</equals>
+						</condition>
+						<field name="warning-time" type="varint" />
+					</if>
+					<if>
+						<condition>
+							<equals field="action">5</equals>
+						</condition>
+						<field name="warning-blocks" type="varint" />
+					</if>
+				</packet>
+				<packet name="set-title" id="45">
+					<field name="action" type="varint" />
+					<field name="title-text" type="string">
+						<condition>
+							<equals field="action">0</equals>
+						</condition>
+					</field>
+					<field name="subtitle-text" type="string">
+						<condition>
+							<equals field="action">1</equals>
+						</condition>
+					</field>
+					<if>
+						<condition>
+							<equals field="action">2</equals>
+						</condition>
+						<field name="fade-in" type="int" />
+						<field name="stay" type="int" />
+						<field name="fade-out" type="int" />
+					</if>
+				</packet>
+				<packet name="set-compression" id="46">
+					<field name="threshold" type="varint" />
+				</packet>
+				<packet name="set-player-list-header-footer" id="47">
+					<field name="header" type="string" />
+					<field name="footer" type="string" />
+				</packet>
+				<packet name="send-resource-pack" id="48">
+					<field name="url" type="string" />
+					<field name="hash" type="string" />
+				</packet>
+				<packet name="update-entity-nbt" id="49">
+					<field name="entity-id" type="varint" />
+					<field name="nbt" type="nbt" />
+				</packet>
+			</inbound>
+			
+			<outbound>
+				<packet name="ping" id="00">
+					<field name="id" type="varint" />
+				</packet>
+				<packet name="send-chat-message" id="01">
+					<field name="message" type="string" />
+				</packet>
+				<packet name="use-entity" id="02">
+					<field name="target-id" type="varint" />
+					<field name="type" type="varint" />
+					<if>
+						<condition>
+							<equals field="type">2</equals>
+						</condition>
+						<field name="target-x" type="float" />
+						<field name="target-y" type="float" />
+						<field name="target-z" type="float" />
+					</if>
+				</packet>
+				<packet name="update-player" id="03">
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-player-position" id="04">
+					<field name="x" type="double" />
+					<field name="y" type="double" />
+					<field name="z" type="double" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-player-rotation" id="05">
+					<field name="yaw" type="float" />
+					<field name="pitch" type="float" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="set-player-position-rotation" id="06">
+					<field name="x" type="double" />
+					<field name="y" type="double" />
+					<field name="z" type="double" />
+					<field name="yaw" type="float" />
+					<field name="pitch" type="float" />
+					<field name="on-ground" type="boolean" />
+				</packet>
+				<packet name="break-block" id="07">
+					<field name="status" type="byte" />
+					<field name="location" type="position" />
+					<field name="face" type="byte" />
+				</packet>
+				<packet name="place-block" id="08">
+					<field name="location" type="position" />
+					<field name="face" type="byte" />
+					<field name="held-item" type="slot" />
+					<field name="cursor-x-off" type="byte" />
+					<field name="cursor-y-off" type="byte" />
+					<field name="cursor-z-off" type="byte" />
+				</packet>
+				<packet name="set-held-item" id="09">
+					<field name="slot" type="short" />
+				</packet>
+				<packet name="swing-arm" id="0A" />
+				<packet name="perform-action" id="0B">
+					<field name="player-id" type="varint" />
+					<field name="action-id" type="varint" />
+					<field name="jump-boost" type="varint" />
+				</packet>
+				<packet name="steer-vehicle" id="0C">
+					<field name="sideways" type="float" />
+					<field name="forward" type="float" />
+					<field name="flags" type="ubyte" />
+				</packet>
+				<packet name="close-window" id="0D">
+					<field name="window-id" type="byte" />
+				</packet>
+				<packet name="click-window" id="0E">
+					<field name="window-id" type="byte" />
+					<field name="slot" type="short" />
+					<field name="button" type="byte" />
+					<field name="action-id" type="short" />
+					<field name="mode" type="byte" />
+					<field name="item" type="slot" />
+				</packet>
+				<packet name="confirm-transaction" id="0F">
+					<field name="window-id" type="byte" />
+					<field name="action-id" type="short" />
+					<field name="accepted" type="boolean" />
+				</packet>
+				<packet name="click-creative-inventory" id="10">
+					<field name="slot" type="short" />
+					<field name="item" type="slot" />
+				</packet>
+				<packet name="click-enchantment-window" id="11">
+					<field name="window-id" type="byte" />
+					<field name="enchantment" type="byte" />
+				</packet>
+				<packet name="set-sign" id="12">
+					<field name="location" type="position" />
+					<field name="lines">
+						<type name="array">
+							<array-type>string</array-type>
+							<length-value>4</length-value>
+						</type>
+					</field>
+				</packet>
+				<packet name="set-abilities" id="13">
+					<field name="flags" type="byte" />
+					<field name="flying-speed" type="float" />
+					<field name="walking-speed" type="float" />
+				</packet>
+				<packet name="request-tab-completion" id="14">
+					<field name="text" type="string" />
+					<field name="has-position" type="position">
+						<condition>
+							<equals field="has-position">true</equals>
+						</condition>
+					</field>
+				</packet>
+				<packet name="set-client-settings" id="15">
+					<field name="locale" type="string" />
+					<field name="view-distance" type="byte" />
+					<field name="chat-mode" type="byte" />
+					<field name="chat-colors" type="boolean" />
+					<field name="clothing-mask" type="ubyte" />
+				</packet>
+				<packet name="perform-client-action" id="16">
+					<field name="action-id" type="varint" />
+				</packet>
+				<packet name="send-plugin-message" id="17">
+					<field name="channel" type="string" />
+					<field name="data" type="remaining-buffer" />
+				</packet>
+				<packet name="spectate" id="18">
+					<field name="target-player" type="uuid" />
+				</packet>
+				<packet name="resource-pack-status" id="19">
+					<field name="hash" type="string" />
+					<field name="result" type="varint" />
+				</packet>
+			</outbound>
+		</state>
+	</packets>
+	
+	<handlers>
+		<receive>
+		</receive>
+		<send>
+		</send>
+	</handlers>
+</protocol>

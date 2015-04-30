@@ -1,0 +1,205 @@
+<protocol-family name="type-b" script="java">
+    <header>
+        <length type="varint" />
+        <id type="varint" />
+    </header>
+    <types>
+        <type name="boolean" provides="java.lang.Boolean">
+            <read>
+                return read() != 0;
+            </read>
+            <write>
+                write(value ? 1 : 0);
+            </write>
+        </type>
+		<type name="byte" provides="java.lang.Byte">
+			<read>
+				return (byte) read();
+			</read>
+			<write>
+				write(value);
+			</write>
+		</type>
+		<type name="ubyte" provides="java.lang.Integer">
+			<read>
+				return read();
+			</read>
+			<write>
+				write(value);
+			</write>
+		</type>
+		<type name="short" provides="java.lang.Short">
+			<read><![CDATA[
+				int i1 = read();
+				int i2 = read();
+				return (short) ((i1 << 8) + (i2));
+			]]></read>
+			<write><![CDATA[
+				write((value >>> 8) & 0xFF);
+				write((value)       & 0xFF);
+			]]></write>
+		</type>
+		<type name="ushort" provides="java.lang.Integer">
+			<read><![CDATA[
+				int i1 = read();
+				int i2 = read();
+				return (i1 << 8) + (i2);
+			]]></read>
+			<write><![CDATA[
+			    write((value >>> 8) & 0xFF);
+			    write((value      ) & 0xFF);
+			]]></write>
+		</type>
+		<type name="int" provides="java.lang.Integer">
+			<read><![CDATA[
+			    read(buffer, 4);
+				return ((buffer[0] & 0xFF) << 24)
+				     + ((buffer[1] & 0xFF) << 16)
+				     + ((buffer[2] & 0xFF) <<  8)
+				     + ((buffer[3] & 0xFF)      );
+			]]></read>
+			<write><![CDATA[
+			    buffer[0] = (byte) ((value >>> 24) & 0xFF);
+				buffer[1] = (byte) ((value >>> 16) & 0xFF);
+				buffer[2] = (byte) ((value >>>  8) & 0xFF);
+				buffer[3] = (byte) ((value       ) & 0xFF);
+				write(buffer, 4);
+			]]></write>
+		</type>
+		<type name="uint" provides="java.lang.Long">
+			<read><![CDATA[
+			    read(buffer, 4);
+			    return ((buffer[0] & 0xFF) << 24)
+			         + ((buffer[1] & 0xFF) << 16)
+			         + ((buffer[2] & 0xFF) <<  8)
+			         + ((buffer[3] & 0xFF)      );
+			]]></read>
+			<write><![CDATA[
+			    buffer[0] = (byte) ((value >>> 24) & 0xFF);
+			    buffer[1] = (byte) ((value >>> 16) & 0xFF);
+			    buffer[2] = (byte) ((value >>>  8) & 0xFF);
+			    buffer[3] = (byte) ((value       ) & 0xFF);
+			    write(buffer, 4);
+			]]></write>
+		</type>
+		<type name="long" provides="java.lang.Long">
+			<read><![CDATA[
+				read(buffer, 8);
+				return ((buffer[0] & 0xFFL) << 56)
+				     + ((buffer[1] & 0xFFL) << 48)
+				     + ((buffer[2] & 0xFFL) << 40)
+				     + ((buffer[3] & 0xFFL) << 32)
+				     + ((buffer[4] & 0xFFL) << 24)
+				     + ((buffer[5] & 0xFFL) << 16)
+				     + ((buffer[6] & 0xFFL) <<  8)
+				     + ((buffer[7] & 0xFFL)      );
+			]]></read>
+			<write><![CDATA[
+			    buffer[0] = (byte) ((value >>> 56) & 0xFF));
+			    buffer[1] = (byte) ((value >>> 48) & 0xFF));
+			    buffer[2] = (byte) ((value >>> 40) & 0xFF));
+			    buffer[3] = (byte) ((value >>> 32) & 0xFF));
+			    buffer[4] = (byte) ((value >>> 24) & 0xFF));
+			    buffer[5] = (byte) ((value >>> 16) & 0xFF));
+			    buffer[6] = (byte) ((value >>>  8) & 0xFF));
+			    buffer[7] = (byte) ((value       ) & 0xFF));
+			    write(buffer, 8);
+			]]></write>
+		</type>
+		<type name="float" provides="java.lang.Float">
+			<read><![CDATA[
+				return Float.intBitsToFloat(read("int"));
+			]]></read>
+			<write><![CDATA[
+				write("int", Float.floatToIntBits(value));
+			]]></write>
+		</type>
+		<type name="double" provides="java.lang.Double">
+			<read><![CDATA[
+				return Double.longBitsToDouble(read("long"));
+			]]></read>
+			<write><![CDATA[
+				write("long", Double.doubleToLongBits(value));
+			]]></write>
+		</type>
+		<type name="varint" provides="java.lang.Integer">
+			<read><![CDATA[
+				int varint = 0;
+				for(int i = 0; i < 5; i++) {
+					int b = read();
+					if(i == 4 && (b & 0xF0) != 0)
+						error("Varint too big");
+						
+					varint |= (b & 0x7F) << (i * 7);
+					if((b & 0x80) == 0)
+						break;
+				}
+				return varint;
+			]]></read>
+			<write><![CDATA[
+				for(int varint = value; varint != 0; varint >>>= 7)
+					write(((varint >>> 7) != 0 ? 0x80 : 0x00) | (varint & 0x7F));
+			]]></write>
+		</type>
+		<type name="varlong" provides="java.lang.Long">
+			<read><![CDATA[
+				long varlong = 0;
+				for(int i = 0; i < 10; i++) {
+					int b = read();
+					if(i == 9 && (b & 0xF0) != 0)
+						error("Varlong too big");
+						
+					varlong |= ((long) b & 0x7F) << (i * 7);
+					if((b & 0x80) == 0)
+						break;
+				}
+				return varlong;
+			]]></read>
+			<write><![CDATA[
+				for(long varlong = value; varlong != 0; varlong >>>= 7)
+					write(((varlong >>> 7) != 0 ? 0x80 : 0x00) | (varlong & 0x7F));
+			]]></write>
+		</type>
+		<type name="string" provides="java.lang.String">
+			<options>
+				<option name="limit" type="int" default="32767" />
+				<option name="trim" type="boolean" default="false" />
+			</options>
+			<global>
+			    variable("utf8", Charset.forName("UTF-8"));
+			</global>
+			<read><![CDATA[
+				int limit = (Integer) option("limit");
+				boolean trim = (Boolean) option("trim");
+				
+				int length = read("varint");
+				read(buffer, length);
+				String string = new String(buffer, 0, length, (java.util.Charset) variable("utf8"));
+				
+				if(string.length() > limit) {
+					if(trim)
+						string = string.substring(0, limit);
+					else
+						error("String too big: " + string.length() + " > " + limit);
+				}
+				
+				return string;
+			]]></read>
+			<write><![CDATA[
+				int limit = (Integer) option("limit");
+				boolean trim = (Boolean) option("trim");
+				
+			    if(value.length() > limit) {
+			    	if(trim)
+			    		value = value.substring(0, limit);
+			    	else
+			    		error("String too big: " + value.length() + " > " + limit);
+			    }
+			    
+			    byte[] bytes = value.getBytes((java.util.Charset) variable("utf8"));
+			    write("varint", bytes.length);
+			    write(bytes);
+			]]></write>
+		</type>
+	</types>
+</protocol-family>
