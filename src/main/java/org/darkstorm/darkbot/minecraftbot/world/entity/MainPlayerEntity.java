@@ -44,30 +44,30 @@ public class MainPlayerEntity extends PlayerEntity {
 		
 		BoundingBox bounds = getBoundingBox();
 		handlePushingOutOfBlocks(bounds);
-		if(isOnGround() && isCrouching())
-			handleSneaking(bounds);
-		
 		handlePlayerPushing(bounds);
 		
 		super.move();
+		
+		if(isOnGround() && isCrouching())
+			handleSneaking(bounds);
 		
 		//System.out.printf("Vel: <%.9f, %.9f, %.9f> Pos: <%.5f, %.5f, %.5f> Colliding: %s%n", velocityX, velocityY, velocityZ, x, y, z, world.isColliding(bounds) ? "YES" : "NO");
 	}
 	
 	private void handleSneaking(BoundingBox bounds) {
 		Set<Block> currentCollisions = world.getCollidingBlocks(bounds);
-		final double off = 0.1;
+		final double off = 0.01;
 
 		double velocity = 0;
 		for(double v = 0, target = Math.abs(velocityX), sign = Math.signum(velocityX);
-				v < target + off && collides(bounds.offset(sign * v, -0.1, 0), currentCollisions);
+				v < target + off && collides(bounds.offset(sign * v, -0.05, 0), currentCollisions);
 				v += off)
 			velocity = sign * Math.min(v, target);
 		velocityX = velocity;
 		
 		velocity = 0;
 		for(double v = 0, target = Math.abs(velocityZ), sign = Math.signum(velocityZ);
-				v < target + off && collides(bounds.offset(0, -0.1, sign * v), currentCollisions);
+				v < target + off && collides(bounds.offset(0, -0.05, sign * v), currentCollisions);
 				v += off)
 			velocity = sign * Math.min(v, target);
 		velocityZ = velocity;
