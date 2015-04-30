@@ -12,6 +12,6 @@ public interface Type<T> {
 	public boolean hasOption(Option<?> option);
 	public <S> S getOptionValue(Option<S> option);
 
-	public T read(Packet packet, DataInputStream stream) throws IOException;
-	public void write(Packet packet, DataOutputStream stream, T object) throws IOException;
+	public T read(InputStream stream) throws IOException;
+	public void write(InputStream stream, T object) throws IOException;
 }
