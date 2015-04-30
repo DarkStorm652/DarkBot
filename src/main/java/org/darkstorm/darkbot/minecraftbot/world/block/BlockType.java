@@ -53,7 +53,9 @@ public enum BlockType {
 	GOLD_BLOCK            (block(41).toolType(PICKAXE)),
 	IRON_BLOCK            (block(42).toolType(PICKAXE)),
 	DOUBLE_STEP           (block(43).toolType(PICKAXE)),
-	STEP                  (block(44).toolType(PICKAXE).factory(singleBoundingBox(0, 0, 0, 1, 0.5, 1))),
+	STEP                  (block(44).toolType(PICKAXE).factory(new StepBlockFactoryProvider())) {
+		@Override public BlockFactory<StepBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	BRICK                 (block(45).toolType(PICKAXE)),
 	TNT                   (block(46)),
 	BOOKSHELF             (block(47).toolType(AXE)),
@@ -78,7 +80,9 @@ public enum BlockType {
 	WOODEN_DOOR           (block(64).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(AXE)),
 	LADDER                (block(65).flags(PLACEABLE)),
 	RAILS                 (block(66).flags(PLACEABLE).toolType(PICKAXE)),
-	COBBLESTONE_STAIRS    (block(67).toolType(PICKAXE)),
+	COBBLESTONE_STAIRS    (block(67).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.COBBLESTONE))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	WALL_SIGN             (block(68).flags(PLACEABLE).toolType(AXE)),
 	LEVER                 (block(69).flags(INTERACTABLE | PLACEABLE)),
 	STONE_PLATE           (block(70).flags(PLACEABLE).toolType(PICKAXE)),
@@ -123,15 +127,21 @@ public enum BlockType {
 	FENCE_GATE            (block(107).toolType(AXE).factory(new FenceGateBlockFactoryProvider())) {
 		@Override public BlockFactory<FenceGateBlock> getBlockFactory() { return getBlockFactoryTyped(); }
 	},
-	BRICK_STAIRS          (block(108).toolType(PICKAXE)),
-	SMOOTH_STAIRS         (block(109).toolType(PICKAXE)),
+	BRICK_STAIRS          (block(108).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.BRICK))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
+	SMOOTH_STAIRS         (block(109).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.STONE_BRICK))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	MYCEL                 (block(110).toolType(SHOVEL)),
 	WATER_LILY            (block(111)),
 	NETHER_BRICK          (block(112).toolType(PICKAXE)),
 	NETHER_FENCE          (block(113).toolType(PICKAXE).factory(new FenceBlockFactoryProvider(0.25, FenceBlockFactoryProvider.NETHERBRICK))) {
 		@Override public BlockFactory<FenceBlock> getBlockFactory() { return getBlockFactoryTyped(); }
 	},
-	NETHER_BRICK_STAIRS   (block(114).toolType(PICKAXE)),
+	NETHER_BRICK_STAIRS   (block(114).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.NETHER_BRICK))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	NETHER_WARTS          (block(115).flags(PLACEABLE)),
 	ENCHANTMENT_TABLE     (block(116).toolType(PICKAXE)),
 	BREWING_STAND         (block(117).toolType(PICKAXE)),
@@ -143,17 +153,27 @@ public enum BlockType {
 	REDSTONE_LAMP_OFF     (block(123).toolType(PICKAXE)),
 	REDSTONE_LAMP_ON      (block(124).toolType(PICKAXE)),
 	WOOD_DOUBLE_STEP      (block(125).toolType(AXE)),
-	WOOD_STEP             (block(126).toolType(AXE).factory(singleBoundingBox(0, 0, 0, 1, 0.5, 1))),
+	WOOD_STEP             (block(126).toolType(AXE).factory(new StepBlockFactoryProvider())) {
+		@Override public BlockFactory<StepBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	COCOA                 (block(127)),
-	SANDSTONE_STAIRS      (block(128).toolType(PICKAXE)),
+	SANDSTONE_STAIRS      (block(128).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.SANDSTONE))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	EMERALD_ORE           (block(129).toolType(PICKAXE)),
 	ENDER_CHEST           (block(130).flags(INDESTRUCTABLE | INTERACTABLE | SOLID | PLACEABLE)),
 	TRIPWIRE_HOOK         (block(131).flags(INTERACTABLE | PLACEABLE)),
 	TRIPWIRE              (block(132).flags(PLACEABLE)),
 	EMERALD_BLOCK         (block(133).toolType(PICKAXE)),
-	SPRUCE_WOOD_STAIRS    (block(134).toolType(AXE)),
-	BIRCH_WOOD_STAIRS     (block(135).toolType(AXE)),
-	JUNGLE_WOOD_STAIRS    (block(136).toolType(AXE)),
+	SPRUCE_WOOD_STAIRS    (block(134).toolType(AXE).factory(new StairBlockFactoryProvider(StairBlock.Material.SPRUCE_WOOD))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
+	BIRCH_WOOD_STAIRS     (block(135).toolType(AXE).factory(new StairBlockFactoryProvider(StairBlock.Material.BIRCH_WOOD))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
+	JUNGLE_WOOD_STAIRS    (block(136).toolType(AXE).factory(new StairBlockFactoryProvider(StairBlock.Material.JUNGLE_WOOD))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	COMMAND               (block(137)),
 	BEACON                (block(138)),
 	COBBLE_WALL           (block(139).toolType(PICKAXE).factory(new FenceBlockFactoryProvider(0.5, FenceBlockFactoryProvider.COBBLESTONE))) {
@@ -173,14 +193,24 @@ public enum BlockType {
 	NETHER_QUARTZ_ORE     (block(153).toolType(PICKAXE)),
 	HOPPER                (block(154).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
 	QUARTZ_BLOCK          (block(155).toolType(PICKAXE)),
-	QUARTZ_STAIRS         (block(156).toolType(PICKAXE)),
+	QUARTZ_STAIRS         (block(156).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.QUARTZ))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
 	ACTIVATOR_RAIL        (block(157).flags(PLACEABLE).toolType(PICKAXE)),
 	DROPPER               (block(158).flags(SOLID | INTERACTABLE | PLACEABLE).toolType(PICKAXE)),
 	STAINED_CLAY          (block(159).toolType(PICKAXE)),
 	CARPET                (block(171).flags(PLACEABLE).toolType(SWORD)),
 	HARDENED_CLAY         (block(172).toolType(PICKAXE)),
 	COAL_BLOCK            (block(173).toolType(PICKAXE)),
-	PACKED_ICE            (block(174).toolType(PICKAXE));
+	PACKED_ICE            (block(174).toolType(PICKAXE)),
+	FLOWER_BLOCK          (block(175).flags(PLACEABLE)),
+	RED_SANDSTONE         (block(179).toolType(PICKAXE)),
+	RED_SANDSTONE_STAIRS  (block(180).toolType(PICKAXE).factory(new StairBlockFactoryProvider(StairBlock.Material.RED_SANDSTONE))) {
+		@Override public BlockFactory<StairBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	},
+	RED_SANDSTONE_STEP    (block(182).toolType(PICKAXE).factory(new StepBlockFactoryProvider())) {
+		@Override public BlockFactory<StepBlock> getBlockFactory() { return super.getBlockFactoryTyped(); }
+	};
 	
 	private final int id, maxStack, flags;
 	private final float frictionCoefficient;
@@ -639,6 +669,65 @@ public enum BlockType {
 				@Override
 				public StairBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
 					return new StairBlockImpl(world, chunk, location, type.getId(), metadata, material);
+				}
+			};
+		}
+	}
+	
+	protected static class StepBlockFactoryProvider implements BlockFactoryProvider<StepBlock> {
+		private static class StepBlockImpl extends AbstractBlock implements StepBlock {
+			private static final BoundingBox BOUNDS_LOWER = BoundingBox.getBoundingBox(0, 0, 0, 1, 0.5, 1);
+			private static final BoundingBox BOUNDS_UPPER = BoundingBox.getBoundingBox(0, 0.5, 0, 1, 1, 1);
+			
+			private final Material material;
+			private final BoundingBox bounds;
+			private final boolean upper;
+			
+			public StepBlockImpl(World world, Chunk chunk, BlockLocation location, int id, int metadata) {
+				super(world, chunk, location, id, metadata);
+				
+				switch(metadata & 0x7) {
+				default:
+				case 0x0: material = Material.OAK_WOOD; break;
+				case 0x1: material = Material.SPRUCE_WOOD; break;
+				case 0x2: material = Material.BIRCH_WOOD; break;
+				case 0x3: material = Material.JUNGLE_WOOD; break;
+				case 0x4: material = Material.ACACIA_WOOD; break;
+				case 0x5: material = Material.DARK_OAK; break;
+				}
+				upper = (metadata & 0x8) != 0;
+				bounds = (upper ? BOUNDS_UPPER : BOUNDS_LOWER).offset(location);
+			}
+			
+			@Override
+			public Material getMaterial() {
+				return material;
+			}
+			
+			@Override
+			public boolean isUpper() {
+				return upper;
+			}
+			
+			@Override
+			public BoundingBox[] getBoundingBoxes() {
+				return new BoundingBox[] { bounds };
+			}
+		}
+		
+		@Override
+		public Class<StepBlock> getBlockClass() {
+			return StepBlock.class;
+		}
+		
+		@Override
+		public BlockFactory<StepBlock> provide(final BlockType type) {
+			return new BlockFactory<StepBlock>() {
+				@Override public BlockType getType() { return type; }
+				
+				@Override
+				public StepBlock createBlock(World world, Chunk chunk, BlockLocation location, int metadata) {
+					return new StepBlockImpl(world, chunk, location, type.getId(), metadata);
 				}
 			};
 		}
