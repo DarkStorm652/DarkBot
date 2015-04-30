@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.auth.*;
+import org.darkstorm.minecraft.darkbot.connection.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.general.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
@@ -40,30 +41,20 @@ public class MinecraftBot implements EventListener {
 	private int messageDelay, inventoryDelay;
 	private long lastMessage;
 	private Activity activity;
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	
 	private MinecraftBot(Builder builder) throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
 		service = Executors.newCachedThreadPool();
 		eventBus = new ConcurrentEventBus();
 		eventBus.register(this);
 		taskManager = new BasicTaskManager(this);
 
-		Protocol<?> protocol;
-		if(builder.getProtocol() >= 0) {
-			ProtocolProvider<?> provider = ProtocolProvider.getProvider(builder.getProtocol());
-			if(provider == null)
-				throw new UnsupportedProtocolException("No protocol support for v" + builder.getProtocol() + " found.");
-			protocol = provider.getProtocolInstance(this);
-		} else
-			protocol = ProtocolProvider.getLatestProvider().getProtocolInstance(this);
+		Protocol protocol = builder.getProtocolProvider().createProtocolInstance();
 		connectionHandler = new SocketConnectionHandler(this, protocol, builder.getServer(), builder.getPort(), builder.getConnectProxy());
 
 		if(builder.getAuthService() != null)
 			authService = builder.getAuthService();
-		else if(protocol instanceof ProtocolX)
-			authService = new YggdrasilAuthService(CLIENT_TOKEN);
 		else
-			authService = new LegacyAuthService();
+			authService = new YggdrasilAuthService(CLIENT_TOKEN);
 
 		if(builder.getSession() != null)
 			authService.validateSession(builder.getSession());
@@ -418,7 +409,8 @@ public class MinecraftBot implements EventListener {
 	public static final class Builder {
 		private String server;
 		private int port = MinecraftBot.DEFAULT_PORT;
-		private int protocol = MinecraftBot.LATEST_PROTOCOL;
+		
+		private ProtocolProvider protocolProvider;
 
 		private String username;
 		private String password;
@@ -442,8 +434,8 @@ public class MinecraftBot implements EventListener {
 			return this;
 		}
 
-		public synchronized Builder protocol(int protocol) {
-			this.protocol = protocol;
+		public synchronized Builder protocolProvider(ProtocolProvider protocolProvider) {
+			this.protocolProvider = protocolProvider;
 			return this;
 		}
 
@@ -489,8 +481,8 @@ public class MinecraftBot implements EventListener {
 			return port;
 		}
 
-		public int getProtocol() {
-			return protocol;
+		public ProtocolProvider getProtocolProvider() {
+			return protocolProvider;
 		}
 
 		public String getUsername() {
