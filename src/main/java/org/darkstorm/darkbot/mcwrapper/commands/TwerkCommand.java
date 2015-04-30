@@ -11,6 +11,10 @@ public class TwerkCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		bot.getTaskManager().getTaskFor(TwerkTask.class).start(args);
+		TwerkTask task = bot.getTaskManager().getTaskFor(TwerkTask.class);
+		if(!task.isActive())
+			task.start(args);
+		else
+			task.stop();
 	}
 }

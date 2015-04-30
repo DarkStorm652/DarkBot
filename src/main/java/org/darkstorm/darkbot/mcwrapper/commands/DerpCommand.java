@@ -11,6 +11,10 @@ public class DerpCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		bot.getTaskManager().getTaskFor(DerpTask.class).start(args);
+		DerpTask task = bot.getTaskManager().getTaskFor(DerpTask.class);
+		if(!task.isActive())
+			task.start(args);
+		else
+			task.stop();
 	}
 }
