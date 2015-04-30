@@ -12,5 +12,5 @@ public interface Protocol {
 	public State getCurrentState();
 	
 	public Packet read(InputStream stream) throws IOException;
-	public void write(Packet packet) throws IOException;
+	public void write(OutputStream stream, Packet packet) throws IOException;
 }
