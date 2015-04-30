@@ -1,7 +1,7 @@
 package org.darkstorm.minecraft.darkbot.ai;
 
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
-import org.darkstorm.minecraft.darkbot.protocol.ConnectionHandler;
+import org.darkstorm.minecraft.darkbot.connection.ConnectionHandler;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class AvoidDeathTask implements Task {
