@@ -1,4 +1,4 @@
-package org.darkstorm.minecraft.darkbot.util;
+package org.darkstorm.minecraft.darkbot.connection;
 
 import java.io.*;
 import java.net.*;
@@ -8,6 +8,7 @@ import org.apache.http.*;
 import org.apache.http.auth.Credentials;
 import org.apache.http.impl.client.ProxyClient;
 import org.apache.http.params.HttpConnectionParams;
+import org.darkstorm.minecraft.darkbot.util.ProxyData;
 import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
 
 public class Connection {

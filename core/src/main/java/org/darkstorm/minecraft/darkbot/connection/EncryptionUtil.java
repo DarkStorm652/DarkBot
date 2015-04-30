@@ -1,4 +1,4 @@
-package org.darkstorm.minecraft.darkbot.protocol;
+package org.darkstorm.minecraft.darkbot.connection;
 
 import java.io.*;
 import java.security.*;
