@@ -1,11 +1,11 @@
 package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.*;
-import java.util.Collection;
+import java.util.*;
 
 public interface Protocol {
-	public int getVersion();
-	public ProtocolType getType();
+	public String getVersionName();
+	public Set<String> getVersionAliases();
 	
 	public Collection<State> getStates();
 	public State getState(String name);
