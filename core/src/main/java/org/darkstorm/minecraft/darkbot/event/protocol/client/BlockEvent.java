@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.event.protocol.ProtocolEvent;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
 
 public abstract class BlockEvent extends ProtocolEvent {
 	private final int x, y, z;

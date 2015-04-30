@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.schematic;
+package org.darkstorm.minecraft.darkbot.schematic;
 
 public enum SchematicMaterialVersion {
 	CLASSIC("Classic"),

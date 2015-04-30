@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.*;
 
 public abstract class AbstractBlock implements Block {
 	private static final BoundingBox EMPTY = BoundingBox.getBoundingBox(0, 0, 0, 0, 0, 0);

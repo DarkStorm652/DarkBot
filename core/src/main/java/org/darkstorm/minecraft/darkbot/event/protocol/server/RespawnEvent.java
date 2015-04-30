@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.darkbot.minecraftbot.event.protocol.ProtocolEvent;
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.world.*;
 
 public class RespawnEvent extends ProtocolEvent {
 	private final Dimension respawnDimension;

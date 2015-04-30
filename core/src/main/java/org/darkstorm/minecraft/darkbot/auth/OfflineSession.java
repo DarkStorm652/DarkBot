@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 public class OfflineSession extends Session {
 	public OfflineSession(String username) {

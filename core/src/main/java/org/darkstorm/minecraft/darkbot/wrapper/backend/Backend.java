@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.backend;
+package org.darkstorm.minecraft.darkbot.wrapper.backend;
 
 public interface Backend {
 	public void enable();

@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.schematic;
+package org.darkstorm.minecraft.darkbot.schematic;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.Entity;
+import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.Entity;
 
 public class Schematic {
 	private final int width, height, length;

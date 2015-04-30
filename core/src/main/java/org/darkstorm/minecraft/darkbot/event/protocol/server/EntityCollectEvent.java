@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class EntityCollectEvent extends EntityEvent {
 	private final int collectedId, collectorId;

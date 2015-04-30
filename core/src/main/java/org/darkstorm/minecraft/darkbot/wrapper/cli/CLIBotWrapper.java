@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.cli;
+package org.darkstorm.minecraft.darkbot.wrapper.cli;
 
 import java.io.*;
 import java.util.*;
@@ -6,16 +6,16 @@ import java.util.regex.*;
 
 import joptsimple.*;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.mcwrapper.backend.ChatBackend;
-import org.darkstorm.darkbot.mcwrapper.commands.*;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.auth.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.util.*;
-import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.auth.*;
+import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.util.*;
+import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
+import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
+import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
 
 public class CLIBotWrapper extends MinecraftBotWrapper {
 	private CLIBotWrapper(MinecraftBot bot, String owner) {

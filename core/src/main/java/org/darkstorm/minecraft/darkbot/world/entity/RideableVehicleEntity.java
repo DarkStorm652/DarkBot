@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.EntityUseEvent;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.EntityUseEvent;
+import org.darkstorm.minecraft.darkbot.world.World;
 
 public abstract class RideableVehicleEntity extends VehicleEntity {
 	public RideableVehicleEntity(World world, int id) {

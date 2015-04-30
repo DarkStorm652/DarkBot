@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.mcwrapper.gui.spam;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.spam;
 
 import java.util.concurrent.*;
 
-import org.darkstorm.darkbot.mcwrapper.gui.spam.ActionProvider.Action;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.spam.ActionProvider.Action;
 
 public class BasicActionManager implements ActionManager {
 	private final MinecraftBot bot;

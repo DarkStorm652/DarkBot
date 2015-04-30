@@ -1,13 +1,13 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
 import java.util.Set;
 import java.util.concurrent.*;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.*;
 
 public class WalkActivity implements Activity {
 	private static double defaultSpeed = 0.17, defaultJumpFactor = 3, defaultFallFactor = 4, defaultLiquidFactor = 0.5;

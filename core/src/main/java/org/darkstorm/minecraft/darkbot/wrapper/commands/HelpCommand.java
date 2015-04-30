@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 import java.util.ArrayList;
 
-import org.darkstorm.darkbot.mcwrapper.cli.CLIBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.wrapper.cli.CLIBotWrapper;
 
 /*
  * @author Sayaad

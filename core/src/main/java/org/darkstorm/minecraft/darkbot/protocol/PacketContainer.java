@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public final class PacketContainer {
 	private final Packet packet;

@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.ai.WalkActivity;
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.ai.WalkActivity;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class WalkCommand extends AbstractCommand {
 

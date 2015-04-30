@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
+import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
 
 public class SignTileEntity extends TileEntity {
 	private final String[] text;

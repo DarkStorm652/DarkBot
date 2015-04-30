@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class EntityMoveEvent extends EntityEvent {
 	private final double x, y, z;

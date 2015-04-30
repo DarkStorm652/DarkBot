@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.io;
+package org.darkstorm.minecraft.darkbot.event.io;
 
-import org.darkstorm.darkbot.minecraftbot.protocol.ReadablePacket;
+import org.darkstorm.minecraft.darkbot.protocol.ReadablePacket;
 
 public class PacketProcessEvent extends PacketEvent {
 	private final ReadablePacket packet;

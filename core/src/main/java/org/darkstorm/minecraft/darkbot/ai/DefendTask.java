@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public class DefendTask implements Task {
 	private static final int[] SWORDS = new int[3200];

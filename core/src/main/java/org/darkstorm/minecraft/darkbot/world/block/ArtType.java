@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
 public enum ArtType {
 	KEBAB("Kebab", 16, 16, 0, 0),

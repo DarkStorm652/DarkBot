@@ -1,12 +1,12 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.EventBus;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.ToolType;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.EventBus;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.item.ToolType;
 
 public class BlockBreakActivity implements Activity {
 	private final MinecraftBot bot;

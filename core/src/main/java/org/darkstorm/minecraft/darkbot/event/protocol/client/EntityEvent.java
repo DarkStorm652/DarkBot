@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
-import org.darkstorm.darkbot.minecraftbot.world.entity.Entity;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.world.entity.Entity;
 
 public abstract class EntityEvent extends AbstractEvent {
 	private final Entity entity;

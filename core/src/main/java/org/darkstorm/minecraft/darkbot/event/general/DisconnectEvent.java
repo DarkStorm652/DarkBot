@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.general;
+package org.darkstorm.minecraft.darkbot.event.general;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
 
 public class DisconnectEvent extends AbstractEvent {
 	private final String reason;

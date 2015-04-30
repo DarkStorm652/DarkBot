@@ -1,18 +1,18 @@
-package org.darkstorm.darkbot.mcwrapper;
+package org.darkstorm.minecraft.darkbot.wrapper;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.*;
 
-import org.darkstorm.darkbot.mcwrapper.backend.Backend;
-import org.darkstorm.darkbot.mcwrapper.commands.*;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.TaskManager;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.ai.TaskManager;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.wrapper.backend.Backend;
+import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
 
 public abstract class MinecraftBotWrapper implements EventListener {
 	protected final MinecraftBot bot;

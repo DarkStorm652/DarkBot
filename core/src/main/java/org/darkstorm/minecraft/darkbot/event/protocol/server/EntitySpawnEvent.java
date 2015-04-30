@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public abstract class EntitySpawnEvent extends EntityEvent {
 	private final SpawnLocation location;

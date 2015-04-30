@@ -1,13 +1,13 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.EntityVelocityEvent;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.EntityVelocityEvent;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public class FishingTask implements Task, EventListener {
 	private final MinecraftBot bot;

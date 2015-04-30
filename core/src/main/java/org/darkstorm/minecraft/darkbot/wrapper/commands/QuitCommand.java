@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestDisconnectEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestDisconnectEvent;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class QuitCommand extends AbstractCommand {
 

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class PaintingSpawnEvent extends EntitySpawnEvent {
 	private final String title;

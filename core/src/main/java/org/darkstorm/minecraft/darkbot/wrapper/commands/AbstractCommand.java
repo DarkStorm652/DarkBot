@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public abstract class AbstractCommand implements Command {
 	protected final MinecraftBotWrapper controller;

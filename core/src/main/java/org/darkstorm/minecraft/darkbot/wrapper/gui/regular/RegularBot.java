@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui.regular;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.regular;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -6,16 +6,16 @@ import java.util.concurrent.*;
 
 import javax.naming.AuthenticationException;
 
-import org.darkstorm.darkbot.mcwrapper.gui.regular.commands.*;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
-import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.util.*;
-import org.darkstorm.darkbot.minecraftbot.util.ProxyData.ProxyType;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.util.*;
+import org.darkstorm.minecraft.darkbot.util.ProxyData.ProxyType;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.commands.*;
 
 public class RegularBot implements EventListener {
 	private final RegularBotControlsUI ui;

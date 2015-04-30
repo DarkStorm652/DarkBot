@@ -1,22 +1,22 @@
-package org.darkstorm.darkbot.minecraftbot;
+package org.darkstorm.minecraft.darkbot;
 
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
-import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.auth.*;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.general.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.event.world.SpawnEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.*;
-import org.darkstorm.darkbot.minecraftbot.util.*;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.auth.*;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.general.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.event.world.SpawnEvent;
+import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.util.*;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public class MinecraftBot implements EventListener {
 	public static final int DEFAULT_PORT = 25565;

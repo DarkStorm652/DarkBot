@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.World;
 
 public class BlazeEntity extends AggressiveEntity {
 	private boolean burning;

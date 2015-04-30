@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.event.world;
+package org.darkstorm.minecraft.darkbot.event.world;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.block.*;
 
 public class BlockChangeEvent extends AbstractEvent {
 	private final World world;

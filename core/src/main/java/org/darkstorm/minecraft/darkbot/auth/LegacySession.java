@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 import org.apache.commons.lang3.StringUtils;
 

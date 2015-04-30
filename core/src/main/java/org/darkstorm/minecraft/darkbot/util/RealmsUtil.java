@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.minecraftbot.util;
+package org.darkstorm.minecraft.darkbot.util;
 
 import java.io.*;
 import java.net.*;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.darkstorm.darkbot.minecraftbot.auth.YggdrasilSession;
+import org.darkstorm.minecraft.darkbot.auth.YggdrasilSession;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 

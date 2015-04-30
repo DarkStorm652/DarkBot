@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class CalcCommand extends AbstractCommand {
 

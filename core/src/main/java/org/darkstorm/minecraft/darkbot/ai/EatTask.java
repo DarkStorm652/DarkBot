@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.ItemUseEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.EntityStopEatingEvent;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.EventHandler;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.ItemUseEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.EntityStopEatingEvent;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public class EatTask implements Task {
 	private static final int[] FOOD_LIST;

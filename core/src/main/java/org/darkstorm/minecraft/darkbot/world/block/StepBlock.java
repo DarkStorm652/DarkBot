@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
 public interface StepBlock extends Block {
 	public enum Material {

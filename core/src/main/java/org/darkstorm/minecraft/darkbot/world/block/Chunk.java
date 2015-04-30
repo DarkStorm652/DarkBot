@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.event.EventBus;
-import org.darkstorm.darkbot.minecraftbot.event.world.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.minecraft.darkbot.event.EventBus;
+import org.darkstorm.minecraft.darkbot.event.world.BlockChangeEvent;
+import org.darkstorm.minecraft.darkbot.world.World;
 
 public final class Chunk {
 	private final World world;

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 @SuppressWarnings("serial")
 public class YggdrasilAuthenticationException extends AuthenticationException {

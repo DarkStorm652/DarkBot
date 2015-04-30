@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class BuildingTask implements Task, EventListener {
 	private static final boolean[] UNPLACEABLE = new boolean[256];

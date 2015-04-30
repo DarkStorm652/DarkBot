@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
+package org.darkstorm.minecraft.darkbot.world.pathfinding.astar;
 
 import java.util.*;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.*;
 
 public class AStarPathSearch implements PathSearch {
 	private static final PathNodeComparator PATH_NODE_COMPARATOR = new PathNodeComparator();

@@ -1,27 +1,25 @@
-package org.darkstorm.darkbot.minecraftbot.world;
+package org.darkstorm.minecraft.darkbot.world;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
-import org.darkstorm.darkbot.minecraftbot.event.general.TickEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.BlockChangeEvent;
-import org.darkstorm.darkbot.minecraftbot.event.world.*;
-import org.darkstorm.darkbot.minecraftbot.event.world.ChunkLoadEvent;
-import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar.AStarPathSearchProvider;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.event.general.TickEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.LivingEntitySpawnEvent.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.ObjectEntitySpawnEvent.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.BlockChangeEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
+import org.darkstorm.minecraft.darkbot.event.world.*;
+import org.darkstorm.minecraft.darkbot.event.world.ChunkLoadEvent;
+import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.*;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.astar.AStarPathSearchProvider;
 
 public final class BasicWorld implements World, EventListener {
 	private final MinecraftBot bot;
@@ -245,7 +243,7 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
-	public void onChunkLoad(org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChunkLoadEvent event) {
+	public void onChunkLoad(org.darkstorm.minecraft.darkbot.event.protocol.server.ChunkLoadEvent event) {
 		ChunkLocation location = new ChunkLocation(event.getX(), event.getY(), event.getZ());
 		Chunk chunk = new Chunk(this, location, event.getBlocks(), event.getMetadata(), event.getLight(), event.getSkylight(), event.getBiomes());
 		synchronized(chunks) {

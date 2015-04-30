@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
 import java.util.Set;
 
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public abstract class LivingEntity extends Entity {
 	protected int health, breathTimer, growthTimer, potionEffectColor;

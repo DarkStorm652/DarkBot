@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.event.world;
+package org.darkstorm.minecraft.darkbot.event.world;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.Chunk;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.block.Chunk;
 
 public class ChunkLoadEvent extends AbstractEvent {
 	private final World world;

@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.world;
+package org.darkstorm.minecraft.darkbot.world;
 
 import static java.lang.Math.*;
 
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
 
 public final class BoundingBox {
 	private final double minX, minY, minZ;

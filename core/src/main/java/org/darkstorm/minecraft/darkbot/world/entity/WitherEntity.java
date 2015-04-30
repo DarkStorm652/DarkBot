@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.World;
 
 public class WitherEntity extends AggressiveEntity {
 	public WitherEntity(World world, int id) {

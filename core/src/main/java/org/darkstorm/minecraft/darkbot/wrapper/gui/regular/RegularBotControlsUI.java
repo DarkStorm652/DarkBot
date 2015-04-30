@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui.regular;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.regular;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -13,10 +13,10 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.darkstorm.darkbot.mcwrapper.gui.*;
-import org.darkstorm.darkbot.mcwrapper.gui.regular.RegularBot.RegularBotData;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBot.RegularBotData;
 
 @SuppressWarnings("serial")
 public class RegularBotControlsUI extends BotControlsUI {
@@ -369,7 +369,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
 		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+				.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		statusPanel = new JPanel();
 		healthPanel = new JPanel();
 		hungerPanel = new JPanel();

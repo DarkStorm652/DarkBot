@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.*;
 
 public class TransparentBlockFactory implements BlockFactory<Block> {
 	private static class BasicBlock extends AbstractBlock {

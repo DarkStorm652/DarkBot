@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.entity.WatchableObject;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public class PlayerSpawnEvent extends MetaEntitySpawnEvent {
 	private final String playerName;

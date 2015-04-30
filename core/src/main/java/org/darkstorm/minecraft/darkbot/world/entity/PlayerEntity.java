@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public class PlayerEntity extends LivingEntity {
 	private String name;

@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class PlayerRotateEvent extends PlayerUpdateEvent {
 	public PlayerRotateEvent(MainPlayerEntity entity) {

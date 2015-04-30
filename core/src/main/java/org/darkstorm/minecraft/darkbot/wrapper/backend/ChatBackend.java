@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.mcwrapper.backend;
+package org.darkstorm.minecraft.darkbot.wrapper.backend;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.mcwrapper.commands.CommandException;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.ChatReceivedEvent;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.ChatReceivedEvent;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
+import org.darkstorm.minecraft.darkbot.wrapper.commands.CommandException;
 
 public class ChatBackend implements Backend, EventListener {
 	private final MinecraftBotWrapper bot;

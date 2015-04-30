@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.darkbot.minecraftbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
 
 public class BlockChangeEvent extends ProtocolEvent {
 	private final int id, metadata, x, y, z;

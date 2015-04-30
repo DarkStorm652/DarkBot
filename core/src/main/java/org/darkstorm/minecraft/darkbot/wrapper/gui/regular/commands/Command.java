@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.mcwrapper.gui.regular.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.regular.commands;
 
-import org.darkstorm.darkbot.mcwrapper.gui.regular.RegularBot;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBot;
 
 public interface Command {
 	public String getName();

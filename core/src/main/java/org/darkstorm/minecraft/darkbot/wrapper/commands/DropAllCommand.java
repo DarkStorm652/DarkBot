@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
-import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.world.item.PlayerInventory;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class DropAllCommand extends AbstractCommand {
 

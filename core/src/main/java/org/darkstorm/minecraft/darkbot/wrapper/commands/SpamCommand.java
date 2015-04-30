@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.cli.CLISpamBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.wrapper.cli.CLISpamBotWrapper;
 
 public class SpamCommand extends AbstractCommand {
 

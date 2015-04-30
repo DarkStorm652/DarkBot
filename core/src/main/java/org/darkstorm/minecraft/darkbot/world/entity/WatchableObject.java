@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
 public class WatchableObject {
 	private final int id, type;

@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 
 public abstract class AbstractProtocolX implements ProtocolX<PacketLengthHeader> {
 	private final int version;

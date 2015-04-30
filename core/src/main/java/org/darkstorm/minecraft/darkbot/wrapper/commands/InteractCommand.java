@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.event.EventBus;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.event.EventBus;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class InteractCommand extends AbstractCommand {
 

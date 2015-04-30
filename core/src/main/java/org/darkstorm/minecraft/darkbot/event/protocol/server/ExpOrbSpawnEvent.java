@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class ExpOrbSpawnEvent extends EntitySpawnEvent {
 	private final int expValue;

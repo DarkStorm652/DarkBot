@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class SleepEvent extends EntityEvent {
 	private final int bedX, bedY, bedZ;

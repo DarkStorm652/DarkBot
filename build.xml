@@ -2,11 +2,11 @@
 	<target name="init">
 		<property name="outputDir" value="bin" />
 		<property name="protocolsDir" value="protocols" />
-		<property name="protocolsPackage" value="org.darkstorm.darkbot.minecraftbot.protocol" />
+		<property name="protocolsPackage" value="org.darkstorm.minecraft.darkbot.protocol" />
 		<property name="deployJar" value="DarkBot.jar" />
 		<property name="libraryDir" value="lib" />
 		<property name="tempDir" value="temp" />
-		<property name="mainClass" value="org.darkstorm.darkbot.mcwrapper.Main" />
+		<property name="mainClass" value="org.darkstorm.minecraft.darkbot.wrapper.Main" />
 		<property name="antContribPath" value="build/ant-contrib-1.0b3.jar" />
 	</target>
 

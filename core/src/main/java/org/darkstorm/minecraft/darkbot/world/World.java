@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.minecraftbot.world;
+package org.darkstorm.minecraft.darkbot.world;
 
 import java.util.Set;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.Entity;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.PathSearchProvider;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.entity.Entity;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.PathSearchProvider;
 
 public interface World {
 	public MinecraftBot getBot();

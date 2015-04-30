@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui;
+package org.darkstorm.minecraft.darkbot.wrapper.gui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -7,8 +7,8 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-import org.darkstorm.darkbot.mcwrapper.gui.regular.RegularBotOptionsUI;
-import org.darkstorm.darkbot.mcwrapper.gui.spam.SpamBotOptionsUI;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBotOptionsUI;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.spam.SpamBotOptionsUI;
 
 @SuppressWarnings("serial")
 public class NewBotDialog extends JDialog {
@@ -65,7 +65,7 @@ public class NewBotDialog extends JDialog {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
 		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+				.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		dialogPane = new JPanel();
 		contentPanel = new JPanel();
 		JLabel typeLabel = new JLabel();

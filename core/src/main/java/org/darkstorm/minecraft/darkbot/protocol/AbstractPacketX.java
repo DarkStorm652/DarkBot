@@ -1,15 +1,15 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.*;
-import org.darkstorm.darkbot.minecraftbot.protocol.ProtocolX.State;
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.nbt.*;
+import org.darkstorm.minecraft.darkbot.protocol.ProtocolX.State;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.entity.WatchableObject;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public abstract class AbstractPacketX implements PacketX {
 	private static final Charset UTF8 = Charset.forName("UTF-8");

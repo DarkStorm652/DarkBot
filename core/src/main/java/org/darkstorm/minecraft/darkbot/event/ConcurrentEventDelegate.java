@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.event;
+package org.darkstorm.minecraft.darkbot.event;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.locks.*;
 
-import org.darkstorm.darkbot.minecraftbot.event.MultiEventException.EventException;
+import org.darkstorm.minecraft.darkbot.event.MultiEventException.EventException;
 
 final class ConcurrentEventDelegate<T extends Event> {
 	private final Class<T> eventClass;

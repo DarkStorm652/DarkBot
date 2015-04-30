@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import static org.darkstorm.darkbot.minecraftbot.world.block.BlockType.Flag.*;
-import static org.darkstorm.darkbot.minecraftbot.world.item.ToolType.*;
+import static org.darkstorm.minecraft.darkbot.world.block.BlockType.Flag.*;
+import static org.darkstorm.minecraft.darkbot.world.item.ToolType.*;
 
-import org.darkstorm.darkbot.minecraftbot.world.*;
-import org.darkstorm.darkbot.minecraftbot.world.item.ToolType;
+import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.item.ToolType;
 
 public enum BlockType {
 	UNKNOWN               (block(-1)),

@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.world.item.PlayerInventory;
+import org.darkstorm.minecraft.darkbot.world.item.PlayerInventory;
 
 public class HeldItemChangeEvent extends HeldItemEvent {
 	private final int oldSlot, newSlot;

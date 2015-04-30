@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.mcwrapper;
+package org.darkstorm.minecraft.darkbot.wrapper;
 
 import java.util.Arrays;
 
-import org.darkstorm.darkbot.mcwrapper.cli.*;
+import org.darkstorm.minecraft.darkbot.wrapper.cli.*;
 
 import joptsimple.*;
 
@@ -47,7 +47,7 @@ public class Main {
 			CLISpamBotWrapper.main(botArgs);
 			break;
 		case "gui":
-			org.darkstorm.darkbot.mcwrapper.gui.GUIBotWrapper.main(botArgs);
+			org.darkstorm.minecraft.darkbot.wrapper.gui.GUIBotWrapper.main(botArgs);
 			break;
 		default:
 			printHelp(parser);

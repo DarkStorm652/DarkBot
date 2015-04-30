@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.IOException;
 

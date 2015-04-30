@@ -1,8 +1,7 @@
-package org.darkstorm.darkbot.mcwrapper.gui.regular;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.regular;
 
 import java.util.*;
 import java.util.List;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -10,9 +9,9 @@ import java.io.IOException;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
-import org.darkstorm.darkbot.mcwrapper.gui.*;
-import org.darkstorm.darkbot.mcwrapper.gui.regular.RegularBot.RegularBotData;
-import org.darkstorm.darkbot.minecraftbot.ai.Task;
+import org.darkstorm.minecraft.darkbot.ai.Task;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBot.RegularBotData;
 
 @SuppressWarnings("serial")
 public class RegularBotOptionsUI extends BotOptionsUI {
@@ -39,7 +38,7 @@ public class RegularBotOptionsUI extends BotOptionsUI {
 		initComponents();
 		tasks = new HashMap<String, Class<? extends Task>>();
 		try {
-			for(Class<?> c : org.darkstorm.darkbot.minecraftbot.util.Util
+			for(Class<?> c : org.darkstorm.minecraft.darkbot.util.Util
 					.getClassesInPackage(Task.class.getPackage().getName())) {
 				try {
 					if(Task.class.isAssignableFrom(c) && !Task.class.equals(c))
@@ -167,7 +166,7 @@ public class RegularBotOptionsUI extends BotOptionsUI {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
 		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+				.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		JLabel usernameLabel = new JLabel();
 		usernameField = new JTextField();
 		passwordCheckBox = new JCheckBox();

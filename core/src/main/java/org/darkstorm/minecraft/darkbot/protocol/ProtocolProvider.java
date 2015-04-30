@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.File;
 import java.net.*;
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
 
 public abstract class ProtocolProvider<T extends Protocol<?>> {
 	private static final List<ProtocolProvider<?>> providers = loadProviders();

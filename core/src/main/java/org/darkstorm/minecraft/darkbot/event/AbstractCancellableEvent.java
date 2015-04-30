@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event;
+package org.darkstorm.minecraft.darkbot.event;
 
 public abstract class AbstractCancellableEvent extends AbstractEvent implements CancellableEvent {
 	private boolean cancelled = false;

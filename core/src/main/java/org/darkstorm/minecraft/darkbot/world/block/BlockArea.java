@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
 public final class BlockArea implements Cloneable {
 	private final int x, y, z, width, length, height;

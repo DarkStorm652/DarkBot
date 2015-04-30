@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world;
+package org.darkstorm.minecraft.darkbot.world;
 
 public enum Dimension {
 	NETHER(-1),

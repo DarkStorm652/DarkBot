@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.minecraftbot.world.item;
+package org.darkstorm.minecraft.darkbot.world.item;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.EventHandler;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.WindowCloseEvent;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.EventHandler;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.WindowCloseEvent;
 
 public class ChestInventory extends AbstractInventory {
 	private final ItemStack[] items;

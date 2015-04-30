@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.EntityHitEvent;
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.ArtType;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.EntityHitEvent;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.ArtType;
 
 public class PaintingEntity extends Entity {
 	private final ArtType artType;

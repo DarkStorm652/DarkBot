@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
 
 public class BlockBreakStartEvent extends BlockBreakEvent {
 	public BlockBreakStartEvent(BlockLocation location, int face) {

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 @SuppressWarnings("serial")
 public class CommandException extends Exception {

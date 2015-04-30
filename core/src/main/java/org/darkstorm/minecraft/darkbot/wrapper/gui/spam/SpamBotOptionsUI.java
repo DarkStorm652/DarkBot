@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui.spam;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.spam;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -12,7 +12,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.*;
 import javax.swing.filechooser.FileFilter;
 
-import org.darkstorm.darkbot.mcwrapper.gui.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.*;
 
 @SuppressWarnings("serial")
 public class SpamBotOptionsUI extends BotOptionsUI {
@@ -270,7 +270,7 @@ public class SpamBotOptionsUI extends BotOptionsUI {
 	private void initComponents() {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
-		ResourceBundle bundle = ResourceBundle.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+		ResourceBundle bundle = ResourceBundle.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		JLabel serverLabel = new JLabel();
 		serverField = new JTextField();
 		JLabel botAmountLabel = new JLabel();

@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.event.protocol.ProtocolEvent;
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public class ItemUseEvent extends ProtocolEvent {
 	private final ItemStack item;

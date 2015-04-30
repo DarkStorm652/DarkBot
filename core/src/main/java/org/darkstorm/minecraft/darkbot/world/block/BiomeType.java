@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
 public enum BiomeType {
 	UNKNOWN(-1),

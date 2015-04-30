@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.block.TileEntity;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.block.TileEntity;
 
 public final class EntityList {
 	private static final IntHashMap<Class<? extends LivingEntity>> livingIds;

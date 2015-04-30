@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.world.Direction;
+import org.darkstorm.minecraft.darkbot.world.Direction;
 
 public interface FenceGateBlock extends Block {
 	public Direction getDirection();

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui.spam;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.spam;
 
 import javax.swing.JPanel;
 

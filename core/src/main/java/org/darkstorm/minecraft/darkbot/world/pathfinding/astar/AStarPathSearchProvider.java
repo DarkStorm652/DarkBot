@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.world.pathfinding.astar;
+package org.darkstorm.minecraft.darkbot.world.pathfinding.astar;
 
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.pathfinding.*;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.pathfinding.*;
 
 public class AStarPathSearchProvider implements PathSearchProvider {
 	private final Heuristic heuristic;

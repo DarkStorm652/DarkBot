@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.auth.Session;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.auth.Session;
+import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
 
 public class HandshakeEvent extends ProtocolEvent {
 	private final Session session;

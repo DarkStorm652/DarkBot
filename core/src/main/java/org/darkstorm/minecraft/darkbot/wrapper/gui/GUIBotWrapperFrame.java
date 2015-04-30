@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui;
+package org.darkstorm.minecraft.darkbot.wrapper.gui;
 
 import java.util.ResourceBundle;
 
@@ -111,7 +111,7 @@ public class GUIBotWrapperFrame extends JFrame {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
 		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+				.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		menuBar = new JMenuBar();
 		fileMenu = new JMenu();
 		newMenuItem = new JMenuItem();

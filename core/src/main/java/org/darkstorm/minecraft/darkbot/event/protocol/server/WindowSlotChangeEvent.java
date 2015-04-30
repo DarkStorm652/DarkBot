@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.darkbot.minecraftbot.world.item.ItemStack;
+import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public class WindowSlotChangeEvent extends WindowEvent {
 	private final int slot;

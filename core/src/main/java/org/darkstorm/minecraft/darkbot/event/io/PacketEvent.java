@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.io;
+package org.darkstorm.minecraft.darkbot.event.io;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
-import org.darkstorm.darkbot.minecraftbot.protocol.Packet;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.protocol.Packet;
 
 public abstract class PacketEvent extends AbstractEvent {
 	public abstract Packet getPacket();

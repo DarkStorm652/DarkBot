@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 import java.io.*;
 import java.net.*;
@@ -7,7 +7,7 @@ import java.security.cert.Certificate;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.darkstorm.darkbot.minecraftbot.util.ProxyData;
+import org.darkstorm.minecraft.darkbot.util.ProxyData;
 
 public class LegacyAuthService implements AuthService<LegacySession> {
 	private static final String LOGIN_URL = "https://login.minecraft.net/";

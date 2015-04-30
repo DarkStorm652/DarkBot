@@ -1,16 +1,16 @@
-package org.darkstorm.darkbot.mcwrapper.gui.spam;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.spam;
 
 import java.util.*;
 
 import javax.naming.AuthenticationException;
 
-import org.darkstorm.darkbot.mcwrapper.gui.spam.ActionProvider.Action;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
-import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.RequestRespawnEvent;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestRespawnEvent;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.spam.ActionProvider.Action;
 
 public class SpamBot implements EventListener {
 	private final SpamBotControlsUI ui;

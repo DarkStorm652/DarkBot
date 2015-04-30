@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.event.world;
+package org.darkstorm.minecraft.darkbot.event.world;
 
-import org.darkstorm.darkbot.minecraftbot.event.AbstractEvent;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.event.AbstractEvent;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class SpawnEvent extends AbstractEvent {
 	private final MainPlayerEntity player;

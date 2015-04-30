@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.client;
+package org.darkstorm.minecraft.darkbot.event.protocol.client;
 
-import org.darkstorm.darkbot.minecraftbot.world.item.Inventory;
+import org.darkstorm.minecraft.darkbot.world.item.Inventory;
 
 public class InventoryCloseEvent extends InventoryEvent {
 	public InventoryCloseEvent(Inventory inventory) {

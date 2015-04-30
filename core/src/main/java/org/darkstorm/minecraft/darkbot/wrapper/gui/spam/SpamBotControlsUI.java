@@ -1,8 +1,7 @@
-package org.darkstorm.darkbot.mcwrapper.gui.spam;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.spam;
 
 import java.util.*;
 import java.util.List;
-
 import java.awt.*;
 import java.awt.event.*;
 
@@ -11,8 +10,8 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
 
-import org.darkstorm.darkbot.mcwrapper.gui.*;
-import org.darkstorm.darkbot.mcwrapper.gui.spam.SpamBot.SpamBotData;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.spam.SpamBot.SpamBotData;
 
 @SuppressWarnings({ "serial", "rawtypes" })
 public class SpamBotControlsUI extends BotControlsUI {
@@ -174,7 +173,7 @@ public class SpamBotControlsUI extends BotControlsUI {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
 		// //GEN-BEGIN:initComponents
 		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+				.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 		JPanel mainControlPanel = new JPanel();
 		progressBar = new JProgressBar();
 		loginButton = new JToggleButton();
@@ -498,7 +497,7 @@ public class SpamBotControlsUI extends BotControlsUI {
 			// JFormDesigner - Component initialization - DO NOT MODIFY
 			// //GEN-BEGIN:initComponents
 			ResourceBundle bundle = ResourceBundle
-					.getBundle("org.darkstorm.darkbot.mcwrapper.gui.enUS");
+					.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.enUS");
 			JPanel containerPanel = new JPanel();
 			JPanel bottomPanel = new JPanel();
 			JPanel buttonPanel = new JPanel();

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui;
+package org.darkstorm.minecraft.darkbot.wrapper.gui;
 
 import javax.swing.JPanel;
 

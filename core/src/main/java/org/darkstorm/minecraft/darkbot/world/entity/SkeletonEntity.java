@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.entity;
+package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.darkbot.minecraftbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.World;
 
 public class SkeletonEntity extends AggressiveEntity {
 	public SkeletonEntity(World world, int id) {

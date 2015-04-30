@@ -1,12 +1,12 @@
-package org.darkstorm.darkbot.mcwrapper.gui.regular.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.gui.regular.commands;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.mcwrapper.gui.regular.RegularBot;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.ai.*;
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.ai.*;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBot;
 
 public enum DefaultCommands implements Command {
 	AI("ai", "Various task controls.",

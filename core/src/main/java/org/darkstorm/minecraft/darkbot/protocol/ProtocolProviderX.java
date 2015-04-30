@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
 
 public abstract class ProtocolProviderX<T extends ProtocolX<?>> extends ProtocolProvider<T> {
 	@Override

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 import java.math.BigInteger;
 import java.util.UUID;

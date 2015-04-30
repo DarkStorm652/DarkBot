@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.event.io;
+package org.darkstorm.minecraft.darkbot.event.io;
 
-import org.darkstorm.darkbot.minecraftbot.protocol.WriteablePacket;
+import org.darkstorm.minecraft.darkbot.protocol.WriteablePacket;
 
 public class PacketSentEvent extends PacketEvent {
 	private final WriteablePacket packet;

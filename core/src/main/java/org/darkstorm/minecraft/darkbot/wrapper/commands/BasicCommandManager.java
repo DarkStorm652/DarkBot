@@ -1,10 +1,10 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class BasicCommandManager implements CommandManager {
 	private final MinecraftBotWrapper bot;

@@ -1,8 +1,8 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 import java.io.IOException;
 
-import org.darkstorm.darkbot.minecraftbot.util.ProxyData;
+import org.darkstorm.minecraft.darkbot.util.ProxyData;
 
 public interface AuthService<T extends Session> {
 	public T login(String username, String password) throws AuthenticationException, IOException;

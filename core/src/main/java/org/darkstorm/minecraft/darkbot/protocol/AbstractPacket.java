@@ -1,13 +1,13 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.*;
 import java.util.List;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.*;
-import org.darkstorm.darkbot.minecraftbot.util.IntHashMap;
-import org.darkstorm.darkbot.minecraftbot.world.block.BlockLocation;
-import org.darkstorm.darkbot.minecraftbot.world.entity.WatchableObject;
-import org.darkstorm.darkbot.minecraftbot.world.item.*;
+import org.darkstorm.minecraft.darkbot.nbt.*;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
+import org.darkstorm.minecraft.darkbot.world.entity.WatchableObject;
+import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public abstract class AbstractPacket implements Packet {
 	public static String readString(DataInputStream in) throws IOException {

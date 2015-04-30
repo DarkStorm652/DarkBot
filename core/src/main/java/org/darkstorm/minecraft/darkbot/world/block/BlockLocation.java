@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.world.WorldLocation;
+import org.darkstorm.minecraft.darkbot.world.WorldLocation;
 
 public final class BlockLocation {
 	private final int x, y, z;

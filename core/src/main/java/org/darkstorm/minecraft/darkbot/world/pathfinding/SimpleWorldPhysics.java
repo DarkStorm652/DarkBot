@@ -1,7 +1,7 @@
-package org.darkstorm.darkbot.minecraftbot.world.pathfinding;
+package org.darkstorm.minecraft.darkbot.world.pathfinding;
 
-import org.darkstorm.darkbot.minecraftbot.world.World;
-import org.darkstorm.darkbot.minecraftbot.world.block.*;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.block.*;
 
 public class SimpleWorldPhysics implements WorldPhysics {
 	private static final BlockLocation[] surrounding = new BlockLocation[] {

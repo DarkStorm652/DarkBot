@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 @SuppressWarnings("serial")
 public class UnsupportedProtocolException extends Exception {

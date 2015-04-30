@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.mcwrapper.gui;
+package org.darkstorm.minecraft.darkbot.wrapper.gui;
 
 import java.util.ResourceBundle;
 
@@ -13,7 +13,7 @@ public final class GUIBotWrapper {
 	private final GUIBotWrapperFrame ui;
 
 	static {
-		ResourceBundle resources = ResourceBundle.getBundle("org.darkstorm.darkbot.mcwrapper.gui.bot");
+		ResourceBundle resources = ResourceBundle.getBundle("org.darkstorm.minecraft.darkbot.wrapper.gui.bot");
 		version = resources.getString("version");
 	}
 

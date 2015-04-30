@@ -1,11 +1,11 @@
-package org.darkstorm.darkbot.minecraftbot.world.item;
+package org.darkstorm.minecraft.darkbot.world.item;
 
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.client.*;
-import org.darkstorm.darkbot.minecraftbot.event.protocol.server.*;
-import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class PlayerInventory extends AbstractInventory {
 	private final MainPlayerEntity player;

@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.world;
+package org.darkstorm.minecraft.darkbot.world;
 
 public enum GameMode {
 	NONE(-1, ""),

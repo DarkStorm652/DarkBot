@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.block;
+package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
+import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
 
 public abstract class TileEntity {
 	protected final BlockLocation location;

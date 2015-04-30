@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
 import java.io.*;
 import java.security.Security;
@@ -9,12 +9,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.crypto.SecretKey;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
-import org.darkstorm.darkbot.minecraftbot.event.*;
-import org.darkstorm.darkbot.minecraftbot.event.EventListener;
-import org.darkstorm.darkbot.minecraftbot.event.general.DisconnectEvent;
-import org.darkstorm.darkbot.minecraftbot.event.io.*;
-import org.darkstorm.darkbot.minecraftbot.util.*;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.event.*;
+import org.darkstorm.minecraft.darkbot.event.EventListener;
+import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
+import org.darkstorm.minecraft.darkbot.event.io.*;
+import org.darkstorm.minecraft.darkbot.util.*;
 
 public class SocketConnectionHandler<H extends PacketHeader> implements ConnectionHandler, EventListener {
 	private final MinecraftBot bot;

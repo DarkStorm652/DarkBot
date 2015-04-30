@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.world.item;
+package org.darkstorm.minecraft.darkbot.world.item;
 
-import org.darkstorm.darkbot.minecraftbot.nbt.NBTTagCompound;
+import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
 
 public interface ItemStack extends Cloneable {
 	public int getId();

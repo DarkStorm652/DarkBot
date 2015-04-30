@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event;
+package org.darkstorm.minecraft.darkbot.event;
 
 import java.lang.annotation.*;
 

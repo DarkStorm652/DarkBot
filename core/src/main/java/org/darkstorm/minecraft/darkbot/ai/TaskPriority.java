@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
 public enum TaskPriority {
 	LOWEST,

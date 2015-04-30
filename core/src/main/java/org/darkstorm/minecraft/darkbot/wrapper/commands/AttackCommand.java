@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.mcwrapper.commands;
+package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.darkbot.mcwrapper.MinecraftBotWrapper;
-import org.darkstorm.darkbot.minecraftbot.ai.AttackTask;
-import org.darkstorm.darkbot.minecraftbot.util.Util;
-import org.darkstorm.darkbot.minecraftbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.ai.AttackTask;
+import org.darkstorm.minecraft.darkbot.util.Util;
+import org.darkstorm.minecraft.darkbot.world.entity.*;
+import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class AttackCommand extends AbstractCommand {
 

@@ -1,9 +1,9 @@
-package org.darkstorm.darkbot.minecraftbot.ai;
+package org.darkstorm.minecraft.darkbot.ai;
 
 import java.math.BigInteger;
 import java.util.*;
 
-import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.MinecraftBot;
 
 public class BasicTaskManager implements TaskManager {
 	private final MinecraftBot bot;

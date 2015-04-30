@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.auth;
+package org.darkstorm.minecraft.darkbot.auth;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -7,8 +7,8 @@ import java.util.*;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.darkstorm.darkbot.minecraftbot.auth.YggdrasilSession.Profile;
-import org.darkstorm.darkbot.minecraftbot.util.ProxyData;
+import org.darkstorm.minecraft.darkbot.auth.YggdrasilSession.Profile;
+import org.darkstorm.minecraft.darkbot.util.ProxyData;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 

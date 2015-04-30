@@ -1,6 +1,6 @@
-package org.darkstorm.darkbot.minecraftbot.protocol;
+package org.darkstorm.minecraft.darkbot.protocol;
 
-import org.darkstorm.darkbot.minecraftbot.protocol.ProtocolX.State;
+import org.darkstorm.minecraft.darkbot.protocol.ProtocolX.State;
 
 public interface PacketX extends Packet {
 	public enum Direction {

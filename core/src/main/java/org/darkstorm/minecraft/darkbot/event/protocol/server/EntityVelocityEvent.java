@@ -1,4 +1,4 @@
-package org.darkstorm.darkbot.minecraftbot.event.protocol.server;
+package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class EntityVelocityEvent extends EntityEvent {
 	private final double velocityX, velocityY, velocityZ;
