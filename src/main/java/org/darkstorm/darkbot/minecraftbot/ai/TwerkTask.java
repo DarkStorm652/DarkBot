@@ -1,13 +1,10 @@
 package org.darkstorm.darkbot.minecraftbot.ai;
 
-import java.util.Random;
-
 import org.darkstorm.darkbot.minecraftbot.MinecraftBot;
 import org.darkstorm.darkbot.minecraftbot.world.entity.MainPlayerEntity;
 
 public class TwerkTask implements Task {
 	private final MinecraftBot bot;
-	private final Random random = new Random();
 	
 	private boolean active;
 	private int timer;
@@ -38,7 +35,7 @@ public class TwerkTask implements Task {
 			timer--;
 			return;
 		}
-		timer += 1 + random.nextInt(2);
+		timer += 1;
 		MainPlayerEntity player = bot.getPlayer();
 		player.setCrouching(!player.isCrouching());
 	}
