@@ -4,8 +4,10 @@ import java.io.IOException;
 
 import javax.crypto.SecretKey;
 
+import org.darkstorm.minecraft.darkbot.protocol.*;
+
 public interface ConnectionHandler {
-	public void sendPacket(WriteablePacket packet);
+	public void sendPacket(Packet packet);
 
 	public void process();
 
@@ -47,5 +49,5 @@ public interface ConnectionHandler {
 
 	public int getPort();
 
-	public Protocol<?> getProtocol();
+	public Protocol getProtocol();
 }

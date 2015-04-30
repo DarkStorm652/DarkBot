@@ -14,13 +14,14 @@ import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
 import org.darkstorm.minecraft.darkbot.event.io.*;
+import org.darkstorm.minecraft.darkbot.protocol.*;
 import org.darkstorm.minecraft.darkbot.util.*;
 
-public class SocketConnectionHandler<H extends PacketHeader> implements ConnectionHandler, EventListener {
+public class SocketConnectionHandler implements ConnectionHandler, EventListener {
 	private final MinecraftBot bot;
-	private final Protocol<H> protocol;
-	private final Queue<ReadablePacket> packetProcessQueue;
-	private final Queue<WriteablePacket> packetWriteQueue;
+	private final Protocol protocol;
+	private final Queue<Packet> packetProcessQueue;
+	private final Queue<Packet> packetWriteQueue;
 	private final Connection connection;
 
 	private final AtomicBoolean pauseReading, pauseWriting;
@@ -31,15 +32,15 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 	private SecretKey sharedKey;
 	private boolean encrypting, decrypting;
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port) {
+	public SocketConnectionHandler(MinecraftBot bot, Protocol protocol, String server, int port) {
 		this(bot, protocol, server, port, null);
 	}
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port, ProxyData socksProxy) {
+	public SocketConnectionHandler(MinecraftBot bot, Protocol protocol, String server, int port, ProxyData socksProxy) {
 		this.bot = bot;
 		this.protocol = protocol;
-		packetProcessQueue = new ArrayDeque<ReadablePacket>();
-		packetWriteQueue = new ArrayDeque<WriteablePacket>();
+		packetProcessQueue = new ArrayDeque<Packet>();
+		packetWriteQueue = new ArrayDeque<Packet>();
 
 		pauseReading = new AtomicBoolean();
 		pauseWriting = new AtomicBoolean();
@@ -58,7 +59,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 	}
 
 	@Override
-	public void sendPacket(WriteablePacket packet) {
+	public void sendPacket(Packet packet) {
 		synchronized(packetWriteQueue) {
 			packetWriteQueue.offer(packet);
 			packetWriteQueue.notifyAll();
@@ -96,20 +97,20 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 
 	@Override
 	public synchronized void process() {
-		ReadablePacket[] packets;
+		Packet[] packets;
 		synchronized(packetProcessQueue) {
 			if(packetProcessQueue.size() == 0)
 				return;
-			packets = packetProcessQueue.toArray(new ReadablePacket[packetProcessQueue.size()]);
+			packets = packetProcessQueue.toArray(new Packet[packetProcessQueue.size()]);
 			packetProcessQueue.clear();
 		}
 		EventBus eventBus = bot.getEventBus();
-		for(ReadablePacket packet : packets)
+		for(Packet packet : packets)
 			eventBus.fire(new PacketProcessEvent(packet));
 	}
 
 	@Override
-	public Protocol<?> getProtocol() {
+	public Protocol getProtocol() {
 		return protocol;
 	}
 
@@ -259,40 +260,8 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 						continue;
 					}
 
-					DataInputStream in = connection.getInputStream();
-					final H header = protocol.readHeader(in);
-					if(header == null)
-						throw new IOException("Invalid header");
-					ReadablePacket packet = (ReadablePacket) protocol.createPacket(header);
-					if(packet == null || !(packet instanceof ReadablePacket))
-						throw new IOException("Bad packet with header: " + header.toString());
-
-					if(header instanceof PacketLengthHeader) {
-						int length = ((PacketLengthHeader) header).getLength() - AbstractPacketX.varIntLength(header.getId());
-						final byte[] data = new byte[length];
-						in.readFully(data);
-
-						in = new DataInputStream(new ByteArrayInputStream(data) {
-							@Override
-							public synchronized int read() {
-								if(pos == count)
-									System.out.println("WARNING: Packet 0x" + Integer.toHexString(header.getId()).toUpperCase() + " read past length of "
-											+ data.length);
-								return super.read();
-							}
-
-							@Override
-							public void close() throws IOException {
-								if(pos != count)
-									System.out.println("WARNING: Packet 0x" + Integer.toHexString(header.getId()).toUpperCase() + " read less than "
-											+ data.length + " (" + pos + ")");
-							}
-						});
-					}
-					packet.readData(in);
-
-					if(header instanceof PacketLengthHeader)
-						in.close();
+					InputStream in = connection.getInputStream();
+					Packet packet = protocol.read(in);
 
 					bot.getEventBus().fire(new PacketReceivedEvent(packet));
 					synchronized(packetProcessQueue) {
@@ -316,7 +285,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 			try {
 				Thread.sleep(500);
 				while(isConnected()) {
-					WriteablePacket packet = null;
+					Packet packet = null;
 					try {
 						synchronized(pauseWriting) {
 							if(pauseWriting.get()) {
@@ -336,16 +305,13 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 							break;
 						continue;
 					}
+					
 					if(packet != null) {
-						ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-						packet.writeData(new DataOutputStream(byteOutputStream));
-						byte[] data = byteOutputStream.toByteArray();
-
-						DataOutputStream out = connection.getOutputStream();
-						PacketHeader header = protocol.createHeader(packet, data);
-
-						header.write(out);
-						out.write(data);
+						if(!packet.getDirection().equals(Direction.TO_SERVER))
+							throw new IOException("Attempted to write a packet in the wrong direction");
+						
+						OutputStream out = connection.getOutputStream();
+						protocol.write(out, packet);
 						out.flush();
 
 						bot.getEventBus().fire(new PacketSentEvent(packet));

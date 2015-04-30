@@ -18,8 +18,8 @@ public class Connection {
 	private String host;
 	private int port;
 	private Socket socket;
-	private DataInputStream inputStream;
-	private DataOutputStream outputStream;
+	private InputStream inputStream;
+	private OutputStream outputStream;
 	private ProxyData proxy;
 
 	public Connection(String host, int port) {
@@ -151,7 +151,7 @@ public class Connection {
 		return socket;
 	}
 
-	public DataInputStream getInputStream() {
+	public InputStream getInputStream() {
 		return inputStream;
 	}
 
@@ -159,7 +159,7 @@ public class Connection {
 		this.inputStream = inputStream;
 	}
 
-	public DataOutputStream getOutputStream() {
+	public OutputStream getOutputStream() {
 		return outputStream;
 	}
 
