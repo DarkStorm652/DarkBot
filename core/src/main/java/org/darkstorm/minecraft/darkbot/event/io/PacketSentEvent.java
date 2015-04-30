@@ -1,16 +1,12 @@
 package org.darkstorm.minecraft.darkbot.event.io;
 
-import org.darkstorm.minecraft.darkbot.protocol.WriteablePacket;
+import org.darkstorm.minecraft.darkbot.protocol.*;
 
 public class PacketSentEvent extends PacketEvent {
-	private final WriteablePacket packet;
-
-	public PacketSentEvent(WriteablePacket packet) {
-		this.packet = packet;
-	}
-
-	@Override
-	public WriteablePacket getPacket() {
-		return packet;
+	public PacketSentEvent(Packet packet) {
+		super(packet);
+		
+		if(!packet.getDirection().equals(Direction.TO_SERVER))
+			throw new IllegalArgumentException("Wrong-way packet");
 	}
 }
