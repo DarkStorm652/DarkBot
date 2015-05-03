@@ -110,11 +110,15 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			return;
 		}
 		if(options.has(protocolsOption)) {
-			System.out.println("Available protocols:");
-			for(ProtocolProvider<?> provider : ProtocolProvider.getProviders())
-				System.out.println("\t" + provider.getMinecraftVersion() + " (" + provider.getSupportedVersion() + "): " + provider.getClass().getName());
-			System.out.println("If no protocols are listed above, you may attempt to specify a protocol version in case the provider is actually in the class-path.");
-			System.out.println("If no protocol is specified, it wil take the latest protocol version, assuming there are protocols listed above.");
+			if(!ProtocolProvider.getProviders().isEmpty()) {
+				System.out.println("Available protocols:");
+				for(String version : ProtocolProvider.getAllSupportedVersionNames()) {
+					System.out.println("  " + version);
+					for(ProtocolProvider provider : ProtocolProvider.getProviders(version))
+						System.out.println("    " + provider.getClass().getName());
+				}
+			} else
+				System.out.println("No available protocols. Ensure that protocol jars are placed in the relative 'protocols/' directory.");
 			return;
 		}
 
@@ -293,26 +297,33 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		} else
 			owner = options.valueOf(ownerOption);
 
-		final int protocol;
+		final ProtocolProvider protocol;
 		if(options.has(protocolOption)) {
 			String protocolString = options.valueOf(protocolOption);
-			int parsedProtocol;
-			try {
-				parsedProtocol = Integer.parseInt(protocolString);
-			} catch(NumberFormatException exception) {
-				ProtocolProvider<?> foundProvider = null;
-				for(ProtocolProvider<?> provider : ProtocolProvider.getProviders())
-					if(protocolString.equals(provider.getMinecraftVersion()))
-						foundProvider = provider;
-				if(foundProvider == null) {
-					System.out.println("No provider found for Minecraft version '" + protocolString + "'.");
-					return;
-				} else
-					parsedProtocol = foundProvider.getSupportedVersion();
+			
+			ProtocolProvider provider = null;
+			Collection<ProtocolProvider> providers = ProtocolProvider.getProviders(protocolString);
+			if(providers.size() == 1) {
+				provider = providers.iterator().next();
+			} else if(providers.size() > 1) {
+				System.out.println("Multiple protocol providers found for '" + protocolString + "'.");
+			} else {
+				for(ProtocolProvider p : ProtocolProvider.getProviders()) {
+					if(protocolString.equals(p.getClass().getName())) {
+						provider = p;
+						break;
+					}
+				}
 			}
-			protocol = parsedProtocol;
-		} else
-			protocol = MinecraftBot.LATEST_PROTOCOL;
+			if(provider == null) {
+				System.out.println("No protocol provider found for '" + protocolString + "'.");
+				return;
+			}
+			protocol = provider;
+		} else {
+			System.out.println("Protocol name required.");
+			return;
+		}
 
 		final List<String> socksProxies;
 		final String defaultProxy;
@@ -507,7 +518,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		return new ProxyData(proxyData, port, type);
 	}
 
-	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, int protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, ProtocolProvider protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
 		MinecraftBot.Builder builder = MinecraftBot.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
@@ -530,7 +541,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			}
 			builder.loginProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
 		}
-		builder.username(username).authService(service).protocol(protocol);
+		builder.username(username).authService(service).protocolProvider(protocol);
 		if(session != null)
 			builder.session(session);
 		else
