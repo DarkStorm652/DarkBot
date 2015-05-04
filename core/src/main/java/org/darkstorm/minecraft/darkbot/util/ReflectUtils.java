@@ -5,8 +5,8 @@ import java.net.*;
 import java.util.*;
 import java.util.jar.*;
 
-public final class ReflectUtil {
-	private ReflectUtil() {
+public final class ReflectUtils {
+	private ReflectUtils() {
 	}
 	
 	@SuppressWarnings("resource")

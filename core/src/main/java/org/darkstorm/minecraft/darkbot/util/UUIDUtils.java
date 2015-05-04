@@ -3,8 +3,8 @@ package org.darkstorm.minecraft.darkbot.util;
 import java.security.*;
 import java.util.UUID;
 
-public final class UUIDUtil {
-	private UUIDUtil() {
+public final class UUIDUtils {
+	private UUIDUtils() {
 	}
 	
 	public static UUID generateSystemUUID() {

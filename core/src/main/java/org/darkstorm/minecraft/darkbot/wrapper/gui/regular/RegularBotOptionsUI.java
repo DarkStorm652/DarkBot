@@ -10,7 +10,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 import org.darkstorm.minecraft.darkbot.ai.Task;
-import org.darkstorm.minecraft.darkbot.util.ReflectUtil;
+import org.darkstorm.minecraft.darkbot.util.ReflectUtils;
 import org.darkstorm.minecraft.darkbot.wrapper.gui.*;
 import org.darkstorm.minecraft.darkbot.wrapper.gui.regular.RegularBot.RegularBotData;
 
@@ -39,7 +39,7 @@ public class RegularBotOptionsUI extends BotOptionsUI {
 		initComponents();
 		tasks = new HashMap<String, Class<? extends Task>>();
 		try {
-			for(Class<?> c : ReflectUtil.getClassesInPackage(Task.class.getPackage().getName())) {
+			for(Class<?> c : ReflectUtils.getClassesInPackage(Task.class.getPackage().getName())) {
 				try {
 					if(Task.class.isAssignableFrom(c) && !Task.class.equals(c))
 						tasks.put(c.getSimpleName(), c.asSubclass(Task.class));

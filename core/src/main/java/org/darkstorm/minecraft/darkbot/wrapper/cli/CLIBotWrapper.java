@@ -13,7 +13,7 @@ import org.darkstorm.minecraft.darkbot.auth.*;
 import org.darkstorm.minecraft.darkbot.connection.*;
 import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.RealmsUtil;
+import org.darkstorm.minecraft.darkbot.util.RealmsUtils;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
@@ -180,9 +180,9 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			}
 
 			System.out.println("Requesting MCO server list...");
-			RealmsUtil.Server[] servers;
+			RealmsUtils.Server[] servers;
 			try {
-				servers = RealmsUtil.requestServers(session, proxy);
+				servers = RealmsUtils.requestServers(session, proxy);
 			} catch(IOException exception) {
 				System.err.println("Unable to request MCO servers:");
 				exception.printStackTrace();
@@ -194,7 +194,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 				return;
 			}
 			System.out.println("Available servers (" + servers.length + "):");
-			for(RealmsUtil.Server server : servers) {
+			for(RealmsUtils.Server server : servers) {
 				System.out.println("\t" + server.getName() + " (" + server.getId() + "):");
 				System.out.println("\t\tOwner: " + server.getOwner());
 				System.out.println("\t\tMOTD: " + server.getMotd());
@@ -240,23 +240,23 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 				return;
 			}
 
-			RealmsUtil.Server[] availableServers;
+			RealmsUtils.Server[] availableServers;
 			try {
-				availableServers = RealmsUtil.requestServers(session, proxy);
+				availableServers = RealmsUtils.requestServers(session, proxy);
 			} catch(IOException exception) {
 				System.err.println("Unable to request MCO servers or server address:");
 				exception.printStackTrace();
 				return;
 			}
 			String serverName = options.valueOf(mcoServerOption);
-			RealmsUtil.Server targetServer = null;
-			for(RealmsUtil.Server availableServer : availableServers)
+			RealmsUtils.Server targetServer = null;
+			for(RealmsUtils.Server availableServer : availableServers)
 				if(serverName.equalsIgnoreCase(availableServer.getName()))
 					targetServer = availableServer;
 			if(targetServer == null) {
 				try {
 					int id = Integer.parseInt(serverName);
-					for(RealmsUtil.Server availableServer : availableServers)
+					for(RealmsUtils.Server availableServer : availableServers)
 						if(id == availableServer.getId())
 							targetServer = availableServer;
 					if(targetServer == null && id < availableServers.length)
@@ -271,7 +271,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			String address = null;
 			for(int i = 0; i < 6; i++) {
 				try {
-					address = RealmsUtil.requestAddress(targetServer, session, proxy);
+					address = RealmsUtils.requestAddress(targetServer, session, proxy);
 					break;
 				} catch(IOException exception) {
 					if(i == 5) {

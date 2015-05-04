@@ -10,12 +10,12 @@ import org.darkstorm.minecraft.darkbot.connection.ProxyData;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
-public final class RealmsUtil {
+public final class RealmsUtils {
 	private static final String REALMS_URL = "https://mcoapi.minecraft.net/";
 	private static final String REALMS_WORLD_URL = REALMS_URL + "worlds";
 	private static final String REALMS_WORLD_JOIN_URL = REALMS_URL + "worlds/%s/join";
 
-	private RealmsUtil() {
+	private RealmsUtils() {
 		throw new UnsupportedOperationException();
 	}
 

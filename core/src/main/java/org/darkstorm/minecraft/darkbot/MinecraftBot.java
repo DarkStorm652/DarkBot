@@ -23,7 +23,7 @@ public class MinecraftBot implements EventListener {
 	public static final int DEFAULT_PORT = 25565;
 	public static final int LATEST_PROTOCOL = -1;
 	public static final int MAX_CHAT_LENGTH = 100;
-	public static final UUID CLIENT_TOKEN = UUIDUtil.generateSystemUUID("CLIENT_TOKEN");
+	public static final UUID CLIENT_TOKEN = UUIDUtils.generateSystemUUID("CLIENT_TOKEN");
 
 	private final ExecutorService service;
 	private final EventBus eventBus;
