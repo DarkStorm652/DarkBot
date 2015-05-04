@@ -2,7 +2,7 @@ package org.darkstorm.minecraft.darkbot.world.entity;
 
 import java.util.Set;
 
-import org.darkstorm.minecraft.darkbot.IntHashMap;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;

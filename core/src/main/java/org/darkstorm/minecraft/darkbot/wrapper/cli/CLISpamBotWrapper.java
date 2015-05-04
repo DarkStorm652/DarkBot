@@ -15,6 +15,7 @@ import javax.swing.Timer;
 
 import joptsimple.*;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.auth.*;
@@ -23,6 +24,7 @@ import org.darkstorm.minecraft.darkbot.event.EventHandler;
 import org.darkstorm.minecraft.darkbot.event.general.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.ChatReceivedEvent;
 import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
@@ -106,12 +108,12 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 	@EventHandler
 	public void onChatReceived(ChatReceivedEvent event) {
 		super.onChatReceived(event);
-		String message = Util.stripColors(event.getMessage());
+		String message = ChatColor.stripColor(event.getMessage());
 		if(message.startsWith("Please register with \"/register")) {
-			String password = Util.generateRandomString(10 + random.nextInt(6));
+			String password = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
 			bot.say("/register " + password + " " + password);
 		} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
-			String msg = "/f create " + Util.generateRandomString(7 + random.nextInt(4));
+			String msg = "/f create " + RandomStringUtils.randomAlphanumeric(7 + random.nextInt(4));
 			bot.say(msg);
 		}
 		for(String s : captchaList) {
@@ -159,7 +161,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			if(spamList.length > 0) {
 				formatter.setVariable("spamlist", spamList[++nextSpamList >= spamList.length ? nextSpamList = 0 : nextSpamList]);
 			}
-			formatter.setVariable("rnd", Util.generateRandomString(15 + random.nextInt(6)));
+			formatter.setVariable("rnd", RandomStringUtils.randomAlphanumeric(15 + random.nextInt(6)));
 			formatter.setVariable("msg", Character.toString(msgChars[++nextMsgChar >= msgChars.length ? nextMsgChar = 0 : nextMsgChar]));
 			message = formatter.format(message);
 			bot.say(message);
@@ -531,7 +533,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 										accountsInUse.add(username);
 									}
 								} else
-									username = Util.generateRandomString(10 + random.nextInt(6));
+									username = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
 								if(loginDelay > 0) {
 									synchronized(this) {
 										try {

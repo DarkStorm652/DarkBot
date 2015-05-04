@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.minecraft.darkbot.IntHashMap;
+import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.entity.WatchableObject;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 

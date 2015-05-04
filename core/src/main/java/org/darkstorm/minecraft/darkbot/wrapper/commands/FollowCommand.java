@@ -1,7 +1,7 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.minecraft.darkbot.Util;
 import org.darkstorm.minecraft.darkbot.ai.FollowTask;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
@@ -19,7 +19,7 @@ public class FollowCommand extends AbstractCommand {
 		for(Entity entity : bot.getWorld().getEntities()) {
 			if(entity instanceof PlayerEntity && isFollowable(args, ((PlayerEntity) entity).getName())) {
 				followTask.follow(entity);
-				controller.say("Now following " + (args.length > 0 ? Util.stripColors(((PlayerEntity) entity).getName()) : "you") + ".");
+				controller.say("Now following " + (args.length > 0 ? ChatColor.stripColor(((PlayerEntity) entity).getName()) : "you") + ".");
 				return;
 			}
 		}
@@ -30,7 +30,7 @@ public class FollowCommand extends AbstractCommand {
 	}
 
 	private boolean isFollowable(String[] args, String name) {
-		name = Util.stripColors(name);
+		name = ChatColor.stripColor(name);
 		if(args.length > 0)
 			return args[0].equalsIgnoreCase(name);
 		for(String owner : controller.getOwners())

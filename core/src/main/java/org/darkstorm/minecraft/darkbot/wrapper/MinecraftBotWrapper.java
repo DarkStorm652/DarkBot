@@ -10,6 +10,7 @@ import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.RequestRespawnEvent;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.Backend;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
 
@@ -32,7 +33,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 
 	@EventHandler
 	public void onChatReceived(ChatReceivedEvent event) {
-		String message = Util.stripColors(event.getMessage());
+		String message = ChatColor.stripColor(event.getMessage());
 		System.out.println("[" + bot.getSession().getUsername() + "]> " + message);
 		String nocheat = "Please type '([^']*)' to continue sending messages/commands\\.";
 		Matcher nocheatMatcher = Pattern.compile(nocheat).matcher(message);

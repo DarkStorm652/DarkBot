@@ -3,6 +3,7 @@ package org.darkstorm.minecraft.darkbot.wrapper.backend;
 import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.ChatReceivedEvent;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.CommandException;
 
@@ -34,7 +35,7 @@ public class ChatBackend implements Backend, EventListener {
 
 	@EventHandler
 	public void onChatReceived(ChatReceivedEvent event) {
-		String message = Util.stripColors(event.getMessage());
+		String message = ChatColor.stripColor(event.getMessage());
 		String executor = null;
 		for(String owner : bot.getOwners()) {
 			int index = message.indexOf(owner);

@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.minecraft.darkbot.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.wrapper.cli.CLISpamBotWrapper;
 
 public class SpamCommand extends AbstractCommand {
@@ -11,6 +11,6 @@ public class SpamCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		CLISpamBotWrapper.setSpamMessage(Util.join(args, " "));
+		CLISpamBotWrapper.setSpamMessage(StringUtils.join(args, " "));
 	}
 }

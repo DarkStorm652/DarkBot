@@ -1,7 +1,7 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.minecraft.darkbot.Util;
 import org.darkstorm.minecraft.darkbot.ai.AttackTask;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
@@ -18,11 +18,11 @@ public class AttackCommand extends AbstractCommand {
 				AttackTask.class);
 		for(Entity entity : bot.getWorld().getEntities()) {
 			if(entity instanceof PlayerEntity
-					&& Util.stripColors(((PlayerEntity) entity).getName())
+					&& ChatColor.stripColor(((PlayerEntity) entity).getName())
 							.equalsIgnoreCase(name)) {
 				attackTask.setAttackEntity(entity);
 				controller.say("Attacking "
-						+ Util.stripColors(((PlayerEntity) entity).getName())
+						+ ChatColor.stripColor(((PlayerEntity) entity).getName())
 						+ "!");
 				return;
 			}

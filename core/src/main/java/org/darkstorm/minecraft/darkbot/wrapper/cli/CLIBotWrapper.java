@@ -6,12 +6,14 @@ import java.util.regex.*;
 
 import joptsimple.*;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.auth.*;
-import org.darkstorm.minecraft.darkbot.connection.ProxyData;
+import org.darkstorm.minecraft.darkbot.connection.*;
 import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.util.RealmsUtil;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
@@ -413,7 +415,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 				try {
 					String name = "";
 					if(username == null)
-						name = Util.generateRandomString(10 + random.nextInt(6));
+						name = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
 					else
 						name = username;
 					CLIBotWrapper bot = new CLIBotWrapper(createBot(server, name, null, null, null, protocol, null, proxy), owner);

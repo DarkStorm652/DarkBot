@@ -1,4 +1,4 @@
-package org.darkstorm.minecraft.darkbot;
+package org.darkstorm.minecraft.darkbot.util;
 
 import java.io.*;
 import java.net.*;

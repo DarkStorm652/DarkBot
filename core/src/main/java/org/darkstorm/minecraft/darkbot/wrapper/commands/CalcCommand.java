@@ -2,7 +2,7 @@ package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 import java.util.*;
 
-import org.darkstorm.minecraft.darkbot.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class CalcCommand extends AbstractCommand {
@@ -13,7 +13,7 @@ public class CalcCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		String text = Util.join(args, " ");
+		String text = StringUtils.join(args, " ");
 		try {
 			bot.say("Result: " + eval(text));
 		} catch(Exception exception) {

@@ -2,7 +2,7 @@ package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
 import java.util.ArrayList;
 
-import org.darkstorm.minecraft.darkbot.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.wrapper.cli.CLIBotWrapper;
 
 /*
@@ -40,7 +40,7 @@ public class HelpCommand extends AbstractCommand {
 				System.out.println((String.format("%-" + (commandName + 13) + "s%-" + (commandUsage + 14) + "s%s\n", "| !" + c.getName(), " | " + c.getOptionDescription(), " | " + c.getDescription())));
 			}
 			System.out.println();
-			bot.say(Util.join(toArray(commands), ","));
+			bot.say(StringUtils.join(toArray(commands), ","));
 		} else
 			for(Command c : getBot().getCommandManager().getCommands())
 				if(c.getName().equalsIgnoreCase(args[0]))

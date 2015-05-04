@@ -1,6 +1,7 @@
 package org.darkstorm.minecraft.darkbot.ai;
 
 import org.darkstorm.minecraft.darkbot.*;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
@@ -52,7 +53,7 @@ public class MirrorTask implements Task {
 			if(world == null)
 				return false;
 			for(Entity entity : world.getEntities())
-				if(entity instanceof PlayerEntity && name.equalsIgnoreCase(Util.stripColors(((PlayerEntity) entity).getName())))
+				if(entity instanceof PlayerEntity && name.equalsIgnoreCase(ChatColor.stripColor(((PlayerEntity) entity).getName())))
 					mirroring = (LivingEntity) entity;
 		}
 		if(mirroring != null) {
@@ -84,7 +85,7 @@ public class MirrorTask implements Task {
 			if(mirroring instanceof PlayerEntity) {
 				String name = ((PlayerEntity) mirroring).getName();
 				for(Entity entity : player.getWorld().getEntities()) {
-					if(entity instanceof PlayerEntity && name.equalsIgnoreCase(Util.stripColors(((PlayerEntity) entity).getName()))) {
+					if(entity instanceof PlayerEntity && name.equalsIgnoreCase(ChatColor.stripColor(((PlayerEntity) entity).getName()))) {
 						mirroring = (LivingEntity) entity;
 						break;
 					}

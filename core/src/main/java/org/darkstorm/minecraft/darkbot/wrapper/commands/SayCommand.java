@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.minecraft.darkbot.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public class SayCommand extends AbstractCommand {
@@ -11,6 +11,6 @@ public class SayCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		bot.say(Util.join(args, " "));
+		bot.say(StringUtils.join(args, " "));
 	}
 }

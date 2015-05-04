@@ -1,6 +1,7 @@
 package org.darkstorm.minecraft.darkbot.ai;
 
 import org.darkstorm.minecraft.darkbot.*;
+import org.darkstorm.minecraft.darkbot.util.ChatColor;
 import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
@@ -35,7 +36,7 @@ public class FollowTask implements Task {
 			if(world == null)
 				return false;
 			for(Entity entity : world.getEntities())
-				if(entity instanceof PlayerEntity && name.equalsIgnoreCase(Util.stripColors(((PlayerEntity) entity).getName())))
+				if(entity instanceof PlayerEntity && name.equalsIgnoreCase(ChatColor.stripColor(((PlayerEntity) entity).getName())))
 					following = entity;
 		}
 		return following != null;

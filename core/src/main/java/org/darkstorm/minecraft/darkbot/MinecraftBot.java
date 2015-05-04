@@ -14,6 +14,7 @@ import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
 import org.darkstorm.minecraft.darkbot.event.world.SpawnEvent;
 import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.util.*;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.*;
@@ -22,7 +23,7 @@ public class MinecraftBot implements EventListener {
 	public static final int DEFAULT_PORT = 25565;
 	public static final int LATEST_PROTOCOL = -1;
 	public static final int MAX_CHAT_LENGTH = 100;
-	public static final UUID CLIENT_TOKEN = Util.generateSystemUUID("CLIENT_TOKEN");
+	public static final UUID CLIENT_TOKEN = UUIDUtil.generateSystemUUID("CLIENT_TOKEN");
 
 	private final ExecutorService service;
 	private final EventBus eventBus;

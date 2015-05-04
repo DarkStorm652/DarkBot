@@ -1,108 +1,14 @@
-package org.darkstorm.minecraft.darkbot;
+package org.darkstorm.minecraft.darkbot.util;
 
 import java.io.*;
 import java.net.*;
-import java.security.*;
 import java.util.*;
 import java.util.jar.*;
 
-import javax.script.*;
-
-public final class Util {
-	private static final ScriptEngine engine;
-	private static final Random random = new Random();
-
-	static {
-		ScriptEngineManager mgr = new ScriptEngineManager();
-		engine = mgr.getEngineByName("JavaScript");
+public final class ReflectUtil {
+	private ReflectUtil() {
 	}
-
-	private Util() {
-		throw new UnsupportedOperationException();
-	}
-
-	public static Object eval(String javascript) {
-		try {
-			return engine.eval(javascript);
-		} catch(ScriptException exception) {
-			exception.printStackTrace();
-			return exception.toString();
-		}
-	}
-
-	public static UUID generateSystemUUID() {
-		return generateSystemUUID(null);
-	}
-
-	public static UUID generateSystemUUID(String extra) {
-		StringBuffer digestData = new StringBuffer();
-		digestData.append(System.getProperty("os.name"));
-		digestData.append(System.getProperty("os.version"));
-		digestData.append(System.getProperty("os.arch"));
-		digestData.append(System.getProperty("user.name"));
-		digestData.append(System.getProperty("user.home"));
-		digestData.append(System.getProperty("java.version"));
-		digestData.append(System.getProperty("java.home"));
-		if(extra != null)
-			digestData.append(extra);
-		return generateHashUUID(digestData.toString());
-	}
-
-	public static UUID generateHashUUID(String digestData) {
-		MessageDigest md5;
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-		} catch(NoSuchAlgorithmException exception) {
-			return UUID.randomUUID();
-		}
-
-		md5.update(digestData.getBytes());
-		byte[] data = md5.digest();
-
-		StringBuffer hash = new StringBuffer();
-		for(int i = 0; i < data.length; i++) {
-			byte b = data[i];
-
-			if((b & 0xF0) == 0)
-				hash.append(0);
-			hash.append(Integer.toHexString(b & 0xFF));
-		}
-
-		StringBuffer uuid = new StringBuffer();
-		uuid.append(hash.substring(0, 8)).append('-');
-		uuid.append(hash.substring(8, 12)).append('-');
-		uuid.append(hash.substring(12, 16)).append('-');
-		uuid.append(hash.substring(16, 20)).append('-');
-		uuid.append(hash.substring(20, 32));
-		return UUID.fromString(uuid.toString());
-	}
-
-	public static String stripColors(final String input) {
-		if(input != null)
-			return input.replaceAll("(?i)§[0-9a-fk-or]", "");
-		return null;
-	}
-
-	public static String join(Object[] objects) {
-		return join(objects, ", ", "");
-	}
-
-	public static String join(Object[] objects, String separator) {
-		return join(objects, separator, "");
-	}
-
-	public static String join(Object[] objects, String separator, String finalSeparator) {
-		StringBuilder builder = new StringBuilder();
-		for(int i = 0; i < objects.length; i++) {
-			if(i != 0)
-				builder.append(separator);
-			if(i == objects.length - 1)
-				builder.append(finalSeparator);
-			builder.append(objects[i]);
-		}
-		return builder.toString();
-	}
-
+	
 	@SuppressWarnings("resource")
 	public static List<Class<?>> getClassesInPackage(String packageName) throws IOException {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -207,25 +113,5 @@ public final class Util {
 			}
 		}
 		return classes;
-	}
-
-	public static String generateRandomString(int length) {
-		char[] characters = new char[length];
-		for(int i = 0; i < length; i++) {
-			char start, end;
-			switch(random.nextInt(4)) {
-			case 0:
-				start = 'A';
-				end = 'Z';
-			case 1:
-				start = '0';
-				end = '9';
-			default:
-				start = 'a';
-				end = 'z';
-			}
-			characters[i] = (char) (start + random.nextInt(end - start));
-		}
-		return new String(characters);
 	}
 }
