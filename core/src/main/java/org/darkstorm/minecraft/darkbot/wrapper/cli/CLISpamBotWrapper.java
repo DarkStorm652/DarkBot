@@ -94,7 +94,8 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new ToolCommand(this));
 		commandManager.register(new WalkCommand(this));
 		commandManager.register(new TwerkCommand(this));
-		commandManager.register(new DerpCommand(this));;
+		commandManager.register(new DerpCommand(this));
+		commandManager.register(new MuteCommand(this));
 
 		connectionHandler = bot.getConnectionHandler();
 		Session session = bot.getSession();

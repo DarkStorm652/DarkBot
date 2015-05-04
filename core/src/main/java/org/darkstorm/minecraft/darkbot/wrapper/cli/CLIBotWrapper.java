@@ -71,6 +71,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new TwerkCommand(this));
 		commandManager.register(new CrouchCommand(this));
 		commandManager.register(new MirrorCommand(this));
+		commandManager.register(new MuteCommand(this));
 	}
 
 	public static void main(String[] args) {
