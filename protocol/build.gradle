@@ -1,0 +1,5 @@
+description = 'DarkBot protocol implementations'
+
+dependencies {
+    compile project(':core')
+}
