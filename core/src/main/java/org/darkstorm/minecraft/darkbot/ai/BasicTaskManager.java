@@ -10,6 +10,8 @@ public class BasicTaskManager implements TaskManager {
 	private final Map<Class<? extends Task>, Task> tasks = new HashMap<Class<? extends Task>, Task>();
 	private final Map<Task, BigInteger> startTimes = new HashMap<Task, BigInteger>();
 
+	private Activity activity;
+
 	public BasicTaskManager(MinecraftBot bot) {
 		this.bot = bot;
 	}
@@ -50,6 +52,7 @@ public class BasicTaskManager implements TaskManager {
 		Task highestExclusiveTask = null;
 		int highestPriority = -1;
 		BigInteger highestStartTime = null;
+
 		for(Task task : tasks.values()) {
 			boolean active = task.isActive();
 			boolean hasStartTime = startTimes.containsKey(task);
@@ -82,8 +85,8 @@ public class BasicTaskManager implements TaskManager {
 				exclusiveIgnoringTasks.add(task);
 		}
 
-		if(bot.hasActivity() || highestExclusiveTask != null) {
-			if(!bot.hasActivity()) {
+		if(hasActivity() || highestExclusiveTask != null) {
+			if(!hasActivity()) {
 				highestExclusiveTask.run();
 				if(!highestExclusiveTask.isActive()) {
 					highestExclusiveTask.stop();
@@ -111,6 +114,19 @@ public class BasicTaskManager implements TaskManager {
 				}
 			}
 		}
+
+		if(activity != null) {
+			if(activity.isActive()) {
+				activity.run();
+				if(!activity.isActive()) {
+					activity.stop();
+					activity = null;
+				}
+			} else {
+				activity.stop();
+				activity = null;
+			}
+		}
 	}
 
 	@Override
@@ -132,6 +148,20 @@ public class BasicTaskManager implements TaskManager {
 	@Override
 	public List<Task> getRegisteredTasks() {
 		return new ArrayList<Task>(tasks.values());
+	}
+
+	public Activity getActivity() {
+		return activity;
+	}
+
+	public void setActivity(Activity activity) {
+		if(activity == null && this.activity != null)
+			this.activity.stop();
+		this.activity = activity;
+	}
+
+	public boolean hasActivity() {
+		return activity != null;
 	}
 
 }

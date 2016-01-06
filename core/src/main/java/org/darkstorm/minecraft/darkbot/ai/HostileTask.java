@@ -5,15 +5,13 @@ import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 
-public class HostileTask implements Task {
-	private final MinecraftBot bot;
-
+public class HostileTask extends AbstractTask {
 	private boolean active = false;
 
 	private int attackCooldown = 0;
 
 	public HostileTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override
@@ -65,16 +63,16 @@ public class HostileTask implements Task {
 				if(original.getY() - location.getY() >= 5)
 					return;
 			}
-			if(bot.hasActivity() && bot.getActivity() instanceof WalkActivity) {
-				WalkActivity activity = (WalkActivity) bot.getActivity();
+			if(hasActivity() && getActivity() instanceof WalkActivity) {
+				WalkActivity activity = (WalkActivity) getActivity();
 				if(location.getDistanceTo(activity.getTarget()) <= 3)
 					return;
 			}
-			bot.setActivity(new WalkActivity(bot, location, true));
+			setActivity(new WalkActivity(bot, location, true));
 			return;
 		} else {
-			if(closestDistance < 9 && bot.hasActivity() && bot.getActivity() instanceof WalkActivity)
-				bot.setActivity(null);
+			if(closestDistance < 9 && hasActivity() && getActivity() instanceof WalkActivity)
+				setActivity(null);
 			if(attackCooldown > 0)
 				return;
 			player.hit(entity);

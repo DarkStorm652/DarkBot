@@ -7,7 +7,7 @@ import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class MiningTask implements Task, EventListener {
+public class MiningTask extends AbstractTask implements EventListener {
 	private static final boolean[] ORES = new boolean[256];
 	private static final int TUNNEL_LENGTH = 35;
 
@@ -21,8 +21,6 @@ public class MiningTask implements Task, EventListener {
 		ORES[74] = true;
 	}
 
-	private final MinecraftBot bot;
-
 	private EatTask eatTask;
 	private boolean running = false;
 
@@ -31,7 +29,7 @@ public class MiningTask implements Task, EventListener {
 	private BlockLocation lastPlacement;
 
 	public MiningTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		bot.getEventBus().register(this);
 	}
 
@@ -114,7 +112,7 @@ public class MiningTask implements Task, EventListener {
 					}
 				}
 			} else {
-				bot.setActivity(new WalkActivity(bot, ourLocation.offset(-1, 0, 0)));
+				setActivity(new WalkActivity(bot, ourLocation.offset(-1, 0, 0)));
 				skipForward = 0;
 				return;
 			}
@@ -146,7 +144,7 @@ public class MiningTask implements Task, EventListener {
 				}
 			}
 			player.face(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ());
-			bot.setActivity(new WalkActivity(bot, newLocation));
+			setActivity(new WalkActivity(bot, newLocation));
 		} else {
 			skipForward = 0;
 
@@ -236,7 +234,7 @@ public class MiningTask implements Task, EventListener {
 						if(player.getInventory().hasActionsQueued())
 							return;
 						player.face(newLocation.getX() + 0.5, newLocation.getY() + 1.5, newLocation.getZ() + 0.5);
-						bot.setActivity(new WalkActivity(bot, newLocation));
+						setActivity(new WalkActivity(bot, newLocation));
 						return;
 					}
 					for(int offset = 1; offset >= 0; offset--) {
@@ -264,7 +262,7 @@ public class MiningTask implements Task, EventListener {
 			if(player.getInventory().hasActionsQueued())
 				return;
 			player.face(newLocation.getX() + 0.5, newLocation.getY() + 1.5, newLocation.getZ() + 0.5);
-			bot.setActivity(new WalkActivity(bot, newLocation));
+			setActivity(new WalkActivity(bot, newLocation));
 		}
 	}
 

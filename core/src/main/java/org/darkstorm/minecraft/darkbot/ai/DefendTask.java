@@ -4,10 +4,8 @@ import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class DefendTask implements Task {
+public class DefendTask extends AbstractTask {
 	private static final int[] SWORDS = new int[3200];
-
-	private final MinecraftBot bot;
 
 	private Entity attackEntity;
 
@@ -21,7 +19,7 @@ public class DefendTask implements Task {
 	}
 
 	public DefendTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override

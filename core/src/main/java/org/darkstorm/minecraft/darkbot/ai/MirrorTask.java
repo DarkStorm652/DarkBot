@@ -6,15 +6,14 @@ import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class MirrorTask implements Task {
+public class MirrorTask extends AbstractTask {
 	public static interface Filter {
 		public boolean canAttack(LivingEntity entity);
 	}
 	public static enum RotationMode {
 		TRACK, ORBIT
 	}
-	
-	private final MinecraftBot bot;
+
 	private LivingEntity mirroring = null;
 	private boolean started = false;
 	private double offR, offD, rotateD;
@@ -25,7 +24,7 @@ public class MirrorTask implements Task {
 	private RotationMode mode = RotationMode.TRACK;
 
 	public MirrorTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	public void mirror(LivingEntity entity) {

@@ -6,7 +6,7 @@ import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
-public class BuildingTask implements Task, EventListener {
+public class BuildingTask extends AbstractTask implements EventListener {
 	private static final boolean[] UNPLACEABLE = new boolean[256];
 	static {
 		UNPLACEABLE[0] = true;
@@ -29,7 +29,6 @@ public class BuildingTask implements Task, EventListener {
 		UNPLACEABLE[107] = true;
 	}
 
-	private final MinecraftBot bot;
 	private EatTask eatTask;
 	private boolean running = false;
 
@@ -38,7 +37,7 @@ public class BuildingTask implements Task, EventListener {
 	private BlockLocation point1, point2;
 
 	public BuildingTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		bot.getEventBus().register(this);
 	}
 
@@ -108,7 +107,7 @@ public class BuildingTask implements Task, EventListener {
 							}
 							if(!location.equals(ourLocation)) {
 								System.out.println("walking...");
-								bot.setActivity(new WalkActivity(bot, location));
+								setActivity(new WalkActivity(bot, location));
 								ticksWait = 4;
 								return;
 							}

@@ -5,14 +5,13 @@ import java.util.Random;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
-public class DerpTask implements Task {
-	private final MinecraftBot bot;
+public class DerpTask extends AbstractTask {
 	private final Random random = new Random();
 
 	private boolean active;
 
 	public DerpTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override

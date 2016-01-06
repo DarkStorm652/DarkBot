@@ -3,6 +3,12 @@ package org.darkstorm.minecraft.darkbot.ai;
 import java.util.List;
 
 public interface TaskManager {
+	public Activity getActivity();
+	
+	public void setActivity(Activity activity);
+	
+	public boolean hasActivity();
+	
 	public boolean registerTask(Task task);
 
 	public boolean unregisterTask(Task task);

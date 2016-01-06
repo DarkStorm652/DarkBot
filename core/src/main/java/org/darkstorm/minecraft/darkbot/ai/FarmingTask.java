@@ -9,7 +9,7 @@ import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class FarmingTask implements Task, EventListener {
+public class FarmingTask extends AbstractTask implements EventListener {
 	public enum StorageAction {
 		STORE,
 		SELL
@@ -43,8 +43,6 @@ public class FarmingTask implements Task, EventListener {
 		FARMED_ITEMS = new int[] { 372, 295, 296, 338, 361, 362, 86, 360 };
 	}
 
-	private final MinecraftBot bot;
-
 	private boolean running = false;
 	private int ticksWait, itemCheckWait;
 	private BlockLocation currentChest;
@@ -54,7 +52,7 @@ public class FarmingTask implements Task, EventListener {
 	private boolean selling;
 
 	public FarmingTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		bot.getEventBus().register(this);
 	}
 
@@ -200,7 +198,7 @@ public class FarmingTask implements Task, EventListener {
 
 							if(!ourLocation.equals(closestWalk)) {
 								System.out.println("Walking to chest!!!");
-								bot.setActivity(new WalkActivity(bot, closestWalk));
+								setActivity(new WalkActivity(bot, closestWalk));
 								return;
 							}
 
@@ -214,7 +212,7 @@ public class FarmingTask implements Task, EventListener {
 				}
 			} else if(storageAction.equals(StorageAction.SELL)) {
 				if(region != null ? region.contains(ourLocation) : getClosestFarmable(32) != null) {
-					bot.say("/spawn");
+					bot.sendChat("/spawn");
 					ticksWait = 200;
 					return;
 				}
@@ -285,7 +283,7 @@ public class FarmingTask implements Task, EventListener {
 
 		BlockLocation closest = getClosestFarmable(32);
 		if(region != null ? !region.contains(ourLocation) : closest == null) {
-			bot.say("/home");
+			bot.sendChat("/home");
 			ticksWait = 200;
 			return;
 		}
@@ -303,7 +301,7 @@ public class FarmingTask implements Task, EventListener {
 			ItemEntity item = getClosestGroundItem(FARMED_ITEMS);
 			if(item != null) {
 				System.out.println("Item: " + item.getItem() + " Location: " + item.getLocation());
-				bot.setActivity(new WalkActivity(bot, new BlockLocation(item.getLocation())));
+				setActivity(new WalkActivity(bot, new BlockLocation(item.getLocation())));
 			} else
 				itemCheckWait = 10;
 			return;
@@ -342,7 +340,7 @@ public class FarmingTask implements Task, EventListener {
 				walkTo = closestWalk;
 			}
 			if(!ourLocation.equals(walkTo)) {
-				bot.setActivity(new WalkActivity(bot, walkTo));
+				setActivity(new WalkActivity(bot, walkTo));
 				return;
 			}
 			player.breakBlock(closest);
@@ -368,7 +366,7 @@ public class FarmingTask implements Task, EventListener {
 				return;
 			BlockLocation offset = closest.offset(0, 1, 0);
 			if(!ourLocation.equals(offset)) {
-				bot.setActivity(new WalkActivity(bot, offset));
+				setActivity(new WalkActivity(bot, offset));
 				return;
 			}
 			player.placeBlock(offset);

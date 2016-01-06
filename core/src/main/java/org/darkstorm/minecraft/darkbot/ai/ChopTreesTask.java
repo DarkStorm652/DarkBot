@@ -10,13 +10,12 @@ import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
-public class ChopTreesTask implements Task, EventListener {
+public class ChopTreesTask extends AbstractTask implements EventListener {
 	private static final BlockLocation[] surrounding = new BlockLocation[] { new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1),
 			new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0), new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1), new BlockLocation(0, 0, -1),
 			new BlockLocation(1, 0, -1), };
 	private static final int LOG_ID = 17;
 
-	private final MinecraftBot bot;
 	private final List<BlockLocation> logPositions = new ArrayList<>();
 	private final Comparator<BlockLocation> logComparator;
 
@@ -24,7 +23,7 @@ public class ChopTreesTask implements Task, EventListener {
 	private boolean running = false;
 
 	public ChopTreesTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		logComparator = new Comparator<BlockLocation>() {
 			@Override
 			public int compare(BlockLocation o1, BlockLocation o2) {

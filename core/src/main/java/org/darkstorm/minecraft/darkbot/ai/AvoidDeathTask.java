@@ -4,14 +4,12 @@ import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.connection.ConnectionHandler;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
-public class AvoidDeathTask implements Task {
-	private final MinecraftBot bot;
-
+public class AvoidDeathTask extends AbstractTask {
 	private boolean enabled;
 	private int lastHealth;
 
 	public AvoidDeathTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override

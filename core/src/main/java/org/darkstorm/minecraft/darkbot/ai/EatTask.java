@@ -7,21 +7,19 @@ import org.darkstorm.minecraft.darkbot.event.protocol.server.EntityStopEatingEve
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class EatTask implements Task {
+public class EatTask extends AbstractTask {
 	private static final int[] FOOD_LIST;
 
 	static {
 		FOOD_LIST = new int[] { 260, 282, 297, 319, 320, 322, 349, 350, 357, 360, 363, 364, 365, 366, 367 };
 	}
 
-	private final MinecraftBot bot;
-
 	private boolean active;
 
 	private int lastHealth = -1, lastHunger = -1, eatingTicks, lastSlot;
 
 	public EatTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override

@@ -9,10 +9,9 @@ import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class DestroyingTask implements Task, EventListener {
+public class DestroyingTask extends AbstractTask implements EventListener {
 	private static final BlockLocation[] surrounding = new BlockLocation[] { new BlockLocation(-1, 0, 1), new BlockLocation(0, 0, 1), new BlockLocation(1, 0, 1), new BlockLocation(-1, 0, 0), new BlockLocation(1, 0, 0), new BlockLocation(-1, 0, -1), new BlockLocation(0, 0, -1), new BlockLocation(1, 0, -1), };
 
-	private final MinecraftBot bot;
 	private EatTask eatTask;
 	private boolean running = false;
 
@@ -21,7 +20,7 @@ public class DestroyingTask implements Task, EventListener {
 	private BlockLocation point1, point2;
 
 	public DestroyingTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		bot.getEventBus().register(this);
 	}
 
@@ -96,7 +95,7 @@ public class DestroyingTask implements Task, EventListener {
 								}
 								if(yChange == 5 || BlockType.getById(world.getBlockIdAt(newLocation.getX(), newLocation.getY() + 1, newLocation.getZ())).isSolid())
 									continue;
-								bot.setActivity(new WalkActivity(bot, newLocation));
+								setActivity(new WalkActivity(bot, newLocation));
 								return;
 							}
 						}
@@ -115,7 +114,7 @@ public class DestroyingTask implements Task, EventListener {
 							return;
 						} else
 							placeBlockAt(nextMove.offset(0, -1, 0));
-					bot.setActivity(new WalkActivity(bot, nextMove));
+					setActivity(new WalkActivity(bot, nextMove));
 					ticksWait = 4;
 					nextMove = null;
 					return;

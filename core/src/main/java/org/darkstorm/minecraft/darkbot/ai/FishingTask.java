@@ -9,15 +9,13 @@ import org.darkstorm.minecraft.darkbot.world.block.BlockLocation;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 
-public class FishingTask implements Task, EventListener {
-	private final MinecraftBot bot;
-
+public class FishingTask extends AbstractTask implements EventListener {
 	private boolean running = false;
 	private boolean fishing = false;
 	private int ticksFished = 0;
 
 	public FishingTask(final MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 		bot.getEventBus().register(this);
 	}
 

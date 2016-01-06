@@ -3,14 +3,12 @@ package org.darkstorm.minecraft.darkbot.ai;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
-public class TwerkTask implements Task {
-	private final MinecraftBot bot;
-	
+public class TwerkTask extends AbstractTask {
 	private boolean active;
 	private int timer;
 
 	public TwerkTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	@Override

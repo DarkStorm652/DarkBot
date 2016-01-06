@@ -6,13 +6,12 @@ import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 
-public class FollowTask implements Task {
-	private final MinecraftBot bot;
+public class FollowTask extends AbstractTask {
 	private Entity following = null;
 	private BlockLocation lastLocation;
 
 	public FollowTask(MinecraftBot bot) {
-		this.bot = bot;
+		super(bot);
 	}
 
 	public synchronized void follow(Entity entity) {
@@ -69,7 +68,7 @@ public class FollowTask implements Task {
 				if(original.getY() - location.getY() >= 5)
 					return;
 			}
-			bot.setActivity(new WalkActivity(bot, location, true));
+			setActivity(new WalkActivity(bot, location, true));
 		}
 	}
 
@@ -80,14 +79,14 @@ public class FollowTask implements Task {
 			MainPlayerEntity player = bot.getPlayer();
 			if(player == null)
 				return true;
-			Activity activity = bot.getActivity();
+			Activity activity = getActivity();
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
 			WalkActivity walkActivity = (WalkActivity) activity;
 			if(walkActivity.isMoving())
 				player.face(following.getX(), following.getY() + 1, following.getZ());
 			if(walkActivity.isActive() && player.isOnGround() && (player.getDistanceTo(following) < 2 || following.getDistanceTo(walkActivity.getTarget()) > 3))
-				bot.setActivity(null);
+				manager.setActivity(null);
 		}
 		return active;
 	}
