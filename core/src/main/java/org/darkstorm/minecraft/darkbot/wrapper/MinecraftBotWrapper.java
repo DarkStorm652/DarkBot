@@ -15,13 +15,13 @@ import org.darkstorm.minecraft.darkbot.wrapper.backend.Backend;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
 
 public abstract class MinecraftBotWrapper implements EventListener {
-	protected final MinecraftBot bot;
+	protected final MinecraftBotImpl bot;
 	protected final CommandManager commandManager;
 
 	private final List<Backend> backends = new CopyOnWriteArrayList<>();
 	private final List<String> owners = new CopyOnWriteArrayList<>();
 
-	public MinecraftBotWrapper(MinecraftBot bot) {
+	public MinecraftBotWrapper(MinecraftBotImpl bot) {
 		this.bot = bot;
 		
 		bot.setMessageDelay(2000);
@@ -40,19 +40,19 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		if(nocheatMatcher.matches()) {
 			try {
 				String captcha = nocheatMatcher.group(1);
-				bot.say(captcha);
+				bot.sendChat(captcha);
 			} catch(Exception exception) {
 				exception.printStackTrace();
 			}
 		} else if(message.contains("teleport to")) {
 			for(String owner : owners) {
 				if(message.contains(owner)) {
-					bot.say("/tpaccept");
+					bot.sendChat("/tpaccept");
 					break;
 				}
 			}
 		} else if(message.startsWith("/uc "))
-			bot.say(message);
+			bot.sendChat(message);
 	}
 
 	@EventHandler
@@ -65,7 +65,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	public void onRespawn(RespawnEvent event) {
 		TaskManager taskManager = bot.getTaskManager();
 		taskManager.stopAll();
-		bot.setActivity(null);
+		taskManager.setActivity(null);
 	}
 
 	@EventHandler

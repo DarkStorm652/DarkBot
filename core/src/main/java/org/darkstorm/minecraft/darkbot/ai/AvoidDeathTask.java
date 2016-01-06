@@ -41,9 +41,7 @@ public class AvoidDeathTask extends AbstractTask {
 			return;
 		}
 		if(player.getHealth() < lastHealth) {
-			ConnectionHandler connectionHandler = bot.getConnectionHandler();
-			connectionHandler.disconnect("Damaged! Disconnecting! Position: "
-					+ player.getLocation());
+			bot.disconnect("Damaged! Disconnecting! Position: " + player.getLocation());
 			enabled = false;
 		}
 	}

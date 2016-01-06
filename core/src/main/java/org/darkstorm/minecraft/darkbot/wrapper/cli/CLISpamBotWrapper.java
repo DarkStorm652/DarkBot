@@ -60,7 +60,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 	private Random random = new Random();
 	private int nextSkill, nextBot, nextMsgChar, nextSpamList, tickDelay = 100, nextMessage;
 
-	private CLISpamBotWrapper(MinecraftBot bot, String owner) {
+	private CLISpamBotWrapper(MinecraftBotImpl bot, String owner) {
 		super(bot);
 		synchronized(bots) {
 			bots.add(this);
@@ -111,15 +111,15 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		String message = ChatColor.stripColor(event.getMessage());
 		if(message.startsWith("Please register with \"/register")) {
 			String password = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
-			bot.say("/register " + password + " " + password);
+			bot.sendChat("/register " + password + " " + password);
 		} else if(message.contains("You are not member of any faction.") && spamMessage != null && createFaction) {
 			String msg = "/f create " + RandomStringUtils.randomAlphanumeric(7 + random.nextInt(4));
-			bot.say(msg);
+			bot.sendChat(msg);
 		}
 		for(String s : captchaList) {
 			Matcher captchaMatcher = Pattern.compile(s).matcher(message);
 			if(captchaMatcher.matches())
-				bot.say(captchaMatcher.group(1));
+				bot.sendChat(captchaMatcher.group(1));
 		}
 	}
 
@@ -164,7 +164,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			formatter.setVariable("rnd", RandomStringUtils.randomAlphanumeric(15 + random.nextInt(6)));
 			formatter.setVariable("msg", Character.toString(msgChars[++nextMsgChar >= msgChars.length ? nextMsgChar = 0 : nextMsgChar]));
 			message = formatter.format(message);
-			bot.say(message);
+			bot.sendChat(message);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -394,7 +394,7 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 					Random random = new Random();
 
 					if(!offline) {
-						AuthService<?> authService = new YggdrasilAuthService(MinecraftBot.CLIENT_TOKEN);
+						AuthService<?> authService = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
 						boolean authenticated = false;
 						user: while(true) {
 							if(authenticated) {
@@ -729,17 +729,17 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		return new ProxyData(proxyData, port, type);
 	}
 
-	private static MinecraftBot createBot(	String server,
-											String username,
-											String password,
-											AuthService<?> service,
-											Session session,
-											ProtocolProvider protocol,
-											String loginProxy,
-											String proxy,
-											boolean tor) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBotImpl createBot(String server,
+											  String username,
+											  String password,
+											  AuthService<?> service,
+											  Session session,
+											  ProtocolProvider protocol,
+											  String loginProxy,
+											  String proxy,
+											  boolean tor) throws AuthenticationException, UnsupportedProtocolException, IOException {
 		System.out.println("[" + session.getUsername() + "] create - " + server + " - " + password + " - " + protocol + " - " + loginProxy + " - " + proxy);
-		MinecraftBot.Builder builder = MinecraftBot.builder();
+		MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
 		if(tor) {
 			//builder.connectProxy(new ProxyData(null, 0, ProxyType.TOR));
 		} else if(proxy != null && !proxy.isEmpty()) {

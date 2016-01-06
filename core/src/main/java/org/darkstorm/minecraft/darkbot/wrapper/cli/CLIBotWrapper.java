@@ -165,7 +165,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			if(options.has(proxyOption))
 				proxy = toProxy(options.valueOf(proxyOption), ProxyData.ProxyType.SOCKS);
 
-			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBot.CLIENT_TOKEN);
+			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
 			YggdrasilSession session;
 			try {
 				session = service.login(username, password, proxy);
@@ -226,7 +226,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			ProxyData proxy = null;
 			if(options.has(proxyOption))
 				proxy = toProxy(options.valueOf(proxyOption), ProxyData.ProxyType.SOCKS);
-			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBot.CLIENT_TOKEN);
+			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
 			YggdrasilSession session;
 			try {
 				session = service.login(username, password, proxy);
@@ -355,7 +355,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		Random random = new Random();
 
 		if(!offline) {
-			AuthService<?> authService = new YggdrasilAuthService(MinecraftBot.CLIENT_TOKEN);
+			AuthService<?> authService = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
 			user: do {
 				Session session = null;
 				String loginProxy;
@@ -522,7 +522,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 	}
 
 	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, ProtocolProvider protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
-		MinecraftBot.Builder builder = MinecraftBot.builder();
+		MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;
 			ProxyType type = ProxyType.SOCKS;
