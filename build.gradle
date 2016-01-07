@@ -27,7 +27,7 @@ configure(subprojects) { subproject ->
 		compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.47'
 		compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.3.1'
 		compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.1'
-		compile group: 'org.jdom', name: 'jdom', version: '1.1'
+		compile group: 'org.jdom', name: 'jdom2', version: '2.0.6'
 		compile group: 'net.sf.jopt-simple', name: 'jopt-simple', version: '3.2'
 		compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 		compile group: 'com.jtattoo', name: 'JTattoo', version: '1.6.11'
