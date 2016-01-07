@@ -1,4 +1,6 @@
-package org.darkstorm.minecraft.darkbot.protocol.generator;
+package org.darkstorm.minecraft.darkbot.protocol.generator.model;
+
+import org.darkstorm.minecraft.darkbot.protocol.generator.Direction;
 
 import java.util.Collection;
 
