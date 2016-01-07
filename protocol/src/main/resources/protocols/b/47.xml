@@ -1,4 +1,4 @@
-<protocol version="47" family="type-b">
+<protocol version="47" family="type-b" script="java">
 	<packets>
 		<state name="handshake" initial="true">
 			<outbound>
@@ -172,14 +172,24 @@
 					<field name="pitch" type="angle" />
 					<field name="yaw" type="angle" />
 					<field name="object-data" type="int" />
-					<if>
-						<condition>
-							<not><equals field="data-flag">0</equals></not>
-						</condition>
-						<field name="velocity-x" type="velocity" />
-						<field name="velocity-y" type="velocity" />
-						<field name="velocity-z" type="velocity" />
-					</if>
+					<field name="velocity-x" type="velocity" />
+					<field name="velocity-y" type="velocity" />
+					<field name="velocity-z" type="velocity" />
+					<read>
+						read("entity-id");
+						read("type");
+						read("x");
+						read("y");
+						read("z");
+						read("pitch");
+						read("yaw");
+						read("object-data");
+						if(value("object-data") == 0) {
+							read("velocity-x");
+							read("velocity-y");
+							read("velocity-z");
+						}
+					</read>
 				</packet>
 				<packet name="spawn-mob" id="0F">
 					<field name="entity-id" type="varint" />
@@ -389,7 +399,7 @@
 								<field name="z" type="int" />
 								<field name="section-mask" type="ushort" />
 							</array-compound>
-							<length-field>chunk-count</length-field>
+							<length-field>count</length-field>
 						</type>
 					</field>
 					<field name="data" type="remaining-buffer" />
@@ -641,26 +651,28 @@
 				<packet name="update-scoreboard-objective" id="3B">
 					<field name="name" type="string" />
 					<field name="mode" type="byte" />
-					<if>
-						<condition>
-							<or>
-								<equals field="mode">0</equals>
-								<equals field="mode">2</equals>
-							</or>
-						</condition>
-						<field name="value" type="string" />
-						<field name="type" type="string" />
-					</if>
+					<field name="value" type="string" />
+					<field name="type" type="string" />
+					<read>
+						`read-field name`;
+						`read-field mode`;
+						if(`field mode` == 0 || `field mode` == 2) {
+							`read-field value`;
+							`read-field value`;
+						}
+					</read>
 				</packet>
 				<packet name="update-score" id="3C">
 					<field name="name" type="string" />
 					<field name="action" type="byte" />
 					<field name="objective-name" type="string" />
-					<field name="value" type="varint">
-						<condition>
-							<not><equals field="action">1</equals></not>
-						</condition>
-					</field>
+					<read>
+						`read-field name`;
+						`read-field action`;
+						`read-field object-name`;
+						if(`field action` != 1)
+							`read-field value`;
+					</read>
 				</packet>
 				<packet name="display-scoreboard" id="3D">
 					<field name="position" type="byte" />
@@ -669,35 +681,33 @@
 				<packet name="update-team" id="3E">
 					<field name="name" type="string" />
 					<field name="mode" type="byte" />
-					<if>
-						<condition>
-							<or>
-								<equals field="mode">0</equals>
-								<equals field="mode">2</equals>
-							</or>
-						</condition>
-						<field name="display-name" type="string" />
-						<field name="prefix" type="string" />
-						<field name="suffix" type="string" />
-						<field name="friendly-fire" type="byte" />
-						<field name="name-tag-visibility" type="string" />
-						<field name="color" type="byte" />
-					</if>
-					<if>
-						<condition>
-							<or>
-								<equals field="mode">0</equals>
-								<equals field="mode">3</equals>
-								<equals field="mode">4</equals>
-							</or>
-						</condition>
-						<field name="players">
-							<type name="array">
-								<array-type>string</array-type>
-								<length-type>varint</length-type>
-							</type>
-						</field>
-					</if>
+					<field name="display-name" type="string" />
+					<field name="prefix" type="string" />
+					<field name="suffix" type="string" />
+					<field name="friendly-fire" type="byte" />
+					<field name="name-tag-visibility" type="string" />
+					<field name="color" type="byte" />
+					<field name="players">
+						<type name="array">
+							<array-type>string</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+					<read>
+						`read-field name`;
+						`read-field mode`;
+						if(`field mode` == 0 || `field mode` == 2) {
+							`read-field display-name`;
+							`read-field prefix`;
+							`read-field suffix`;
+							`read-field friendly-fire`;
+							`read-field name-tag-visibility`;
+							`read-field color`;
+						}
+						if(`field mode` == 0 || `field mode` == 3 || `field mode` == 4) {
+							`read-field players`;
+						}
+					</read>
 				</packet>
 				<packet name="send-plugin-message" id="3F">
 					<field name="channel" type="string" />
@@ -711,102 +721,83 @@
 				</packet>
 				<packet name="update-combat" id="42">
 					<field name="event" type="varint" />
-					<field name="duration" type="varint">
-						<condition>
-							<equals field="event">1</equals>
-						</condition>
-					</field>
-					<field name="player-id" type="varint">
-						<condition>
-							<equals field="event">2</equals>
-						</condition>
-					</field>
-					<field name="entity-id" type="varint">
-						<condition>
-							<or>
-								<equals field="event">1</equals>
-								<equals field="event">2</equals>
-							</or>
-						</condition>
-					</field>
-					<field name="message" type="string">
-						<condition>
-							<equals field="event">2</equals>
-						</condition>
-					</field>
+					<field name="duration" type="varint" />
+					<field name="player-id" type="varint" />
+					<field name="entity-id" type="varint" />
+					<field name="message" type="string" />
+					<read>
+						`read-field event`;
+						if(`field event` == 1) {
+							`read-field duration`;
+							`read-field entity-id`;
+						} else if(`field event` == 2) {
+							`read-field player-id`;
+							`read-field entity-id`;
+							`read-field message`;
+						}
+					</read>
 				</packet>
 				<packet name="update-camera" id="43">
 					<field name="camera-id" type="varint" />
 				</packet>
 				<packet name="set-world-border" id="44">
 					<field name="action" type="varint" />
-					<if>
-						<condition>
-							<equals field="action">0</equals>
-						</condition>
-						<field name="radius" type="double" />
-					</if>
-					<if>
-						<condition>
-							<equals field="action">1</equals>
-						</condition>
-						<field name="old-radius" type="double" />
-						<field name="new-radius" type="double" />
-						<field name="speed" type="varlong" />
-					</if>
-					<if>
-						<condition>
-							<equals field="action">2</equals>
-						</condition>
-						<field name="x" type="double" />
-						<field name="z" type="double" />
-					</if>
-					<if>
-						<condition>
-							<equals field="action">3</equals>
-						</condition>
-						<field name="x" type="double" />
-						<field name="z" type="double" />
-						<field name="old-radius" type="double" />
-						<field name="new-radius" type="double" />
-						<field name="speed" type="varlong" />
-						<field name="portal-teleport-boundary" type="varint" />
-						<field name="warning-time" type="varint" />
-						<field name="warning-blocks" type="varint" />
-					</if>
-					<if>
-						<condition>
-							<equals field="action">4</equals>
-						</condition>
-						<field name="warning-time" type="varint" />
-					</if>
-					<if>
-						<condition>
-							<equals field="action">5</equals>
-						</condition>
-						<field name="warning-blocks" type="varint" />
-					</if>
+					<field name="radius" type="double" />
+					<field name="x" type="double" />
+					<field name="z" type="double" />
+					<field name="old-radius" type="double" />
+					<field name="new-radius" type="double" />
+					<field name="speed" type="varlong" />
+					<field name="portal-teleport-boundary" type="varint" />
+					<field name="warning-time" type="varint" />
+					<field name="warning-blocks" type="varint" />
+					<read>
+						`read-field action`;
+						switch(`field action`) {
+						case 0: `read-field radius`; break;
+						case 1:
+							`read-field old-radius`;
+							`read-field new-radius`;
+							`read-field speed`;
+							break;
+						case 2:
+							`read-field x`;
+							`read-field z`;
+							break;
+						case 3:
+							`read-field x`;
+							`read-field z`;
+							`read-field old-radius`;
+							`read-field new-radius`;
+							`read-field speed`;
+							`read-field portal-teleport-boundary`;
+							`read-field warning-time`;
+							`read-field warning-blocks`;
+							break;
+						case 4: `read-field warning-time`; break;
+						case 5: `read-field warning-blocks`; break;
+						}
+					</read>
 				</packet>
 				<packet name="set-title" id="45">
 					<field name="action" type="varint" />
-					<field name="title-text" type="string">
-						<condition>
-							<equals field="action">0</equals>
-						</condition>
-					</field>
-					<field name="subtitle-text" type="string">
-						<condition>
-							<equals field="action">1</equals>
-						</condition>
-					</field>
-					<if>
-						<condition>
-							<equals field="action">2</equals>
-						</condition>
-						<field name="fade-in" type="int" />
-						<field name="stay" type="int" />
-						<field name="fade-out" type="int" />
-					</if>
+					<field name="title-text" type="string" />
+					<field name="subtitle-text" type="string" />
+					<field name="fade-in" type="int" />
+					<field name="stay" type="int" />
+					<field name="fade-out" type="int" />
+					<read>
+						`read-field action`;
+						if(`field action` == 0)
+							`read-field title-text`;
+						else if(`field action` == 1)
+							`read-field subtitle-text`;
+						else if(`field action` == 2) {
+							`read-field fade-in`;
+							`read-field stay`;
+							`read-field fade-out`;
+						}
+					</read>
 				</packet>
 				<packet name="set-compression" id="46">
 					<field name="threshold" type="varint" />
@@ -835,14 +826,18 @@
 				<packet name="use-entity" id="02">
 					<field name="target-id" type="varint" />
 					<field name="type" type="varint" />
-					<if>
-						<condition>
-							<equals field="type">2</equals>
-						</condition>
-						<field name="target-x" type="float" />
-						<field name="target-y" type="float" />
-						<field name="target-z" type="float" />
-					</if>
+					<field name="target-x" type="float" />
+					<field name="target-y" type="float" />
+					<field name="target-z" type="float" />
+					<write>
+						`write-field target-id`;
+						`write-field type`;
+						if(`field type` == 2) {
+							`write-field target-x`;
+							`write-field target-y`;
+							`write-field target-z`;
+						}
+					</write>
 				</packet>
 				<packet name="update-player" id="03">
 					<field name="on-ground" type="boolean" />
@@ -933,11 +928,14 @@
 				</packet>
 				<packet name="request-tab-completion" id="14">
 					<field name="text" type="string" />
-					<field name="has-position" type="position">
-						<condition>
-							<equals field="has-position">true</equals>
-						</condition>
-					</field>
+					<field name="is-facing-block" type="boolean" />
+					<field name="block-faced" type="position" />
+					<write>
+						`write-field text`;
+						`write-field is-facing-block`;
+						if(`field is-facing-block`)
+							`write-field block-faced`;
+					</write>
 				</packet>
 				<packet name="set-client-settings" id="15">
 					<field name="locale" type="string" />
