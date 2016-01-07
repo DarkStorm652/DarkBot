@@ -1,4 +1,6 @@
-package org.darkstorm.minecraft.darkbot.protocol.generator.type;
+package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
+
+import org.darkstorm.minecraft.darkbot.protocol.generator.type.Type;
 
 abstract class AbstractOption<T> implements Option<T> {
 	private final String name;

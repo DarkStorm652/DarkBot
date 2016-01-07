@@ -1,9 +1,9 @@
-package org.darkstorm.minecraft.darkbot.protocol.generator;
+package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
+
 
 import org.darkstorm.minecraft.darkbot.protocol.generator.type.Type;
 
-public interface Field<T> {
+public interface Option<T> {
 	public String getName();
 	public Type<T> getType();
-	public T getValue();
 }

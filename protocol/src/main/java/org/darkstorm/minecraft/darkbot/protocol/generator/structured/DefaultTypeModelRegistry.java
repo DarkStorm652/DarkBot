@@ -1,4 +1,4 @@
-package org.darkstorm.minecraft.darkbot.protocol.generator.type;
+package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
 
 import java.util.*;
 

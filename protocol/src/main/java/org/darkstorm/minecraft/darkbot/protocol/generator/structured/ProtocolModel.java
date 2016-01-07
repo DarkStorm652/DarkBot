@@ -1,8 +1,6 @@
-package org.darkstorm.minecraft.darkbot.protocol.generator;
+package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
 
 import java.util.*;
-
-import org.darkstorm.minecraft.darkbot.protocol.generator.type.TypeModelRegistry;
 
 public interface ProtocolModel {
 	public String getVersionName();
