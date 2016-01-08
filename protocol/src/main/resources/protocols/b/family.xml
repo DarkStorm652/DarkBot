@@ -1,7 +1,63 @@
 <protocol-family name="type-b" script="java">
     <header>
-        <length type="varint" />
-        <id type="varint" />
+		<constants>
+			<constant name="varint-length" type="java.util.function.IntUnaryOperator"><![CDATA[
+				return (varint) -> {
+				    int size = 0;
+					int temp = varint;
+					while(true) {
+						size++;
+						if((temp & 0xFFFFFF80) == 0)
+						break;
+						temp >>>= 7;
+					}
+					return size;
+				};
+			]]></constant>
+		</constants>
+        <import>
+            import java.io.*;
+        </import>
+		<read provides-in="true"><![CDATA[
+			int length = `read varint`;
+			int id = `read varint`;
+
+			int idLength = `constant varint-length`.apply(id);
+			int count = length - idLength;
+
+			InputStream in = new InputStream() {
+				private int pos = 0;
+				@Override
+				public synchronized int read() {
+					if(pos == count)
+						System.out.println("WARNING: Packet 0x" + Integer.toHexString(id).toUpperCase() + " read past length of " + count);
+					int b = `read`;
+					pos++;
+					return b;
+				}
+
+				@Override
+				public void close() throws IOException {
+					if(pos < count)
+						System.out.println("WARNING: Packet 0x" + Integer.toHexString(header.getId()).toUpperCase() + " read less than " + count + " (" + pos + ")");
+				}
+			});
+
+			`read-packet id in`;
+			in.close();
+		]]></read>
+		<write><![CDATA[
+			int length = `packet-length`;
+			int id = `packet-id`;
+
+			int idLength = `constant varint-length`.apply(id);
+			int count = length + idLength;
+
+			`write varint count`;
+			`write varint id`;
+
+			`write-packet`;
+		]]></write>
     </header>
     <types>
         <type name="boolean" provides="boolean">
@@ -171,11 +227,11 @@
 				<option name="limit" type="int" default="32767" />
 				<option name="trim" type="boolean" default="false" />
 			</options>
-			<variables>
-				<variable name="utf8" type="java.util.Charset">
+			<constants>
+				<constant name="utf8" class="java.util.Charset">
 					return Charset.forName("UTF-8");
-				</variable>
-			</variables>
+				</constant>
+			</constants>
 			<imports>
 				<import class="java.util.Charset" />
 			</imports>
@@ -185,7 +241,7 @@
 				
 				int length = `read varint`;
 				`read-array buffer 0 length`;
-				String string = new String(buffer, 0, length, `variable utf8`);
+				String string = new String(buffer, 0, length, `constant utf8`);
 				
 				if(string.length() > limit) {
 					if(trim)
@@ -208,7 +264,7 @@
 			    		error("String too big: " + string.length() + " > " + limit);
 			    }
 			    
-			    byte[] bytes = string.getBytes(`variable utf8`);
+			    byte[] bytes = string.getBytes(`constant utf8`);
 			    `write varint {bytes.length}`;
 			    `write-array bytes 0 bytes.length`;
 			]]></write>
@@ -226,5 +282,41 @@
 				`write {(int) (`value` * div)}`;
 			]]></write>
 		</type>
+        <type name="array" provides="array">
+            <options>
+                <option name="element" type="compound">
+                    <default />
+                </option>
+                <option name="length" type="type">
+                    <default />
+                </option>
+                <option name="take-until" type="type">
+                    <default name="" />
+                </option>
+            </options>
+            <read><![CDATA[
+                if(`is-default take-until`) {
+                    int length = -1;
+                    if(!`is-default length-type`)
+                        length = `read {`option length-type`}`;
+                    else if(!`is-default length`)
+                        length = `call length`;
+                    else
+                        `error Length not provided`
+
+                    List list = new ArrayList<>(length);
+                    if(!`is-default array-type`) {
+                        for(int i = 0; i < length; i++)
+                            list.add(`read {`option array-type`}`);
+                    } else if(!`is-default array-compound`) {
+                        for(int i = 0; i < length; i++)
+                            list.add(`read {`option array-compound`}`);
+                    } else
+                        `error Array type not provided`;
+                }
+            ]]></read>
+            <write><![CDATA[
+            ]]></write>
+        </type>
 	</types>
 </protocol-family>

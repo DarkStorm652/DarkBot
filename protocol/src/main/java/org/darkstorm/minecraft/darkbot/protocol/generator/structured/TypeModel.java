@@ -1,14 +1,19 @@
 package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
 
-import org.darkstorm.minecraft.darkbot.protocol.generator.type.TypeBuilder;
-
 import java.util.*;
 
-public interface TypeModel<T> {
+public interface TypeModel {
 	public String getName();
-	public Class<T> getTypeClass();
-	public Collection<Option<?>> getOptions();
-	public Option<?> getOption(String name);
-	
-	public TypeBuilder<T> createBuilder();
+	public String getTypeClass();
+
+	public Collection<TypeOption> getOptions();
+	public TypeOption getOption(String name);
+
+	public Collection<Constant> getConstants();
+	public Constant getConstant(String name);
+
+	public TypeBuilder createBuilder();
+
+	public Code getReadCode();
+	public Code getWriteCode();
 }

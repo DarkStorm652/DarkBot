@@ -176,20 +176,35 @@
 					<field name="velocity-y" type="velocity" />
 					<field name="velocity-z" type="velocity" />
 					<read>
-						read("entity-id");
-						read("type");
-						read("x");
-						read("y");
-						read("z");
-						read("pitch");
-						read("yaw");
-						read("object-data");
-						if(value("object-data") == 0) {
-							read("velocity-x");
-							read("velocity-y");
-							read("velocity-z");
+						`read-field entity-id`;
+						`read-field type`;
+						`read-field x`;
+						`read-field y`;
+						`read-field z`;
+						`read-field pitch`;
+						`read-field yaw`;
+						`read-field object-data`;
+						if(`field object-data` == 0) {
+							`read-field velocity-x`;
+							`read-field velocity-y`;
+							`read-field velocity-z`;
 						}
 					</read>
+					<write>
+						`write-field entity-id`;
+						`write-field type`;
+						`write-field x`;
+						`write-field y`;
+						`write-field z`;
+						`write-field pitch`;
+						`write-field yaw`;
+						`write-field object-data`;
+						if(`field object-data` == 0) {
+							`write-field velocity-x`;
+							`write-field velocity-y`;
+							`write-field velocity-z`;
+						}
+					</write>
 				</packet>
 				<packet name="spawn-mob" id="0F">
 					<field name="entity-id" type="varint" />
@@ -231,8 +246,8 @@
 				<packet name="destroy-entities" id="13">
 					<field name="entity-ids">
 						<type name="array">
-							<array-type>varint</array-type>
-							<length-type>varint</length-type>
+							<array-type name="varint" />
+							<length-type name="varint" />
 						</type>
 					</field>
 				</packet>
@@ -340,11 +355,11 @@
 											<field name="amount" type="double" />
 											<field name="operation" type="byte" />
 										</array-compound>
-										<length-type>varint</length-type>
+										<length-type name="varint" />
 									</type>
 								</field>
 							</array-compound>
-							<length-type>int</length-type>
+							<length-type name="int" />
 						</type>
 					</field>
 				</packet>
@@ -355,8 +370,8 @@
 					<field name="section-mask" type="ushort" />
 					<field name="data">
 						<type name="array">
-							<array-type>byte</array-type>
-							<length-type>varint</length-type>
+							<array-type name="byte" />
+							<length-type name="varint" />
 						</type>
 					</field>
 				</packet>
@@ -370,7 +385,7 @@
 								<field name="y" type="ubyte" />
 								<field name="block-type" type="varint" />
 							</array-compound>
-							<length-type>varint</length-type>
+							<length-type name="varint" />
 						</type>
 					</field>
 				</packet>
@@ -487,6 +502,22 @@
 							<equals field="type">EntityHorse</equals>
 						</condition>
 					</field>
+					<read>
+						`read-field window-id`;
+						`read-field type`;
+						`read-field title`;
+						`read-field slot-count`;
+						if(`field type`.equals("EntityHorse"))
+							`read-field entity-id`;
+					</read>
+					<write>
+						`write-field window-id`;
+						`write-field type`;
+						`write-field title`;
+						`write-field slot-count`;
+						if(`field type`.equals("EntityHorse"))
+							`write-field entity-id`;
+					</write>
 				</packet>
 				<packet name="close-window" id="2E">
 					<field name="window-id" type="ubyte" />
@@ -538,20 +569,39 @@
 						</type>
 					</field>
 					<field name="columns" type="byte" />
-					<if>
-						<condition>
-							<greater-than field="columns">0</greater-than>
-						</condition>
-						<field name="rows" type="byte" />
-						<field name="x" type="byte" />
-						<field name="z" type="byte" />
-						<field name="data">
-							<type name="array">
-								<array-type>ubyte</array-type>
-								<length-type>varint</length-type>
-							</type>
-						</field>
-					</if>
+					<field name="rows" type="byte" />
+					<field name="x" type="byte" />
+					<field name="z" type="byte" />
+					<field name="data">
+						<type name="array">
+							<array-type>ubyte</array-type>
+							<length-type>varint</length-type>
+						</type>
+					</field>
+					<read>
+						`read-field map-id`;
+						`read-field scale`;
+						`read-field icons`;
+						`read-field columns`;
+						if(`field columns` > 0) {
+							`read-field rows`;
+							`read-field x`;
+							`read-field z`;
+							`read-field data`;
+						}
+					</read>
+					<write>
+						`write-field map-id`;
+						`write-field scale`;
+						`write-field icons`;
+						`write-field columns`;
+						if(`field columns` > 0) {
+							`write-field rows`;
+							`write-field x`;
+							`write-field z`;
+							`write-field data`;
+						}
+					</write>
 				</packet>
 				<packet name="update-block-entity" id="35">
 					<field name="location" type="position" />
@@ -578,58 +628,76 @@
 						<type name="array">
 							<array-compound>
 								<field name="uuid" type="uuid" />
-								<if>
-									<condition>
-										<equals field="action">0</equals>
-									</condition>
-									<field name="name" type="string" />
-									<field name="properties">
-										<type name="array">
-											<array-compound>
-												<field name="name" type="string" />
-												<field name="value" type="string" />
-												<field name="signed" type="boolean" />
-												<field name="signature" type="string">
-													<condition>
-														<equals field="signed">true</equals>
-													</condition>
-												</field>
-											</array-compound>
-											<length-type>varint</length-type>
-										</type>
-									</field>
-									<field name="game-mode" type="varint" />
-									<field name="ping" type="varint" />
-									<field name="has-display-name" type="boolean" />
-									<field name="display-name" type="string">
-										<condition>
-											<equals field="has-display-name">true</equals>
-										</condition>
-									</field>
-								</if>
-								<if>
-									<condition>
-										<equals field="action">1</equals>
-									</condition>
-									<field name="game-mode" type="varint" />
-								</if>
-								<if>
-									<condition>
-										<equals field="action">2</equals>
-									</condition>
-									<field name="ping" type="varint" />
-								</if>
-								<if>
-									<condition>
-										<equals field="action">3</equals>
-									</condition>
-									<field name="has-display-name" type="boolean" />
-									<field name="display-name" type="string">
-										<condition>
-											<equals field="has-display-name">true</equals>
-										</condition>
-									</field>
-								</if>
+								<field name="name" type="string" />
+								<field name="properties">
+									<type name="array">
+										<array-compound>
+											<field name="name" type="string" />
+											<field name="value" type="string" />
+											<field name="signed" type="boolean" />
+											<field name="signature" type="string" />
+											<read>
+												`read-field name`;
+												`read-field value`;
+												`read-field signed`;
+												if(`field signed`)
+													`read-field signature`;
+											</read>
+											<write>
+												`write-field name`;
+												`write-field value`;
+												`write-field signed`;
+												if(`field signed`)
+													`write-field signature`;
+											</write>
+										</array-compound>
+										<length-type>varint</length-type>
+									</type>
+								</field>
+								<field name="game-mode" type="varint" />
+								<field name="ping" type="varint" />
+								<field name="has-display-name" type="boolean" />
+								<field name="display-name" type="string" />
+								<read>
+									`read-field uuid`;
+									if(`field action` == 0) {
+										`read-field name`;
+										`read-field properties`;
+										`read-field game-mode`;
+										`read-field ping`;
+										`read-field has-display-name`;
+										if(`field has-display-name`)
+											`read-field display-name`;
+									} else if(`field action` == 1) {
+										`read-field game-mode`;
+									} else if(`field action` == 2) {
+										`read-field ping`;
+									} else if(`field action` == 3) {
+										`read-field has-display-name`;
+										if(`field has-display-name`)
+											`read-field display-name`;
+									}
+								</read>
+								<write>
+									`write-field uuid`;
+									if(`field action == 0) {
+										`write-field name`;
+										`write-field properties`;
+										`write-field game-mode`;
+										`write-field ping`;
+										`write-field has-display-name`;
+										if(`field has-display-name`)
+											`write-field display-name`;
+									} else if(`field action` == 1) {
+										`write-field game-mode`;
+									} else if(`field action` == 2) {
+										`write-field ping`;
+									} else if(`field action == 3) {
+										`write-field has-display-name`;
+										if(`field has-display-name`)
+											`write-field display-name`;
+									}
+								</write>
 							</array-compound>
 							<length-type>varint</length-type>
 						</type>
@@ -658,9 +726,17 @@
 						`read-field mode`;
 						if(`field mode` == 0 || `field mode` == 2) {
 							`read-field value`;
-							`read-field value`;
+							`read-field type`;
 						}
 					</read>
+					<write>
+						`write-field name`;
+						`write-field mode`;
+						if(`field mode` == 0 || `field mode` == 2) {
+							`write-field value`;
+							`write-field type`;
+						}
+					</write>
 				</packet>
 				<packet name="update-score" id="3C">
 					<field name="name" type="string" />
@@ -669,10 +745,17 @@
 					<read>
 						`read-field name`;
 						`read-field action`;
-						`read-field object-name`;
+						`read-field objective-name`;
 						if(`field action` != 1)
 							`read-field value`;
 					</read>
+					<write>
+						`write-field name`;
+						`write-field action`;
+						`write-field objective-name`;
+						if(`field action` != 1)
+							`write-field value`;
+					</write>
 				</packet>
 				<packet name="display-scoreboard" id="3D">
 					<field name="position" type="byte" />
@@ -708,6 +791,21 @@
 							`read-field players`;
 						}
 					</read>
+					<write>
+						`write-field name`;
+						`write-field mode`;
+						if(`field mode` == 0 || `field mode` == 2) {
+							`write-field display-name`;
+							`write-field prefix`;
+							`write-field suffix`;
+							`write-field friendly-fire`;
+						 	`write-field name-tag-visibility`;
+							`write-field color`;
+						}
+						if(`field mode` == 0 || `field mode` == 3 || `field mode` == 4) {
+							`write-field players`;
+						}
+					</write>
 				</packet>
 				<packet name="send-plugin-message" id="3F">
 					<field name="channel" type="string" />
@@ -736,6 +834,17 @@
 							`read-field message`;
 						}
 					</read>
+					<write>
+						`write-field event`;
+						if(`field event` == 1) {
+							`write-field duration`;
+							`write-field entity-id`;
+						} else if(`field event` == 2) {
+							`write-field player-id`;
+							`write-field entity-id`;
+							`write-field message`;
+						}
+					</write>
 				</packet>
 				<packet name="update-camera" id="43">
 					<field name="camera-id" type="varint" />
@@ -778,6 +887,33 @@
 						case 5: `read-field warning-blocks`; break;
 						}
 					</read>
+					<write>
+						`write-field action`;
+						switch(`field action`) {
+						case 0: `write-field radius`; break;
+						case 1:
+							`write-field old-radius`;
+							`write-field new-radius`;
+							`write-field speed`;
+							break;
+						case 2:
+							`write-field x`;
+							`write-field z`;
+							break;
+						case 3:
+							`write-field x`;
+							`write-field z`;
+							`write-field old-radius`;
+							`write-field new-radius`;
+							`write-field speed`;
+							`write-field portal-teleport-boundary`;
+							`write-field warning-time`;
+							`write-field warning-blocks`;
+							break;
+						case 4: `write-field warning-time`; break;
+						case 5: `write-field warning-blocks`; break;
+						}
+					</write>
 				</packet>
 				<packet name="set-title" id="45">
 					<field name="action" type="varint" />
@@ -798,6 +934,18 @@
 							`read-field fade-out`;
 						}
 					</read>
+					<write>
+						`write-field action`;
+						if(`field action` == 0)
+							`write-field title-text`;
+						else if(`field action` == 1)
+							`write-field subtitle-text`;
+						else if(`field action` == 2) {
+							`write-field fade-in`;
+							`write-field stay`;
+							`write-field fade-out`;
+						}
+					</write>
 				</packet>
 				<packet name="set-compression" id="46">
 					<field name="threshold" type="varint" />
@@ -829,6 +977,15 @@
 					<field name="target-x" type="float" />
 					<field name="target-y" type="float" />
 					<field name="target-z" type="float" />
+					<read>
+						`read-field target-id`;
+						`read-field type`;
+						if(`field type` == 2) {
+							`read-field target-x`;
+							`read-field target-y`;
+							`read-field target-z`;
+						}
+					</read>
 					<write>
 						`write-field target-id`;
 						`write-field type`;
@@ -930,6 +1087,12 @@
 					<field name="text" type="string" />
 					<field name="is-facing-block" type="boolean" />
 					<field name="block-faced" type="position" />
+					<read>
+						`read-field text`;
+						`read-field is-facing-block`;
+						if(`field is-facing-block`)
+							`read-field block-faced`;
+					</read>
 					<write>
 						`write-field text`;
 						`write-field is-facing-block`;

@@ -1,11 +1,13 @@
 package org.darkstorm.minecraft.darkbot.protocol.generator.structured;
 
 import java.io.*;
-
-import org.darkstorm.minecraft.darkbot.protocol.generator.Compound;
+import java.util.Collection;
 
 public interface ProtocolFamily {
-	public Compound readHeader(InputStream stream) throws IOException;
-	
-	public TypeModelRegistry getTypeModelRegistry();
+	public String getName();
+
+	public Compound getHeaderCompound();
+
+	public TypeModel getTypeModel(String name);
+	public Collection<TypeModel> getTypeModels();
 }
