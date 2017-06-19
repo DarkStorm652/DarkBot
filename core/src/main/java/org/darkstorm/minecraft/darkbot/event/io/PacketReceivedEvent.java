@@ -1,12 +1,16 @@
 package org.darkstorm.minecraft.darkbot.event.io;
 
-import org.darkstorm.minecraft.darkbot.protocol.*;
+import org.darkstorm.minecraft.darkbot.protocol.ReadablePacket;
 
 public class PacketReceivedEvent extends PacketEvent {
-	public PacketReceivedEvent(Packet packet) {
-		super(packet);
-		
-		if(!packet.getDirection().equals(Direction.TO_CLIENT))
-			throw new IllegalArgumentException("Wrong-way packet");
+	private final ReadablePacket packet;
+
+	public PacketReceivedEvent(ReadablePacket packet) {
+		this.packet = packet;
+	}
+
+	@Override
+	public ReadablePacket getPacket() {
+		return packet;
 	}
 }
