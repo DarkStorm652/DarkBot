@@ -92,7 +92,18 @@ public class BasicTaskManager implements TaskManager {
 					highestExclusiveTask.stop();
 					startTimes.remove(highestExclusiveTask);
 				}
-			}
+			} else {
+                if(activity.isActive()) {
+                    activity.run();
+                    if(!activity.isActive()) {
+                        activity.stop();
+                        activity = null;
+                    }
+                } else {
+                    activity.stop();
+                    activity = null;
+                }
+            }
 			for(Task task : exclusiveIgnoringTasks) {
 				if(task.isActive()) {
 					task.run();
@@ -112,19 +123,6 @@ public class BasicTaskManager implements TaskManager {
 					task.stop();
 					startTimes.remove(task);
 				}
-			}
-		}
-
-		if(activity != null) {
-			if(activity.isActive()) {
-				activity.run();
-				if(!activity.isActive()) {
-					activity.stop();
-					activity = null;
-				}
-			} else {
-				activity.stop();
-				activity = null;
 			}
 		}
 	}
