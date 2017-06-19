@@ -27,7 +27,7 @@ public class StatusCommand extends AbstractCommand {
 					activeTasks.append(task.getClass().getSimpleName());
 				}
 			}
-			bot.say("Active tasks: [" + activeTasks + "]");
+			controller.say("Active tasks: [" + activeTasks + "]");
 		} catch(Exception exception) {
 			exception.printStackTrace();
 		}

@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 import javax.naming.AuthenticationException;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.connection.ProxyData;
 import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
@@ -41,7 +41,7 @@ public class RegularBot implements EventListener {
 		service.execute(new Runnable() {
 			@Override
 			public void run() {
-				MinecraftBot.Builder builder = MinecraftBot.builder();
+				MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
 				builder.username(data.username).password(data.password);
 
 				String server = data.server;
@@ -110,7 +110,7 @@ public class RegularBot implements EventListener {
 	public void disconnect() {
 		if(bot != null) {
 			System.out.println("Disconnected");
-			bot.getConnectionHandler().disconnect("");
+			bot.disconnect("");
 			bot.getEventBus().unregister(this);
 			bot = null;
 			loadingState = 0;

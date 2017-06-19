@@ -4,7 +4,7 @@ import java.util.*;
 
 import javax.naming.AuthenticationException;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
@@ -33,7 +33,7 @@ public class SpamBot implements EventListener {
 	}
 
 	public void connect() {
-		MinecraftBot.Builder builder = MinecraftBot.builder();
+		MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
 		builder.username(data.username).password(data.password);
 
 		String server = data.server;
@@ -90,7 +90,7 @@ public class SpamBot implements EventListener {
 
 	public void disconnect() {
 		if(bot != null) {
-			bot.getConnectionHandler().disconnect("");
+			bot.disconnect("");
 			bot.getEventBus().unregister(this);
 			bot = null;
 			loadingState = 0;

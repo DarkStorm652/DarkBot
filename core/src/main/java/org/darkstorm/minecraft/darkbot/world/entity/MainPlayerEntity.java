@@ -306,11 +306,6 @@ public class MainPlayerEntity extends PlayerEntity {
 	}
 
 	public boolean switchTools(ToolType tool) {
-		MainPlayerEntity player = world.getBot().getPlayer();
-		if(player == null)
-			return false;
-		PlayerInventory inventory = player.getInventory();
-
 		ItemStack bestTool = null;
 		int bestToolSlot = -1, bestToolValue = -1;
 		for(int i = 0; i < 36; i++) {
@@ -394,7 +389,7 @@ public class MainPlayerEntity extends PlayerEntity {
 	public boolean placeBlock(BlockLocation location) {
 		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(), location);
 		if(activity.isActive()) {
-			world.getBot().setActivity(activity);
+			world.getBot().getTaskManager().setActivity(activity);
 			return true;
 		}
 		return false;
@@ -403,7 +398,7 @@ public class MainPlayerEntity extends PlayerEntity {
 	public boolean placeBlock(BlockLocation location, int face) {
 		BlockPlaceActivity activity = new BlockPlaceActivity(world.getBot(), location, (byte) face);
 		if(activity.isActive()) {
-			world.getBot().setActivity(activity);
+			world.getBot().getTaskManager().setActivity(activity);
 			return true;
 		}
 		return false;
@@ -412,14 +407,14 @@ public class MainPlayerEntity extends PlayerEntity {
 	public boolean breakBlock(BlockLocation location) {
 		BlockBreakActivity activity = new BlockBreakActivity(world.getBot(), location);
 		if(activity.isActive()) {
-			world.getBot().setActivity(activity);
+			world.getBot().getTaskManager().setActivity(activity);
 			return true;
 		}
 		return false;
 	}
 
 	public void walkTo(BlockLocation location) {
-		world.getBot().setActivity(new WalkActivity(world.getBot(), location));
+		world.getBot().getTaskManager().setActivity(new WalkActivity(world.getBot(), location));
 	}
 	
 	public void jump() {

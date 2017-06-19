@@ -90,7 +90,7 @@ public enum DefaultCommands implements Command {
 			String message = args[0];
 			for(int i = 1; i < args.length; i++)
 				message += " " + args[i];
-			bot.getBot().say(message);
+			bot.getBot().sendChat(message);
 			return true;
 		}
 	},

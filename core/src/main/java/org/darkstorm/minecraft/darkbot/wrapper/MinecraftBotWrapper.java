@@ -115,7 +115,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		return backends.toArray(new Backend[backends.size()]);
 	}
 
-	public final MinecraftBot getBot() {
+	public final MinecraftBotImpl getBot() {
 		return bot;
 	}
 }

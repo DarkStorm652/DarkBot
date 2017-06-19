@@ -40,11 +40,11 @@ public class HelpCommand extends AbstractCommand {
 				System.out.println((String.format("%-" + (commandName + 13) + "s%-" + (commandUsage + 14) + "s%s\n", "| !" + c.getName(), " | " + c.getOptionDescription(), " | " + c.getDescription())));
 			}
 			System.out.println();
-			bot.say(StringUtils.join(toArray(commands), ","));
+			controller.say(StringUtils.join(toArray(commands), ","));
 		} else
 			for(Command c : getBot().getCommandManager().getCommands())
 				if(c.getName().equalsIgnoreCase(args[0]))
-					bot.say("!" + c.getName() + " " + c.getOptionDescription() + " - " + c.getDescription());
+					controller.say("!" + c.getName() + " " + c.getOptionDescription() + " - " + c.getDescription());
 	}
 
 	private String[] toArray(ArrayList<String> array) {

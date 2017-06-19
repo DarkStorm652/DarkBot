@@ -78,7 +78,7 @@ public class AttackTask implements Task {
 				if(original.getY() - location.getY() >= 5)
 					return;
 			}
-			bot.setActivity(new WalkActivity(bot, location, true));
+			bot.getTaskManager().setActivity(new WalkActivity(bot, location, true));
 			return;
 		} else {
 			if(attackCooldown > 0) {
@@ -142,13 +142,13 @@ public class AttackTask implements Task {
 			if(player == null)
 				return true;
 			player.face(attackEntity.getX(), attackEntity.getY() + 1.5, attackEntity.getZ());
-			Activity activity = bot.getActivity();
+			Activity activity = bot.getTaskManager().getActivity();
 			if(activity == null || !(activity instanceof WalkActivity))
 				return active;
 			WalkActivity walkActivity = (WalkActivity) activity;
 			if(walkActivity.isActive() && (player.getDistanceTo(attackEntity) < 3 || attackEntity.getDistanceTo(walkActivity.getTarget()) > 3)
 					&& player.isOnGround())
-				bot.setActivity(null);
+				bot.getTaskManager().setActivity(null);
 		}
 		return active;
 	}

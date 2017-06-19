@@ -20,7 +20,7 @@ import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
 
 public class CLIBotWrapper extends MinecraftBotWrapper {
-	private CLIBotWrapper(MinecraftBot bot, String owner) {
+	private CLIBotWrapper(MinecraftBotImpl bot, String owner) {
 		super(bot);
 		addOwner(owner);
 		addBackend(new ChatBackend(this));
@@ -96,32 +96,14 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
 		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
 
-		OptionSet options;
-		try {
-			options = parser.parse(args);
-		} catch(OptionException exception) {
-			try {
-				parser.printHelpOn(System.out);
-			} catch(Exception exception1) {
-				exception1.printStackTrace();
-			}
-			return;
-		}
+		OptionSet options = CLIWrapperUtils.parseOptions(parser, args);
 
 		if(options.has("help")) {
-			printHelp(parser);
+            CLIWrapperUtils.printHelp(parser);
 			return;
 		}
 		if(options.has(protocolsOption)) {
-			if(!ProtocolProvider.getProviders().isEmpty()) {
-				System.out.println("Available protocols:");
-				for(String version : ProtocolProvider.getAllSupportedVersionNames()) {
-					System.out.println("  " + version);
-					for(ProtocolProvider provider : ProtocolProvider.getProviders(version))
-						System.out.println("    " + provider.getClass().getName());
-				}
-			} else
-				System.out.println("No available protocols. Ensure that protocol jars are placed in the relative 'protocols/' directory.");
+            CLIWrapperUtils.dumpProtocols();
 			return;
 		}
 
@@ -142,7 +124,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 					password = options.valueOf(passwordOption);
 				else if(!offline) {
 					System.out.println("Option 'password' or option " + "'offline' required.");
-					printHelp(parser);
 					return;
 				} else
 					password = null;
@@ -212,7 +193,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		final String server;
 		if(!options.has(serverOption) && !options.has(mcoServerOption)) {
 			System.out.println("Option 'server' required.");
-			printHelp(parser);
 			return;
 		} else if(options.has(mcoServerOption)) {
 			if(offline) {
@@ -292,41 +272,11 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		} else
 			server = options.valueOf(serverOption);
 
-		final String owner;
-		if(!options.has(ownerOption)) {
-			System.out.println("Option 'owner' required.");
-			printHelp(parser);
-			return;
-		} else
-			owner = options.valueOf(ownerOption);
+		final String owner = CLIWrapperUtils.getRequiredOption(options, ownerOption);
 
-		final ProtocolProvider protocol;
-		if(options.has(protocolOption)) {
-			String protocolString = options.valueOf(protocolOption);
-			
-			ProtocolProvider provider = null;
-			Collection<ProtocolProvider> providers = ProtocolProvider.getProviders(protocolString);
-			if(providers.size() == 1) {
-				provider = providers.iterator().next();
-			} else if(providers.size() > 1) {
-				System.out.println("Multiple protocol providers found for '" + protocolString + "'.");
-			} else {
-				for(ProtocolProvider p : ProtocolProvider.getProviders()) {
-					if(protocolString.equals(p.getClass().getName())) {
-						provider = p;
-						break;
-					}
-				}
-			}
-			if(provider == null) {
-				System.out.println("No protocol provider found for '" + protocolString + "'.");
-				return;
-			}
-			protocol = provider;
-		} else {
-			System.out.println("Protocol name required.");
-			return;
-		}
+		final ProtocolProvider protocol = CLIWrapperUtils.getProtocolProvider(options, protocolOption);
+		if(protocol == null)
+		    return;
 
 		final List<String> socksProxies;
 		final String defaultProxy;
@@ -346,7 +296,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			httpProxies = loadLoginProxies(options.valueOf(httpProxyListOption));
 		else if(username == null && accounts != null) {
 			System.out.println("Option 'http-proxy-list' required in presence " + "of option 'account-list'.");
-			printHelp(parser);
 			return;
 		} else
 			httpProxies = null;
@@ -439,14 +388,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		System.exit(0);
 	}
 
-	private static void printHelp(OptionParser parser) {
-		try {
-			parser.printHelpOn(System.out);
-		} catch(Exception exception) {
-			exception.printStackTrace();
-		}
-	}
-
 	private static List<String> loadProxies(String fileName) {
 		List<String> proxies = new ArrayList<String>();
 		try {
@@ -521,7 +462,7 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		return new ProxyData(proxyData, port, type);
 	}
 
-	private static MinecraftBot createBot(String server, String username, String password, AuthService<?> service, Session session, ProtocolProvider protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBotImpl createBot(String server, String username, String password, AuthService<?> service, Session session, ProtocolProvider protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
 		MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
 		if(proxy != null && !proxy.isEmpty()) {
 			int port = 80;

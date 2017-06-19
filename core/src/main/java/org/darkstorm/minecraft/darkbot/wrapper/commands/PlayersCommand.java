@@ -36,9 +36,9 @@ public class PlayersCommand extends AbstractCommand implements EventListener {
 			lines.add(current);
 		}
 
-		bot.say("Players:");
+		controller.say("Players:");
 		for(String line : lines)
-			bot.say(line);
+			controller.say(line);
 	}
 
 	@EventHandler

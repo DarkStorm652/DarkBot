@@ -1,5 +1,7 @@
 package org.darkstorm.minecraft.darkbot.connection;
 
+import org.darkstorm.minecraft.darkbot.protocol.*;
+
 import java.io.IOException;
 
 import javax.crypto.SecretKey;

@@ -47,8 +47,13 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		eventBus.register(this);
 		taskManager = new BasicTaskManager(this);
 
-		Protocol protocol = builder.getProtocolProvider().createProtocolInstance();
-		connectionHandler = new SocketConnectionHandler(this, protocol, builder.getServer(), builder.getPort(), builder.getConnectProxy());
+		connectionHandler = new SocketConnectionHandler<>(
+		        eventBus,
+                service,
+                createProtocol(builder.getProtocolProvider()),
+                builder.getServer(),
+                builder.getPort(),
+                builder.getConnectProxy());
 
 		if(builder.getAuthService() != null)
 			authService = builder.getAuthService();
@@ -72,6 +77,10 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		eventBus.fire(new HandshakeEvent(session, connectionHandler.getServer(), connectionHandler.getPort()));
 		new TickHandler();
 	}
+
+	private <T extends Protocol<H>, H extends PacketHeader> T createProtocol(ProtocolProvider<T, H> provider) {
+	    return provider.getProtocolInstance(this);
+    }
 
 	@EventHandler
 	public void onLogin(LoginEvent event) {
@@ -273,11 +282,11 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			this.world.destroy();
 		this.world = world;
 		if(player != null) {
-			if(world != null)
-				player = new MainPlayerEntity(world, player.getId(), player.getName(), player.getGameMode());
-			else
+			if(world != null) {
+                player = new MainPlayerEntity(world, player.getId(), player.getName(), player.getGameMode());
+                world.spawnEntity(player);
+            } else
 				player = null;
-			world.spawnEntity(player);
 		}
 	}
 
@@ -300,6 +309,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		return taskManager;
 	}
 
+	@Override
 	public ConnectionHandler getConnectionHandler() {
 		return connectionHandler;
 	}
@@ -309,10 +319,12 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		return authService;
 	}
 
+	@Override
 	public ProxyData getLoginProxy() {
 		return loginProxy;
 	}
 
+	@Override
 	public ProxyData getConnectProxy() {
 		return connectProxy;
 	}
@@ -327,10 +339,12 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		connectionHandler.disconnect(reason);
 	}
 
+	@Override
 	public boolean isMovementDisabled() {
 		return movementDisabled;
 	}
 
+	@Override
 	public void setMovementDisabled(boolean movementDisabled) {
 		this.movementDisabled = movementDisabled;
 	}
@@ -352,11 +366,13 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 	public void setMessageDelay(int messageDelay) {
 		this.messageDelay = messageDelay;
 	}
-	
+
+	@Override
 	public int getInventoryDelay() {
 		return inventoryDelay;
 	}
-	
+
+	@Override
 	public void setInventoryDelay(int inventoryDelay) {
 		this.inventoryDelay = inventoryDelay;
 	}
@@ -399,7 +415,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		private String server;
 		private int port = MinecraftBotImpl.DEFAULT_PORT;
 		
-		private ProtocolProvider protocolProvider;
+		private ProtocolProvider<?, ?> protocolProvider;
 
 		private String username;
 		private String password;
@@ -423,7 +439,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			return this;
 		}
 
-		public synchronized Builder protocolProvider(ProtocolProvider protocolProvider) {
+		public synchronized Builder protocolProvider(ProtocolProvider<?, ?> protocolProvider) {
 			this.protocolProvider = protocolProvider;
 			return this;
 		}
@@ -470,7 +486,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			return port;
 		}
 
-		public ProtocolProvider getProtocolProvider() {
+		public ProtocolProvider<?, ?> getProtocolProvider() {
 			return protocolProvider;
 		}
 

@@ -37,7 +37,7 @@ public class WalkActivity implements Activity {
 		this.target = target;
 		System.out.println("Generating path...");
 		if(keepWalking) {
-			Activity activity = bot.getActivity();
+			Activity activity = bot.getTaskManager().getActivity();
 			if(activity != null && activity instanceof WalkActivity && ((WalkActivity) activity).isMoving()) {
 				WalkActivity walkActivity = (WalkActivity) activity;
 				nextStep = walkActivity.nextStep;

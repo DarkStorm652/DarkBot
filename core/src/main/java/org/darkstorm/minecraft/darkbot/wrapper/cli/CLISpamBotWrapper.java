@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -211,32 +212,14 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 				.describedAs("file");
 		OptionSpec<?> torOption = parser.accepts("tor", "Use Tor rather than socks proxies to join");
 
-		OptionSet options;
-		try {
-			options = parser.parse(args);
-		} catch(OptionException exception) {
-			try {
-				parser.printHelpOn(System.out);
-			} catch(Exception exception1) {
-				exception1.printStackTrace();
-			}
-			return;
-		}
+		OptionSet options = CLIWrapperUtils.parseOptions(parser, args);
 
 		if(options.has("help")) {
-			printHelp(parser);
+			CLIWrapperUtils.printHelp(parser);
 			return;
 		}
 		if(options.has(protocolsOption)) {
-			if(!ProtocolProvider.getProviders().isEmpty()) {
-				System.out.println("Available protocols:");
-				for(String version : ProtocolProvider.getAllSupportedVersionNames()) {
-					System.out.println("  " + version);
-					for(ProtocolProvider provider : ProtocolProvider.getProviders(version))
-						System.out.println("    " + provider.getClass().getName());
-				}
-			} else
-				System.out.println("No available protocols. Ensure that protocol jars are placed in the relative 'protocols/' directory.");
+            CLIWrapperUtils.dumpProtocols();
 			return;
 		}
 
@@ -248,7 +231,6 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 			accounts = loadAccounts(options.valueOf(accountListOption));
 		} else if(!offline) {
 			System.out.println("Option 'accounts' must be supplied in " + "absence of option 'offline'.");
-			printHelp(parser);
 			return;
 		} else
 			accounts = null;
@@ -257,49 +239,13 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		if(options.has(captchaListOption))
 			readCaptchaFile(options.valueOf(captchaListOption));
 
-		final String server;
-		if(!options.has(serverOption)) {
-			System.out.println("Option 'server' required.");
-			printHelp(parser);
-			return;
-		} else
-			server = options.valueOf(serverOption);
+		final String server = CLIWrapperUtils.getRequiredOption(options, ownerOption);
+		final String owner = CLIWrapperUtils.getRequiredOption(options, ownerOption);
 
-		final String owner;
-		if(!options.has(ownerOption)) {
-			System.out.println("Option 'owner' required.");
-			printHelp(parser);
-			return;
-		} else
-			owner = options.valueOf(ownerOption);
 
-		final ProtocolProvider protocol;
-		if(options.has(protocolOption)) {
-			String protocolString = options.valueOf(protocolOption);
-			
-			ProtocolProvider provider = null;
-			Collection<ProtocolProvider> providers = ProtocolProvider.getProviders(protocolString);
-			if(providers.size() == 1) {
-				provider = providers.iterator().next();
-			} else if(providers.size() > 1) {
-				System.out.println("Multiple protocol providers found for '" + protocolString + "'.");
-			} else {
-				for(ProtocolProvider p : ProtocolProvider.getProviders()) {
-					if(protocolString.equals(p.getClass().getName())) {
-						provider = p;
-						break;
-					}
-				}
-			}
-			if(provider == null) {
-				System.out.println("No protocol provider found for '" + protocolString + "'.");
-				return;
-			}
-			protocol = provider;
-		} else {
-			System.out.println("Protocol name required.");
-			return;
-		}
+		final ProtocolProvider protocol = CLIWrapperUtils.getProtocolProvider(options, protocolOption);
+		if(protocol == null)
+		    return;
 
 		final List<String> socksProxies;
 		final boolean useTor;
@@ -335,7 +281,6 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		final int botAmount;
 		if(!options.has(botAmountOption)) {
 			System.out.println("Option 'bot-amount' required.");
-			printHelp(parser);
 			return;
 		} else
 			botAmount = options.valueOf(botAmountOption);
@@ -645,14 +590,6 @@ public class CLISpamBotWrapper extends MinecraftBotWrapper {
 		frame.setSize(500, frame.getHeight());
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
-	}
-
-	private static void printHelp(OptionParser parser) {
-		try {
-			parser.printHelpOn(System.out);
-		} catch(Exception exception) {
-			exception.printStackTrace();
-		}
 	}
 
 	private static List<String> loadProxies(String fileName) {

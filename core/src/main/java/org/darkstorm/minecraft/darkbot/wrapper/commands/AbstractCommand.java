@@ -1,11 +1,11 @@
 package org.darkstorm.minecraft.darkbot.wrapper.commands;
 
-import org.darkstorm.minecraft.darkbot.MinecraftBot;
+import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 
 public abstract class AbstractCommand implements Command {
 	protected final MinecraftBotWrapper controller;
-	protected final MinecraftBot bot;
+	protected final MinecraftBotImpl bot;
 
 	private final String name, description, optionDescription, optionRegex;
 

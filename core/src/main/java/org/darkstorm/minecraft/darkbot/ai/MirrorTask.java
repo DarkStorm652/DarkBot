@@ -75,7 +75,7 @@ public class MirrorTask extends AbstractTask {
 
 	@Override
 	public void run() {
-		mode = RotationMode.ORBIT;
+		mode = RotationMode.TRACK;
 		MainPlayerEntity player = bot.getPlayer();
 		if(mirroring == null || player == null)
 			return;

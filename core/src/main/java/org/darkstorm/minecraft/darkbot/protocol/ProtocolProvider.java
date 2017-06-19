@@ -6,18 +6,17 @@ import java.util.*;
 
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 
-public abstract class ProtocolProvider<T extends Protocol<?>> {
-	private static final List<ProtocolProvider<?>> providers = loadProviders();
+public abstract class ProtocolProvider<T extends Protocol<H>, H extends PacketHeader> {
+	private static final List<ProtocolProvider<?, ?>> providers = loadProviders();
 
-	private static final List<ProtocolProvider<?>> loadProviders() {
-		List<ProtocolProvider<?>> providers = new ArrayList<>();
+	private static List<ProtocolProvider<?, ?>> loadProviders() {
+		List<ProtocolProvider<?, ?>> providers = new ArrayList<>();
 
 		URL[] urls = locateProtocolJars();
 		URLClassLoader classLoader = new URLClassLoader(urls);
-		@SuppressWarnings("rawtypes")
 		ServiceLoader<ProtocolProvider> providerLoader = ServiceLoader.load(ProtocolProvider.class, classLoader);
-		loop: for(ProtocolProvider<?> provider : providerLoader) {
-			for(ProtocolProvider<?> installed : providers)
+		loop: for(ProtocolProvider<?, ?> provider : providerLoader) {
+			for(ProtocolProvider<?, ?> installed : providers)
 				if(provider.getSupportedVersion() == installed.getSupportedVersion() && (provider instanceof ProtocolProviderX == installed instanceof ProtocolProviderX))
 					continue loop;
 			providers.add(provider);
@@ -26,7 +25,7 @@ public abstract class ProtocolProvider<T extends Protocol<?>> {
 		return Collections.unmodifiableList(providers);
 	}
 
-	private static final URL[] locateProtocolJars() {
+	private static URL[] locateProtocolJars() {
 		File protocolsDirectory = new File("protocols");
 		File[] files = protocolsDirectory.listFiles();
 		if(files == null || files.length == 0)
@@ -40,19 +39,19 @@ public abstract class ProtocolProvider<T extends Protocol<?>> {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
-	public static final List<ProtocolProvider<?>> getProviders() {
+	public static List<ProtocolProvider<?, ?>> getProviders() {
 		return providers;
 	}
 
-	public static final ProtocolProvider<?> getProvider(int version) {
-		ProtocolProvider<?> provider = getProvider(version, true);
+	public static ProtocolProvider<?, ?> getProvider(int version) {
+		ProtocolProvider<?, ?> provider = getProvider(version, true);
 		if(provider != null)
 			return provider;
 		return getProvider(version, false);
 	}
 
-	public static final ProtocolProvider<?> getProvider(int version, boolean x) {
-		for(ProtocolProvider<?> provider : providers)
+	public static ProtocolProvider<?, ?> getProvider(int version, boolean x) {
+		for(ProtocolProvider<?, ?> provider : providers)
 			if(version == provider.getSupportedVersion() && (x == provider instanceof ProtocolProviderX))
 				return provider;
 		try {
@@ -65,16 +64,16 @@ public abstract class ProtocolProvider<T extends Protocol<?>> {
 		}
 	}
 
-	public static final ProtocolProvider<?> getLatestProvider() {
-		ProtocolProvider<?> provider = getLatestProvider(true);
+	public static ProtocolProvider<?, ?> getLatestProvider() {
+		ProtocolProvider<?, ?> provider = getLatestProvider(true);
 		if(provider != null)
 			return provider;
 		return getLatestProvider(false);
 	}
 
-	public static final ProtocolProvider<?> getLatestProvider(boolean x) {
-		ProtocolProvider<?> latestProvider = null;
-		for(ProtocolProvider<?> provider : providers)
+	public static ProtocolProvider<?, ?> getLatestProvider(boolean x) {
+		ProtocolProvider<?, ?> latestProvider = null;
+		for(ProtocolProvider<?, ?> provider : providers)
 			if((x == provider instanceof ProtocolProviderX) && (latestProvider == null || provider.getSupportedVersion() > latestProvider.getSupportedVersion()))
 				latestProvider = provider;
 		return latestProvider;

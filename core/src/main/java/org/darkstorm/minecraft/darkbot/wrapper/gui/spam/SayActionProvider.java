@@ -63,7 +63,7 @@ public class SayActionProvider extends ActionProvider {
 			String[] lines = textArea.getText().replace("\r", "").split("\n");
 			if(line > lines.length - 1)
 				line = 0;
-			manager.getBot().say(lines[line++]);
+			manager.getBot().sendChat(lines[line++]);
 		}
 
 		@Override

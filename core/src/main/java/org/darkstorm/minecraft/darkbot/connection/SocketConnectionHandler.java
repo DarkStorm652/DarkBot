@@ -18,7 +18,9 @@ import org.darkstorm.minecraft.darkbot.protocol.*;
 import org.darkstorm.minecraft.darkbot.util.*;
 
 public class SocketConnectionHandler<H extends PacketHeader> implements ConnectionHandler, EventListener {
-	private final MinecraftBot bot;
+    private final EventBus eventBus;
+    private final ExecutorService executorService;
+
 	private final Protocol<H> protocol;
 	private final Queue<ReadablePacket> packetProcessQueue;
 	private final Queue<WriteablePacket> packetWriteQueue;
@@ -32,12 +34,13 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 	private SecretKey sharedKey;
 	private boolean encrypting, decrypting;
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port) {
-		this(bot, protocol, server, port, null);
+	public SocketConnectionHandler(EventBus eventBus, ExecutorService executorService, Protocol<H> protocol, String server, int port) {
+		this(eventBus, executorService, protocol, server, port, null);
 	}
 
-	public SocketConnectionHandler(MinecraftBot bot, Protocol<H> protocol, String server, int port, ProxyData socksProxy) {
-		this.bot = bot;
+	public SocketConnectionHandler(EventBus eventBus, ExecutorService executorService, Protocol<H> protocol, String server, int port, ProxyData socksProxy) {
+		this.eventBus = eventBus;
+		this.executorService = executorService;
 		this.protocol = protocol;
 		packetProcessQueue = new ArrayDeque<ReadablePacket>();
 		packetWriteQueue = new ArrayDeque<WriteablePacket>();
@@ -49,7 +52,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 			connection = new Connection(server, port, socksProxy);
 		else
 			connection = new Connection(server, port);
-		bot.getEventBus().register(this);
+		eventBus.register(this);
 	}
 
 	@EventHandler
@@ -72,16 +75,18 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 			return;
 		connection.connect();
 
-		ExecutorService service = bot.getService();
-		readTask = new ReadTask();
-		writeTask = new WriteTask();
-		readTask.future = service.submit(readTask);
-		writeTask.future = service.submit(writeTask);
+		ReadTask readTask = new ReadTask();
+		WriteTask writeTask = new WriteTask();
+		readTask.future = executorService.submit(readTask);
+		writeTask.future = executorService.submit(writeTask);
+
+		this.readTask = readTask;
+		this.writeTask = writeTask;
 	}
 
 	@Override
 	public synchronized void disconnect(String reason) {
-		if(!connection.isConnected() && readTask.future == null && writeTask.future == null)
+		if(!connection.isConnected() && readTask == null && writeTask == null)
 			return;
 		if(readTask != null)
 			readTask.future.cancel(true);
@@ -92,7 +97,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 		sharedKey = null;
 		encrypting = decrypting = false;
 		connection.disconnect();
-		bot.getEventBus().fire(new DisconnectEvent(reason));
+		eventBus.fire(new DisconnectEvent(reason));
 	}
 
 	@Override
@@ -104,7 +109,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 			packets = packetProcessQueue.toArray(new ReadablePacket[packetProcessQueue.size()]);
 			packetProcessQueue.clear();
 		}
-		EventBus eventBus = bot.getEventBus();
+
 		for(ReadablePacket packet : packets)
 			eventBus.fire(new PacketProcessEvent(packet));
 	}
@@ -264,9 +269,10 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 					final H header = protocol.readHeader(in);
 					if(header == null)
 						throw new IOException("Invalid header");
-					ReadablePacket packet = (ReadablePacket) protocol.createPacket(header);
-					if(packet == null || !(packet instanceof ReadablePacket))
+					Packet uncheckedPacket = protocol.createPacket(header);
+					if(uncheckedPacket == null || !(uncheckedPacket instanceof ReadablePacket))
 						throw new IOException("Bad packet with header: " + header.toString());
+					ReadablePacket packet = (ReadablePacket) uncheckedPacket;
 
 					if(header instanceof PacketLengthHeader) {
 						int length = ((PacketLengthHeader) header).getLength() - AbstractPacketX.varIntLength(header.getId());
@@ -295,7 +301,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 					if(header instanceof PacketLengthHeader)
 						in.close();
 
-					bot.getEventBus().fire(new PacketReceivedEvent(packet));
+					eventBus.fire(new PacketReceivedEvent(packet));
 					synchronized(packetProcessQueue) {
 						packetProcessQueue.offer(packet);
 					}
@@ -349,7 +355,7 @@ public class SocketConnectionHandler<H extends PacketHeader> implements Connecti
 						out.write(data);
 						out.flush();
 
-						bot.getEventBus().fire(new PacketSentEvent(packet));
+						eventBus.fire(new PacketSentEvent(packet));
 					}
 				}
 			} catch(Throwable exception) {

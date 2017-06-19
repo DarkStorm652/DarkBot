@@ -56,7 +56,7 @@ public class WalkCommand extends AbstractCommand {
 			y = Integer.parseInt(args[1]);
 
 		BlockLocation target = new BlockLocation(x, y, z);
-		bot.setActivity(new WalkActivity(bot, target));
+		bot.getTaskManager().setActivity(new WalkActivity(bot, target));
 		controller.say("Walking to (" + x + ", " + y + ", " + z + ").");
 	}
 }
