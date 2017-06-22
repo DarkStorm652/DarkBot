@@ -35,13 +35,6 @@ configure(subprojects) { subproject ->
 		testCompile group: 'junit', name: 'junit', version: '4.+'
 	}
 
-	task spec(dependsOn: ['testClasses'], type: JavaExec) {
-		main = 'org.scalatest.tools.Runner'
-		args = ['-R', 'build/classes/test', '-o']
-		classpath = sourceSets.test.runtimeClasspath
-	}
-	tasks.test.dependsOn += tasks.spec
-
 	task pack(type: Jar) {
 		manifest {
 			attributes('Implementation-Title': subproject.name,
