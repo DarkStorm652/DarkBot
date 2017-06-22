@@ -104,7 +104,7 @@ public class SimpleWorldPhysics implements WorldPhysics {
 			valid = false;
 		}
 		int nodeBlockUnder = world.getBlockIdAt(x2, y2 - 1, z2);
-		if(nodeBlockUnder == 85 || nodeBlockUnder == 107 || nodeBlockUnder == 113)
+		if(nodeBlockUnder == 107 || nodeBlockUnder == 113)
 			valid = false;
 		return valid;
 	}

@@ -52,9 +52,9 @@ public class WalkActivity implements Activity {
 				if(world == null || player == null || target == null)
 					return null;
 				BlockLocation ourLocation = new BlockLocation(player.getLocation());
-				PathSearch search = world.getPathFinder().provideSearch(ourLocation, target);
+                PathSearch search = world.getPathFinder().provideSearch(ourLocation, target);
 				while(!search.isDone() && !thread.isCancelled())
-					search.step();
+                    search.step();
 				return search.getPath();
 			}
 		});
@@ -112,7 +112,7 @@ public class WalkActivity implements Activity {
 
 	@Override
 	public void run() {
-		if(!thread.isDone()) {
+        if(!thread.isDone()) {
 			if(timeout > 0 && System.currentTimeMillis() - startTime > timeout) {
 				thread.cancel(true);
 				setNextStep(null);
@@ -126,7 +126,7 @@ public class WalkActivity implements Activity {
 			try {
 				setNextStep(thread.get());
 				if(nextStep == null) {
-					System.out.println("Error! Could not find path!");
+                    System.out.println("Error! Could not find path!");
 					return;
 				} else
 					System.out.println("Path found, walking...");
@@ -165,15 +165,23 @@ public class WalkActivity implements Activity {
 			double x = stepTarget.getX(), y = stepTarget.getY(), z = stepTarget.getZ();
 			//System.out.println("TARGETING [" + x + "," + y + "," + z + "]");
 			double dist = Math.hypot(x - player.getX(), z - player.getZ());
+			double multiplier = 1;
+            System.out.println(player.getY());
+            BlockLocation blockLocation = new BlockLocation(player.getLocation());
+			if(player.getWorld().getBlockIdAt(blockLocation.getX(), blockLocation.getY(), blockLocation.getZ()) == BlockType.SOUL_SAND.getId()) {
+			    multiplier = 0.4;
+            }
 			if(dist < 0.5 && nextStepTarget == null) {
 				player.setVelocityX(0);
 				player.setVelocityZ(0);
-				player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, Math.min(dist / 4, speed / 4), Math.min(dist, speed));
+				player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, Math.min(dist / 4, speed / 4), Math.min(dist, speed * multiplier));
 			} else
-				player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, speed / 4, Math.min(dist, speed));
-			if(y > player.getY() && (y - player.getY() > 0.5 || dist > 1.5 || !player.getWorld().isColliding(player.getBoundingBoxAt(stepTarget.getX(), stepTarget.getY() - 1, stepTarget.getZ()))))
-				player.jump();
-			
+				player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, speed / 4, Math.min(dist, speed * multiplier));
+			if(y > player.getY() && (y - player.getY() > 0.5 || !player.getWorld().isColliding(player.getBoundingBoxAt(stepTarget.getX(), stepTarget.getY() - 1, stepTarget.getZ())))) {
+			    if(!player.getWorld().isColliding(player.getBoundingBoxAt(stepTarget.getX(), stepTarget.getY() - 1, stepTarget.getZ())))
+                    player.getWorld().getBot().sendChat("LEAP OF FAITH!!!");
+                player.jump();
+            }
 		}
 	}
 	

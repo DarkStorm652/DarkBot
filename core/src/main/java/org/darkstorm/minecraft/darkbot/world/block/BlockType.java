@@ -105,7 +105,7 @@ public enum BlockType {
 	},
 	PUMPKIN               (block(86).toolType(AXE)),
 	NETHERRACK            (block(87).toolType(PICKAXE)),
-	SOUL_SAND             (block(88).toolType(SHOVEL)),
+	SOUL_SAND             (block(88).toolType(SHOVEL).factory(new SoulSandBlockFactoryProvider())),
 	GLOWSTONE             (block(89).toolType(PICKAXE)),
 	PORTAL                (block(90).flags(PLACEABLE | INDESTRUCTABLE)),
 	JACK_O_LANTERN        (block(91).toolType(AXE)),
@@ -359,6 +359,19 @@ public enum BlockType {
 		public Class<T> getBlockClass();
 		public BlockFactory<T> provide(BlockType type);
 	}
+
+	protected static class SoulSandBlockFactoryProvider implements BlockFactoryProvider<Block> {
+	    private static final BoundingBox SOUL_SAND_BOUNDS = BoundingBox.getBoundingBox(0, 0, 0, 1, 0.88, 1);
+        @Override
+        public Class<Block> getBlockClass() {
+            return Block.class;
+        }
+
+        @Override
+        public BlockFactory<Block> provide(BlockType type) {
+            return RectangularBlockFactory.getInstance(type, SOUL_SAND_BOUNDS);
+        }
+    }
 	
 	protected static class FenceBlockFactoryProvider implements BlockFactoryProvider<FenceBlock> {
 		private static class FenceBlockImpl extends AbstractBlock implements FenceBlock {
