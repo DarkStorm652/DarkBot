@@ -1,15 +1,16 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
+import org.darkstorm.minecraft.darkbot.world.PlayerInfo;
 
 public abstract class PlayerListEvent extends ProtocolEvent {
-	private final String playerName;
+	private final PlayerInfo playerInfo;
 
-	public PlayerListEvent(String playerName) {
-		this.playerName = playerName;
+	public PlayerListEvent(PlayerInfo playerInfo) {
+		this.playerInfo = playerInfo;
 	}
 
-	public String getPlayerName() {
-		return playerName;
+	public PlayerInfo getPlayerInfo() {
+		return playerInfo;
 	}
 }

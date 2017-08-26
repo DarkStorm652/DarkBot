@@ -8,8 +8,6 @@ import javax.naming.AuthenticationException;
 
 import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
-import org.darkstorm.minecraft.darkbot.connection.ProxyData;
-import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.general.DisconnectEvent;
@@ -52,27 +50,6 @@ public class RegularBot implements EventListener {
 					port = Integer.parseInt(parts[1]);
 				}
 				builder.server(server).port(port);
-
-				if(data.proxy != null) {
-					String proxy = data.proxy;
-					int proxyPort;
-					ProxyType type = null;
-					if(proxy.contains(":")) {
-						String[] parts = proxy.split(":");
-						proxy = parts[0];
-						proxyPort = Integer.parseInt(parts[1]);
-						if(parts.length > 2) {
-							try {
-								type = ProxyType.values()[Integer.parseInt(parts[2])];
-							} catch(NumberFormatException exception) {
-								type = ProxyType.valueOf(parts[2].toUpperCase());
-							}
-						}
-					} else
-						throw new IllegalArgumentException("Invalid proxy");
-					ProxyData data = new ProxyData(proxy, proxyPort, type == null ? ProxyType.SOCKS : type);
-					builder.connectProxy(data);
-				}
 
 				clearLog();
 				log("[BOT] Connecting...");

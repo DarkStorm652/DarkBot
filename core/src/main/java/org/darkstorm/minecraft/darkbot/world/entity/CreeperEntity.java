@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.world.World;
 
 public class CreeperEntity extends AggressiveEntity {
@@ -27,11 +27,14 @@ public class CreeperEntity extends AggressiveEntity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
 		super.updateMetadata(metadata);
-		if(metadata.containsKey(16))
-			setIgnited(((Byte) metadata.get(16).getObject()).byteValue() == 1);
-		if(metadata.containsKey(17))
-			setCharged(((Byte) metadata.get(17).getObject()).byteValue() == 1);
+
+		for(EntityMetadata md : metadata) {
+			if(md.getId() == 16)
+				setIgnited((Byte) md.getValue() == 1);
+			if(md.getId() == 17)
+				setCharged((Byte) md.getValue() == 1);
+		}
 	}
 }

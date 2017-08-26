@@ -1,10 +1,10 @@
 package org.darkstorm.minecraft.darkbot.world.item;
 
-import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 
 public class BasicItemStack implements ItemStack {
 	private int id, stackSize, damage;
-	private NBTTagCompound stackTagCompound;
+	private CompoundTag stackTagCompound;
 
 	public BasicItemStack(int id, int stackSize, int damage) {
 		this.id = id;
@@ -32,11 +32,11 @@ public class BasicItemStack implements ItemStack {
 		this.damage = damage;
 	}
 
-	public NBTTagCompound getStackTagCompound() {
+	public CompoundTag getStackTagCompound() {
 		return stackTagCompound;
 	}
 
-	public void setStackTagCompound(NBTTagCompound stackTagCompound) {
+	public void setStackTagCompound(CompoundTag stackTagCompound) {
 		this.stackTagCompound = stackTagCompound;
 	}
 

@@ -1,5 +1,7 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
+import com.github.steveice10.mc.protocol.data.game.entity.type.object.HangingDirection;
+
 public class PaintingSpawnEvent extends EntitySpawnEvent {
 	private final String title;
 
@@ -19,15 +21,15 @@ public class PaintingSpawnEvent extends EntitySpawnEvent {
 	}
 
 	public static class PaintingSpawnLocation extends SpawnLocation {
-		private final int direction;
+		private final HangingDirection direction;
 
-		public PaintingSpawnLocation(double x, double y, double z, int direction) {
+		public PaintingSpawnLocation(double x, double y, double z, HangingDirection direction) {
 			super(x, y, z);
 
 			this.direction = direction;
 		}
 
-		public int getDirection() {
+		public HangingDirection getDirection() {
 			return direction;
 		}
 	}

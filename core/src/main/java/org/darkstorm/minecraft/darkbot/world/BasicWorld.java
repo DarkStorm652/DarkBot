@@ -2,7 +2,11 @@ package org.darkstorm.minecraft.darkbot.world;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.List;
 
+import com.github.steveice10.mc.protocol.data.game.setting.Difficulty;
+import com.github.steveice10.mc.protocol.data.game.world.WorldType;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
@@ -15,7 +19,6 @@ import org.darkstorm.minecraft.darkbot.event.protocol.server.PaintingSpawnEvent.
 import org.darkstorm.minecraft.darkbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
 import org.darkstorm.minecraft.darkbot.event.world.*;
 import org.darkstorm.minecraft.darkbot.event.world.ChunkLoadEvent;
-import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.*;
 import org.darkstorm.minecraft.darkbot.world.pathfinding.*;
@@ -24,16 +27,17 @@ import org.darkstorm.minecraft.darkbot.world.pathfinding.astar.AStarPathSearchPr
 public final class BasicWorld implements World, EventListener {
 	private final MinecraftBot bot;
 	private final WorldType type;
-	private final Dimension dimension;
+	private final int dimension;
 	private final Difficulty difficulty;
 	private final int height;
 	private final Map<ChunkLocation, Chunk> chunks;
+	private final List<PlayerInfo> players = new ArrayList<PlayerInfo>();
 	private final List<Entity> entities;
 	private PathSearchProvider pathFinder;
 
 	private long time, age;
 
-	public BasicWorld(MinecraftBot bot, WorldType type, Dimension dimension, Difficulty difficulty, int height) {
+	public BasicWorld(MinecraftBot bot, WorldType type, int dimension, Difficulty difficulty, int height) {
 		this.bot = bot;
 		this.type = type;
 		this.height = height;
@@ -61,7 +65,7 @@ public final class BasicWorld implements World, EventListener {
 		if(entity == null || !(entity instanceof LivingEntity))
 			return;
 		LivingEntity livingEntity = (LivingEntity) entity;
-		livingEntity.setWornItemAt(event.getSlot().getId(), event.getItem());
+		livingEntity.setWornItemAt(event.getSlot().ordinal(), event.getItem());
 	}
 
 	@EventHandler
@@ -78,9 +82,46 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
+	public void onPlayerListUpdate(PlayerListUpdateEvent event) {
+		PlayerInfo playerInfo = event.getPlayerInfo();
+		synchronized(players) {
+			for (PlayerInfo player : players) {
+				if (player.getPlayerUUID().equals(playerInfo.getPlayerUUID())) {
+					return;
+				}
+			}
+			players.add(playerInfo);
+		}
+	}
+
+	@EventHandler
+	public void onPlayerListRemove(PlayerListRemoveEvent event) {
+		PlayerInfo playerInfo = event.getPlayerInfo();
+		synchronized(players) {
+			for (PlayerInfo player : players) {
+				if (player.getPlayerUUID().equals(playerInfo.getPlayerUUID())) {
+					players.remove(player);
+					return;
+				}
+			}
+		}
+	}
+
+	@EventHandler
 	public void onPlayerSpawn(PlayerSpawnEvent event) {
 		RotatedSpawnLocation location = event.getLocation();
-		PlayerEntity entity = new PlayerEntity(this, event.getEntityId(), event.getPlayerName());
+		String playerName = null;
+		synchronized(players) {
+			for (PlayerInfo playerInfo : players) {
+				if (playerInfo.getPlayerUUID().equals(event.getPlayerUUID()))
+					playerName = playerInfo.getPlayerName();
+			}
+		}
+		if(playerName == null) {
+			System.out.println("Couldn't find spawned player in list!");
+			return;
+		}
+		PlayerEntity entity = new PlayerEntity(this, event.getEntityId(), playerName);
 		entity.setX(location.getX());
 		entity.setY(location.getY());
 		entity.setZ(location.getZ());
@@ -103,7 +144,7 @@ public final class BasicWorld implements World, EventListener {
 	public void onObjectEntitySpawn(ObjectEntitySpawnEvent event) {
 		RotatedSpawnLocation spawnLocation = event.getLocation();
 		ObjectSpawnData spawnData = event.getSpawnData();
-		Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnData.getType());
+		Class<? extends Entity> entityClass = EntityList.getObjectEntityClass(spawnData.getType().ordinal());
 		if(entityClass == null)
 			return;
 		Entity entity;
@@ -131,7 +172,7 @@ public final class BasicWorld implements World, EventListener {
 	public void onLivingEntitySpawn(LivingEntitySpawnEvent event) {
 		LivingEntitySpawnData spawnData = event.getSpawnData();
 		LivingEntitySpawnLocation spawnLocation = event.getLocation();
-		Class<? extends LivingEntity> entityClass = EntityList.getLivingEntityClass(spawnData.getType());
+		Class<? extends LivingEntity> entityClass = EntityList.getLivingEntityClass(spawnData.getType().ordinal());
 		if(entityClass == null)
 			return;
 		LivingEntity entity;
@@ -245,7 +286,7 @@ public final class BasicWorld implements World, EventListener {
 	@EventHandler
 	public void onChunkLoad(org.darkstorm.minecraft.darkbot.event.protocol.server.ChunkLoadEvent event) {
 		ChunkLocation location = new ChunkLocation(event.getX(), event.getY(), event.getZ());
-		Chunk chunk = new Chunk(this, location, event.getBlocks(), event.getMetadata(), event.getLight(), event.getSkylight(), event.getBiomes());
+		Chunk chunk = new Chunk(this, location, event.getBlocks(), event.getLight(), event.getSkylight(), event.getBiomes());
 		synchronized(chunks) {
 			chunks.put(location, chunk);
 		}
@@ -261,12 +302,13 @@ public final class BasicWorld implements World, EventListener {
 	@EventHandler
 	public void onTileEntityUpdate(TileEntityUpdateEvent event) {
 		BlockLocation location = new BlockLocation(event.getX(), event.getY(), event.getZ());
-		Class<? extends TileEntity> entityClass = EntityList.getTileEntityClass(event.getType());
+		Class<? extends TileEntity> entityClass = EntityList.getTileEntityClass(event.getType().ordinal());
+
 		if(entityClass == null)
 			return;
 		TileEntity entity;
 		try {
-			Constructor<? extends TileEntity> constructor = entityClass.getConstructor(NBTTagCompound.class);
+			Constructor<? extends TileEntity> constructor = entityClass.getConstructor(CompoundTag.class);
 			entity = constructor.newInstance(event.getCompound());
 		} catch(Exception exception) {
 			exception.printStackTrace();
@@ -624,6 +666,13 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
+	public PlayerInfo[] getPlayers() {
+		synchronized(players) {
+			return players.toArray(new PlayerInfo[players.size()]);
+		}
+	}
+
+	@Override
 	public void spawnEntity(Entity entity) {
 		if(entity == null)
 			throw new NullPointerException();
@@ -653,7 +702,7 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@Override
-	public Dimension getDimension() {
+	public int getDimension() {
 		return dimension;
 	}
 

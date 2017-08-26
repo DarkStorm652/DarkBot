@@ -1,9 +1,10 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class EntityTeleportEvent extends EntityEvent {
-	private final double x, y, z, yaw, pitch;
+	private final double x, y, z;
+	private final float yaw, pitch;
 
-	public EntityTeleportEvent(int entityId, double x, double y, double z, double yaw, double pitch) {
+	public EntityTeleportEvent(int entityId, double x, double y, double z, float yaw, float pitch) {
 		super(entityId);
 
 		this.x = x;
@@ -25,11 +26,11 @@ public class EntityTeleportEvent extends EntityEvent {
 		return z;
 	}
 
-	public double getYaw() {
+	public float getYaw() {
 		return yaw;
 	}
 
-	public double getPitch() {
+	public float getPitch() {
 		return pitch;
 	}
 }

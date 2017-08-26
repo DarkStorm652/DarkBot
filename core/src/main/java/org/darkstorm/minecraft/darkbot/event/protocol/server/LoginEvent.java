@@ -1,17 +1,19 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
+import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
+import com.github.steveice10.mc.protocol.data.game.setting.Difficulty;
+import com.github.steveice10.mc.protocol.data.game.world.WorldType;
 import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
-import org.darkstorm.minecraft.darkbot.world.*;
 
 public class LoginEvent extends ProtocolEvent {
 	private final int playerId;
 	private final WorldType worldType;
 	private final GameMode gameMode;
-	private final Dimension dimension;
+	private final int dimension;
 	private final Difficulty difficulty;
 	private final int worldHeight, maxPlayers;
 
-	public LoginEvent(int playerId, WorldType worldType, GameMode gameMode, Dimension dimension, Difficulty difficulty, int worldHeight, int maxPlayers) {
+	public LoginEvent(int playerId, WorldType worldType, GameMode gameMode, int dimension, Difficulty difficulty, int worldHeight, int maxPlayers) {
 		this.playerId = playerId;
 		this.worldType = worldType;
 		this.gameMode = gameMode;
@@ -33,7 +35,7 @@ public class LoginEvent extends ProtocolEvent {
 		return gameMode;
 	}
 
-	public Dimension getDimension() {
+	public int getDimension() {
 		return dimension;
 	}
 

@@ -34,7 +34,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 	@EventHandler
 	public void onChatReceived(ChatReceivedEvent event) {
 		String message = ChatColor.stripColor(event.getMessage());
-		System.out.println("[" + bot.getSession().getUsername() + "]> " + message);
+		System.out.println("[" + bot.getUsername() + "]> " + message);
 		String nocheat = "Please type '([^']*)' to continue sending messages/commands\\.";
 		Matcher nocheatMatcher = Pattern.compile(nocheat).matcher(message);
 		if(nocheatMatcher.matches()) {
@@ -70,7 +70,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 
 	@EventHandler
 	public void onDisconnect(DisconnectEvent event) {
-		System.out.println("[" + bot.getSession().getUsername() + "] Disconnected: " + event.getReason());
+		System.out.println("[" + bot.getUsername() + "] Disconnected: " + event.getReason());
 	}
 
 	public void say(String message) {

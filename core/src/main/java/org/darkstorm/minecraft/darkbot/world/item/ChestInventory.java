@@ -1,5 +1,9 @@
 package org.darkstorm.minecraft.darkbot.world.item;
 
+import com.github.steveice10.mc.protocol.data.game.window.ClickItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.DropItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.ShiftClickItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.WindowAction;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.event.EventHandler;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
@@ -117,7 +121,9 @@ public class ChestInventory extends AbstractInventory {
 			}
 		}
 		System.out.println("Clicked at " + slot + " | left: " + leftClick + " item: " + item + " selected: " + oldSelected);
-		perform(new InventoryChangeEvent(this, slot, leftClick ? 0 : 1, (short) 0, item, false));
+		perform(new InventoryChangeEvent(this, slot,
+				WindowAction.CLICK_ITEM, (short) 1, item, ClickItemParam.LEFT_CLICK));
+
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -161,7 +167,8 @@ public class ChestInventory extends AbstractInventory {
 		}
 		if(!slotFound)
 			return;
-		perform(new InventoryChangeEvent(this, slot, 0, (short) 0, item, true));
+		perform(new InventoryChangeEvent(this, slot,
+				WindowAction.SHIFT_CLICK_ITEM, (short) 1, item, ShiftClickItemParam.LEFT_CLICK));
 	}
 
 	@Override
@@ -172,6 +179,8 @@ public class ChestInventory extends AbstractInventory {
 	@Override
 	public synchronized void dropSelectedItem() {
 		selectedItem = null;
-		perform(new InventoryChangeEvent(this, -999, 0, (short) 0, null, true));
+		perform(new InventoryChangeEvent(this, -999,
+				WindowAction.DROP_ITEM, (short) 1, null, DropItemParam.DROP_FROM_SELECTED));
+
 	}
 }

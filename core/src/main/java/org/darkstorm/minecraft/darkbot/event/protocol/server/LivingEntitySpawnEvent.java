@@ -1,12 +1,14 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
+import com.github.steveice10.mc.protocol.data.game.entity.type.MobType;
 import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.entity.WatchableObject;
 
 public class LivingEntitySpawnEvent extends MetaEntitySpawnEvent {
 	private final LivingEntitySpawnData spawnData;
 
-	public LivingEntitySpawnEvent(int entityId, LivingEntitySpawnLocation location, LivingEntitySpawnData spawnData, IntHashMap<WatchableObject> metadata) {
+	public LivingEntitySpawnEvent(int entityId, LivingEntitySpawnLocation location, LivingEntitySpawnData spawnData, EntityMetadata[] metadata) {
 		super(entityId, location, metadata);
 
 		this.spawnData = spawnData;
@@ -22,31 +24,31 @@ public class LivingEntitySpawnEvent extends MetaEntitySpawnEvent {
 	}
 
 	public static class LivingEntitySpawnLocation extends RotatedSpawnLocation {
-		private final double headYaw;
+		private final float headYaw;
 
-		public LivingEntitySpawnLocation(double x, double y, double z, double yaw, double pitch, double headYaw) {
+		public LivingEntitySpawnLocation(double x, double y, double z, float yaw, float pitch, float headYaw) {
 			super(x, y, z, yaw, pitch);
 
 			this.headYaw = headYaw;
 		}
 
-		public double getHeadYaw() {
+		public float getHeadYaw() {
 			return headYaw;
 		}
 	}
 
 	public static class LivingEntitySpawnData {
-		private final int type;
+		private final MobType type;
 		private final double velocityX, velocityY, velocityZ;
 
-		public LivingEntitySpawnData(int type, double velocityX, double velocityY, double velocityZ) {
+		public LivingEntitySpawnData(MobType type, double velocityX, double velocityY, double velocityZ) {
 			this.type = type;
 			this.velocityX = velocityX;
 			this.velocityY = velocityY;
 			this.velocityZ = velocityZ;
 		}
 
-		public int getType() {
+		public MobType getType() {
 			return type;
 		}
 

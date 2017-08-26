@@ -2,10 +2,13 @@ package org.darkstorm.minecraft.darkbot.world.entity;
 
 import java.util.*;
 
+import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.event.EventBus;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
-import org.darkstorm.minecraft.darkbot.world.*;
+import org.darkstorm.minecraft.darkbot.world.BoundingBox;
+import org.darkstorm.minecraft.darkbot.world.World;
+import org.darkstorm.minecraft.darkbot.world.WorldLocation;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.item.*;
 

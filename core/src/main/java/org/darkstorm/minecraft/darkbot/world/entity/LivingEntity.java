@@ -2,15 +2,16 @@ package org.darkstorm.minecraft.darkbot.world.entity;
 
 import java.util.Set;
 
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
 public abstract class LivingEntity extends Entity {
-	protected int health, breathTimer, growthTimer, potionEffectColor;
+	protected float health;
+	protected int breathTimer, growthTimer, potionEffectColor;
 	protected boolean onFire, crouching, riding, sprinting, performingAction;
-	protected double headYaw;
+	protected float headYaw;
 
 	public LivingEntity(World world, int id) {
 		super(world, id);
@@ -130,7 +131,7 @@ public abstract class LivingEntity extends Entity {
 		return !found.isEmpty();
 	}*/
 
-	public int getHealth() {
+	public float getHealth() {
 		return health;
 	}
 
@@ -170,11 +171,11 @@ public abstract class LivingEntity extends Entity {
 		return null;
 	}
 
-	public double getHeadYaw() {
+	public float getHeadYaw() {
 		return headYaw;
 	}
 
-	public void setHealth(int health) {
+	public void setHealth(float health) {
 		this.health = health;
 	}
 
@@ -213,7 +214,7 @@ public abstract class LivingEntity extends Entity {
 	public void setWornItemAt(int slot, ItemStack item) {
 	}
 
-	public void setHeadYaw(double headYaw) {
+	public void setHeadYaw(float headYaw) {
 		this.headYaw = headYaw;
 	}
 	
@@ -223,21 +224,23 @@ public abstract class LivingEntity extends Entity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
-		if(metadata.containsKey(0)) {
-			byte flags = (Byte) metadata.get(0).getObject();
-			setOnFire((flags & 1) != 0);
-			setCrouching((flags & 2) != 0);
-			setRiding((flags & 4) != 0);
-			setSprinting((flags & 8) != 0);
-			setPerformingAction((flags & 16) != 0);
+	public void updateMetadata(EntityMetadata[] metadata) {
+		for(EntityMetadata md : metadata)
+		{
+			if(md.getId() == 0) {
+				byte flags = (Byte) md.getValue();
+				setOnFire((flags & 1) != 0);
+				setCrouching((flags & 2) != 0);
+				setRiding((flags & 4) != 0);
+				setSprinting((flags & 8) != 0);
+				setPerformingAction((flags & 16) != 0);
+			} else if(md.getId() == 1) {
+				setBreathTimer((Integer) md.getValue());
+			} else if(md.getId() == 8) {
+				setPotionEffectColor((Integer) md.getValue());
+			} else if(md.getId() == 12) {
+				setGrowthTimer((Integer) md.getValue());
+			}
 		}
-
-		if(metadata.containsKey(1))
-			setBreathTimer((Short) metadata.get(1).getObject());
-		if(metadata.containsKey(8))
-			setPotionEffectColor((Integer) metadata.get(8).getObject());
-		if(metadata.containsKey(12))
-			setGrowthTimer((Integer) metadata.get(12).getObject());
 	}
 }

@@ -1,15 +1,15 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
 public class EntityHeadRotateEvent extends EntityEvent {
-	private final double headYaw;
+	private final float headYaw;
 
-	public EntityHeadRotateEvent(int entityId, double headYaw) {
+	public EntityHeadRotateEvent(int entityId, float headYaw) {
 		super(entityId);
 
 		this.headYaw = headYaw;
 	}
 
-	public double getHeadYaw() {
+	public float getHeadYaw() {
 		return headYaw;
 	}
 }

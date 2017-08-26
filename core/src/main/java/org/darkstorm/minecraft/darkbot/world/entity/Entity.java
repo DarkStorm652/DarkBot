@@ -2,6 +2,7 @@ package org.darkstorm.minecraft.darkbot.world.entity;
 
 import java.util.Set;
 
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.world.block.*;
@@ -9,7 +10,8 @@ import org.darkstorm.minecraft.darkbot.world.block.*;
 public abstract class Entity {
 	protected final World world;
 	protected final int id;
-	protected double x, y, z, yaw, pitch;
+	protected double x, y, z;
+	protected float yaw, pitch;
 	protected double velocityX, velocityY, velocityZ;
 	protected double sizeX, sizeY, sizeZ;
 	protected Entity rider, riding;
@@ -55,11 +57,11 @@ public abstract class Entity {
 		return z;
 	}
 
-	public double getYaw() {
+	public float getYaw() {
 		return yaw;
 	}
 
-	public double getPitch() {
+	public float getPitch() {
 		return pitch;
 	}
 	
@@ -123,11 +125,11 @@ public abstract class Entity {
 		this.z = z;
 	}
 
-	public void setYaw(double yaw) {
+	public void setYaw(float yaw) {
 		this.yaw = yaw;
 	}
 
-	public void setPitch(double pitch) {
+	public void setPitch(float pitch) {
 		this.pitch = pitch;
 	}
 	
@@ -189,7 +191,8 @@ public abstract class Entity {
 		z = location.getZ();
 	}
 
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
+		//TODO: Implement
 	}
 	
 	public void accelerate(double horizAngle, double vertAngle, double accel) {

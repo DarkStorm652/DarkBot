@@ -2,6 +2,8 @@ package org.darkstorm.minecraft.darkbot.world;
 
 import java.util.Set;
 
+import com.github.steveice10.mc.protocol.data.game.setting.Difficulty;
+import com.github.steveice10.mc.protocol.data.game.world.WorldType;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.Entity;
@@ -39,11 +41,12 @@ public interface World {
 	public boolean isInMaterial(BoundingBox box, BlockType... materials);
 
 	public Entity[] getEntities();
+	public PlayerInfo[] getPlayers();
 	public Entity getEntityById(int id);
 	public void spawnEntity(Entity entity);
 	public void despawnEntity(Entity entity);
 
-	public Dimension getDimension();
+	public int getDimension();
 	public Difficulty getDifficulty();
 	public WorldType getType();
 	public int getMaxHeight();

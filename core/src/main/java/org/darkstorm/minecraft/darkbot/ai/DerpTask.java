@@ -33,8 +33,8 @@ public class DerpTask extends AbstractTask {
 	@Override
 	public void run() {
 		MainPlayerEntity player = bot.getPlayer();
-		player.setYaw(random.nextDouble() * 360);
-		player.setPitch(random.nextDouble() * 360);
+		player.setYaw((float) random.nextDouble() * 360);
+		player.setPitch((float) random.nextDouble() * 360);
 	}
 
 	@Override

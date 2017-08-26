@@ -9,12 +9,6 @@ import joptsimple.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.darkstorm.minecraft.darkbot.*;
 import org.darkstorm.minecraft.darkbot.ai.*;
-import org.darkstorm.minecraft.darkbot.auth.*;
-import org.darkstorm.minecraft.darkbot.connection.*;
-import org.darkstorm.minecraft.darkbot.connection.ProxyData.ProxyType;
-import org.darkstorm.minecraft.darkbot.protocol.*;
-import org.darkstorm.minecraft.darkbot.util.RealmsUtils;
-import org.darkstorm.minecraft.darkbot.world.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
@@ -74,6 +68,8 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new CrouchCommand(this));
 		commandManager.register(new MirrorCommand(this));
 		commandManager.register(new MuteCommand(this));
+
+		commandManager.register(new LoginCommand(this));
 	}
 
 	public static void main(String[] args) {
@@ -103,7 +99,8 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			return;
 		}
 		if(options.has(protocolsOption)) {
-            CLIWrapperUtils.dumpProtocols();
+			//TODO: Implement
+			System.out.println("Not implemented!");
 			return;
 		}
 
@@ -134,240 +131,34 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		}
 
 		if(options.has(mcoServersOption)) {
-			if(offline) {
-				System.out.println("Must be online with authentication details for MCO.");
-				return;
-			}
-			if(username == null || password == null) {
-				System.out.println("Username and password must be provided for MCO.");
-				return;
-			}
-			ProxyData proxy = null;
-			if(options.has(proxyOption))
-				proxy = toProxy(options.valueOf(proxyOption), ProxyData.ProxyType.SOCKS);
-
-			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
-			YggdrasilSession session;
-			try {
-				session = service.login(username, password, proxy);
-			} catch(AuthenticationException exception) {
-				System.err.println("Invalid authentication details:");
-				exception.printStackTrace();
-				return;
-			} catch(IOException exception) {
-				System.err.println("Unable to retrieve auth details:");
-				exception.printStackTrace();
-				return;
-			}
-
-			System.out.println("Requesting MCO server list...");
-			RealmsUtils.Server[] servers;
-			try {
-				servers = RealmsUtils.requestServers(session, proxy);
-			} catch(IOException exception) {
-				System.err.println("Unable to request MCO servers:");
-				exception.printStackTrace();
-				return;
-			}
-
-			if(servers.length == 0) {
-				System.out.println("No servers found!");
-				return;
-			}
-			System.out.println("Available servers (" + servers.length + "):");
-			for(RealmsUtils.Server server : servers) {
-				System.out.println("\t" + server.getName() + " (" + server.getId() + "):");
-				System.out.println("\t\tOwner: " + server.getOwner());
-				System.out.println("\t\tMOTD: " + server.getMotd());
-				System.out.println("\t\tDifficulty: " + Difficulty.getDifficultyById(server.getDifficulty()).name());
-				System.out.println("\t\tGame Mode: " + GameMode.getGameModeById(server.getGameMode()).name());
-				if(!server.isExpired())
-					System.out.println("\t\tSubscription: " + server.getDaysLeft() + " days left");
-				else
-					System.out.println("\t\tSubscription: Expired");
-				System.out.println("\t\tState: " + server.getState());
-			}
+			//TODO: Implement
+			System.out.println("Not implemented!");
 			return;
 		}
 
-		final String server;
-		if(!options.has(serverOption) && !options.has(mcoServerOption)) {
+		if(!options.has(serverOption)) {
 			System.out.println("Option 'server' required.");
 			return;
-		} else if(options.has(mcoServerOption)) {
-			if(offline) {
-				System.out.println("Must be online with authentication details for MCO.");
-				return;
-			}
-			if(username == null || password == null) {
-				System.out.println("Username and password must be provided for MCO.");
-				return;
-			}
-			ProxyData proxy = null;
-			if(options.has(proxyOption))
-				proxy = toProxy(options.valueOf(proxyOption), ProxyData.ProxyType.SOCKS);
-			YggdrasilAuthService service = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
-			YggdrasilSession session;
-			try {
-				session = service.login(username, password, proxy);
-			} catch(AuthenticationException exception) {
-				System.err.println("Invalid authentication details:");
-				exception.printStackTrace();
-				return;
-			} catch(IOException exception) {
-				System.err.println("Unable to retrieve auth details:");
-				exception.printStackTrace();
-				return;
-			}
-
-			RealmsUtils.Server[] availableServers;
-			try {
-				availableServers = RealmsUtils.requestServers(session, proxy);
-			} catch(IOException exception) {
-				System.err.println("Unable to request MCO servers or server address:");
-				exception.printStackTrace();
-				return;
-			}
-			String serverName = options.valueOf(mcoServerOption);
-			RealmsUtils.Server targetServer = null;
-			for(RealmsUtils.Server availableServer : availableServers)
-				if(serverName.equalsIgnoreCase(availableServer.getName()))
-					targetServer = availableServer;
-			if(targetServer == null) {
-				try {
-					int id = Integer.parseInt(serverName);
-					for(RealmsUtils.Server availableServer : availableServers)
-						if(id == availableServer.getId())
-							targetServer = availableServer;
-					if(targetServer == null && id < availableServers.length)
-						targetServer = availableServers[id];
-				} catch(NumberFormatException exception) {}
-			}
-			if(targetServer == null) {
-				System.out.println("No MCO server by name, ID, or index (ordered by priority) found! Try listing servers with --mco-servers");
-				return;
-			}
-
-			String address = null;
-			for(int i = 0; i < 6; i++) {
-				try {
-					address = RealmsUtils.requestAddress(targetServer, session, proxy);
-					break;
-				} catch(IOException exception) {
-					if(i == 5) {
-						System.err.println("Unable to retrieve MCO server address to connect:");
-						exception.printStackTrace();
-						return;
-					}
-				}
-				try {
-					Thread.sleep(5000);
-				} catch(InterruptedException exception) {}
-			}
-			if(address == null) {
-				System.out.println("Unable to retrieve MCO server address to connect.");
-				return;
-			}
-			server = address;
-		} else
-			server = options.valueOf(serverOption);
-
-		final String owner = CLIWrapperUtils.getRequiredOption(options, ownerOption);
-
-		final ProtocolProvider protocol = CLIWrapperUtils.getProtocolProvider(options, protocolOption);
-		if(protocol == null)
-		    return;
-
-		final List<String> socksProxies;
-		final String defaultProxy;
-		if(options.has(socksProxyListOption)) {
-			socksProxies = loadProxies(options.valueOf(socksProxyListOption));
-			defaultProxy = null;
-		} else {
-			socksProxies = null;
-			if(options.has(proxyOption))
-				defaultProxy = options.valueOf(proxyOption);
-			else
-				defaultProxy = null;
 		}
 
-		final List<String> httpProxies;
-		if(options.has(httpProxyListOption))
-			httpProxies = loadLoginProxies(options.valueOf(httpProxyListOption));
-		else if(username == null && accounts != null) {
-			System.out.println("Option 'http-proxy-list' required in presence " + "of option 'account-list'.");
-			return;
-		} else
-			httpProxies = null;
+		final String server = options.valueOf(serverOption);
+		final String owner = CLIWrapperUtils.getRequiredOption(options, ownerOption);
 
 		final List<String> accountsInUse = new ArrayList<String>();
 		Random random = new Random();
 
 		if(!offline) {
-			AuthService<?> authService = new YggdrasilAuthService(MinecraftBotImpl.CLIENT_TOKEN);
-			user: do {
-				Session session = null;
-				String loginProxy;
-				String account;
-				if(username == null) {
-					account = accounts.get(random.nextInt(accounts.size()));
-					synchronized(accountsInUse) {
-						while(accountsInUse.contains(account))
-							account = accounts.get(random.nextInt(accounts.size()));
-						accountsInUse.add(account);
-					}
-				} else
-					account = username + ":" + password;
-				String[] accountParts = account.split(":");
-				while(true) {
-					loginProxy = username != null ? null : httpProxies.get(random.nextInt(httpProxies.size()));
-					try {
-						session = authService.login(accountParts[0], accountParts[1], toProxy(loginProxy, ProxyData.ProxyType.HTTP));
-						break;
-					} catch(IOException exception) {
-						System.err.println("[Bot] " + exception);
-						if(username != null)
-							break user;
-					} catch(AuthenticationException exception) {
-						System.err.println("[Bot] " + exception);
-						if(username != null)
-							break user;
-						continue user;
-					}
-				}
-				System.out.println("[" + session.getUsername() + "] " + session);
-
-				while(true) {
-					String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : defaultProxy;
-					try {
-						CLIBotWrapper bot = new CLIBotWrapper(createBot(server, session.getUsername(), session.getPassword(), authService, session, protocol, null, proxy), owner);
-						if(!bot.getBot().isConnected())
-							System.out.println("[" + session.getUsername() + "] Account failed");
-						while(bot.getBot().isConnected()) {
-							try {
-								Thread.sleep(1500);
-							} catch(InterruptedException exception) {
-								exception.printStackTrace();
-							}
-						}
-						if(!autoRejoin)
-							break;
-					} catch(Exception exception) {
-						exception.printStackTrace();
-						System.out.println("[" + session.getUsername() + "] Error connecting: " + exception.getCause().toString());
-					}
-				}
-			} while(username == null);
+			//TODO: Implement
+			System.out.println("Not implemented!");
 		} else {
 			while(true) {
-				String proxy = socksProxies != null ? socksProxies.get(random.nextInt(socksProxies.size())) : defaultProxy;
 				try {
 					String name = "";
 					if(username == null)
 						name = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
 					else
 						name = username;
-					CLIBotWrapper bot = new CLIBotWrapper(createBot(server, name, null, null, null, protocol, null, proxy), owner);
+					CLIBotWrapper bot = new CLIBotWrapper(createBot(server, name), owner);
 					while(bot.getBot().isConnected()) {
 						try {
 							Thread.sleep(1500);
@@ -377,8 +168,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 					}
 					if(!autoRejoin)
 						break;
-					else
-						continue;
 				} catch(Exception exception) {
 					System.out.println("[Bot] Error connecting: " + exception.toString());
 					exception.printStackTrace();
@@ -386,44 +175,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 			}
 		}
 		System.exit(0);
-	}
-
-	private static List<String> loadProxies(String fileName) {
-		List<String> proxies = new ArrayList<String>();
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
-			String line;
-			while((line = reader.readLine()) != null) {
-				if(line.trim().isEmpty())
-					continue;
-				String[] parts = line.split(" ")[0].trim().split(":");
-				proxies.add(parts[0].trim() + ":" + Integer.parseInt(parts[1].trim()));
-			}
-			reader.close();
-		} catch(Exception exception) {
-			throw new RuntimeException(exception);
-		}
-		System.out.println("Loaded " + proxies.size() + " proxies.");
-		return proxies;
-	}
-
-	private static List<String> loadLoginProxies(String fileName) {
-		List<String> proxies = new ArrayList<String>();
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
-			String line;
-			while((line = reader.readLine()) != null) {
-				if(line.trim().isEmpty())
-					continue;
-				String[] parts = line.split(" ")[0].trim().split(":");
-				proxies.add(parts[0].trim() + ":" + Integer.parseInt(parts[1].trim()));
-			}
-			reader.close();
-		} catch(Exception exception) {
-			throw new RuntimeException(exception);
-		}
-		System.out.println("Loaded " + proxies.size() + " login proxies.");
-		return proxies;
 	}
 
 	private static List<String> loadAccounts(String fileName) {
@@ -450,46 +201,10 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		return accounts;
 	}
 
-	private static ProxyData toProxy(String proxyData, ProxyData.ProxyType type) {
-		if(proxyData == null)
-			return null;
-		int port = 80;
-		if(proxyData.contains(":")) {
-			String[] parts = proxyData.split(":");
-			proxyData = parts[0];
-			port = Integer.parseInt(parts[1]);
-		}
-		return new ProxyData(proxyData, port, type);
-	}
-
-	private static MinecraftBotImpl createBot(String server, String username, String password, AuthService<?> service, Session session, ProtocolProvider protocol, String loginProxy, String proxy) throws AuthenticationException, UnsupportedProtocolException, IOException {
+	private static MinecraftBotImpl createBot(String server, String username) throws IOException {
 		MinecraftBotImpl.Builder builder = MinecraftBotImpl.builder();
-		if(proxy != null && !proxy.isEmpty()) {
-			int port = 80;
-			ProxyType type = ProxyType.SOCKS;
-			if(proxy.contains(":")) {
-				String[] parts = proxy.split(":");
-				proxy = parts[0];
-				port = Integer.parseInt(parts[1]);
-				if(parts.length > 2)
-					type = ProxyType.values()[Integer.parseInt(parts[2]) - 1];
-			}
-			builder.connectProxy(new ProxyData(proxy, port, type));
-		}
-		if(loginProxy != null && !loginProxy.isEmpty()) {
-			int port = 80;
-			if(loginProxy.contains(":")) {
-				String[] parts = loginProxy.split(":");
-				loginProxy = parts[0];
-				port = Integer.parseInt(parts[1]);
-			}
-			builder.loginProxy(new ProxyData(loginProxy, port, ProxyType.HTTP));
-		}
-		builder.username(username).authService(service).protocolProvider(protocol);
-		if(session != null)
-			builder.session(session);
-		else
-			builder.password(password);
+		builder.username(username);
+
 		if(server != null && !server.isEmpty()) {
 			int port = 25565;
 			if(server.contains(":")) {

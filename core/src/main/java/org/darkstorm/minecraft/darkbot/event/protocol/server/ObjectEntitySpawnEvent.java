@@ -1,5 +1,7 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
+import com.github.steveice10.mc.protocol.data.game.entity.type.object.ObjectType;
+
 public class ObjectEntitySpawnEvent extends RotatedEntitySpawnEvent {
 	private final ObjectSpawnData spawnData;
 
@@ -14,13 +16,13 @@ public class ObjectEntitySpawnEvent extends RotatedEntitySpawnEvent {
 	}
 
 	public static class ObjectSpawnData {
-		private final int type;
+		private final ObjectType type;
 
-		public ObjectSpawnData(int type) {
+		public ObjectSpawnData(ObjectType type) {
 			this.type = type;
 		}
 
-		public int getType() {
+		public ObjectType getType() {
 			return type;
 		}
 	}
@@ -29,7 +31,7 @@ public class ObjectEntitySpawnEvent extends RotatedEntitySpawnEvent {
 		private final int throwerId;
 		private final double speedX, speedY, speedZ;
 
-		public ThrownObjectSpawnData(int type, int throwerId, double speedX, double speedY, double speedZ) {
+		public ThrownObjectSpawnData(ObjectType type, int throwerId, double speedX, double speedY, double speedZ) {
 			super(type);
 
 			this.throwerId = throwerId;

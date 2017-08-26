@@ -1,12 +1,12 @@
 package org.darkstorm.minecraft.darkbot.world.block;
 
-import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 
 public abstract class TileEntity {
 	protected final BlockLocation location;
 
-	public TileEntity(NBTTagCompound nbt) {
-		this(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
+	public TileEntity(CompoundTag nbt) {
+		this((int)nbt.get("x").getValue(), (int)nbt.get("y").getValue(), (int)nbt.get("z").getValue());
 	}
 
 	public TileEntity(int x, int y, int z) {

@@ -2,6 +2,10 @@ package org.darkstorm.minecraft.darkbot.world.item;
 
 import java.util.*;
 
+import com.github.steveice10.mc.protocol.data.game.window.ClickItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.DropItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.ShiftClickItemParam;
+import com.github.steveice10.mc.protocol.data.game.window.WindowAction;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
@@ -126,7 +130,9 @@ public class PlayerInventory extends AbstractInventory {
 				setItemAt(slot, selectedItem);
 				selectedItem = null;
 			}
-			perform(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+			perform(new InventoryChangeEvent(this, getServerSlotFor(slot),
+					WindowAction.CLICK_ITEM, transactionId++, item, leftClick ? ClickItemParam.LEFT_CLICK : ClickItemParam.RIGHT_CLICK));
+
 			return;
 		}
 		if(slot == 44 && item != null) {
@@ -202,7 +208,9 @@ public class PlayerInventory extends AbstractInventory {
 				}
 			}
 		}
-		perform(new InventoryChangeEvent(this, getServerSlotFor(slot), leftClick ? 0 : 1, transactionId++, item, false));
+		perform(new InventoryChangeEvent(this, getServerSlotFor(slot),
+				WindowAction.CLICK_ITEM, transactionId++, item, leftClick ? ClickItemParam.LEFT_CLICK : ClickItemParam.RIGHT_CLICK));
+
 	}
 
 	public synchronized void selectArmorAt(int slot) {
@@ -258,7 +266,9 @@ public class PlayerInventory extends AbstractInventory {
 		}
 		if(!slotFound)
 			return;
-		perform(new InventoryChangeEvent(this, getServerSlotFor(slot), 0, transactionId++, originalItem, true));
+		perform(new InventoryChangeEvent(this, getServerSlotFor(slot),
+				WindowAction.SHIFT_CLICK_ITEM, transactionId++, originalItem, ShiftClickItemParam.LEFT_CLICK));
+
 	}
 
 	public synchronized boolean contains(int... ids) {
@@ -306,7 +316,9 @@ public class PlayerInventory extends AbstractInventory {
 	@Override
 	public synchronized void dropSelectedItem() {
 		selectedItem = null;
-		perform(new InventoryChangeEvent(this, -999, 0, transactionId++, null, true));
+		perform(new InventoryChangeEvent(this, -999,
+				WindowAction.DROP_ITEM, transactionId++, null, DropItemParam.DROP_FROM_SELECTED));
+
 	}
 
 	public synchronized int getCurrentHeldSlot() {

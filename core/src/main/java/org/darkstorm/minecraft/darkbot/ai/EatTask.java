@@ -16,7 +16,8 @@ public class EatTask extends AbstractTask {
 
 	private boolean active;
 
-	private int lastHealth = -1, lastHunger = -1, eatingTicks, lastSlot;
+	private float lastHealth = -1;
+	private int  lastHunger = -1, eatingTicks, lastSlot;
 
 	public EatTask(MinecraftBot bot) {
 		super(bot);

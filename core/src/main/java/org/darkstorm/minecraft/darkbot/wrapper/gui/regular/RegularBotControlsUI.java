@@ -88,7 +88,7 @@ public class RegularBotControlsUI extends BotControlsUI {
 				MainPlayerEntity player = mcbot.getPlayer();
 				if(player == null)
 					return;
-				int health = player.getHealth();
+				float health = player.getHealth();
 				int width = ((empty.getWidth(null) + 2) * 10) - 2, height = empty
 						.getHeight(null);
 				int x = (getWidth() / 2) - (width / 2), y = (getHeight() / 2)
