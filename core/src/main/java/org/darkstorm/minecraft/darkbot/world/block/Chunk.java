@@ -80,7 +80,10 @@ public final class Chunk {
 	}
 
 	public int getBlockIdAt(int x, int y, int z) {
-		return blocks.get(x, y, z).getId();
+		BlockState block = blocks.get(x, y, z);
+		if(block == null)
+			return -1;
+		return block.getId();
 	}
 
 	public void setBlockIdAt(int id, BlockLocation location) {

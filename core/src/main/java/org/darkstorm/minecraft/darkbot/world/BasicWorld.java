@@ -377,10 +377,14 @@ public final class BasicWorld implements World, EventListener {
 
 	@Override
 	public int getBlockIdAt(BlockLocation location) {
+
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
-			return 0;
+		if(chunk == null) {
+			System.out.println("Attempted to get invalid block id from: " + location);
+			return -1;
+		}
+
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		return chunk.getBlockIdAt(
@@ -398,8 +402,10 @@ public final class BasicWorld implements World, EventListener {
 	public void setBlockIdAt(int id, BlockLocation location) {
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
+		if(chunk == null) {
+			System.out.println("Attempted to set invalid block id at: " + location);
 			return;
+		}
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		chunk.setBlockIdAt(id,
@@ -417,8 +423,10 @@ public final class BasicWorld implements World, EventListener {
 	public int getBlockMetadataAt(BlockLocation location) {
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
-			return 0;
+		if(chunk == null) {
+			System.out.println("Attempted to get invalid block metadata from: " + location);
+			return -1;
+		}
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		return chunk.getBlockMetadataAt(
@@ -436,8 +444,10 @@ public final class BasicWorld implements World, EventListener {
 	public void setBlockMetadataAt(int metadata, BlockLocation location) {
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
+		if(chunk == null) {
+			System.out.println("Attempted to set invalid block metadata at: " + location);
 			return;
+		}
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		chunk.setBlockMetadataAt(metadata, 
@@ -455,8 +465,10 @@ public final class BasicWorld implements World, EventListener {
 	public TileEntity getTileEntityAt(BlockLocation location) {
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
+		if(chunk == null) {
+			System.out.println("Attempted to get invalid tile entity from: " + location);
 			return null;
+		}
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		return chunk.getTileEntityAt(
@@ -474,8 +486,10 @@ public final class BasicWorld implements World, EventListener {
 	public void setTileEntityAt(TileEntity tileEntity, BlockLocation location) {
 		ChunkLocation chunkLocation = new ChunkLocation(location);
 		Chunk chunk = getChunkAt(chunkLocation);
-		if(chunk == null)
+		if(chunk == null) {
+			System.out.println("Attempted to set invalid tile entity at: " + location);
 			return;
+		}
 
 		BlockLocation base = chunk.getBlockBaseLocation();
 		chunk.setTileEntityAt(tileEntity, 

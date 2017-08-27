@@ -24,7 +24,8 @@ public class BlockBreakActivity implements Activity {
 		this.lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
 		this.timeout = timeout;
-		
+
+		System.out.println("Breaking block at: " + location);
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
 		if(player == null || world == null)

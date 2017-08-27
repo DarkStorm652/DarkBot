@@ -49,6 +49,18 @@ public final class BlockLocation {
 		return offset(-location.x, -location.y, -location.z);
 	}
 
+	public boolean isAdjacentTo(BlockLocation target) {
+		int[] offsets = new int[] { Math.abs(x - target.x), Math.abs(y - target.y), Math.abs(z - target.z)};
+		int offsetCoords = 0;
+		for(int offset : offsets)
+			if(offset > 0)
+				offsetCoords++;
+
+		if(offsetCoords == 2) // 3 would mean it's not touching the target block
+			return true;
+		return false;
+	}
+
 	public BlockLocation offset(int x, int y, int z) {
 		return new BlockLocation(this.x + x, this.y + y, this.z + z);
 	}
