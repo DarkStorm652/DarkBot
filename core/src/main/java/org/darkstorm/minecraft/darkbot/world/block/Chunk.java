@@ -2,6 +2,9 @@ package org.darkstorm.minecraft.darkbot.world.block;
 
 import java.util.*;
 
+import com.github.steveice10.mc.protocol.data.game.chunk.BlockStorage;
+import com.github.steveice10.mc.protocol.data.game.chunk.NibbleArray3d;
+import com.github.steveice10.mc.protocol.data.game.world.block.BlockState;
 import org.darkstorm.minecraft.darkbot.event.EventBus;
 import org.darkstorm.minecraft.darkbot.event.world.BlockChangeEvent;
 import org.darkstorm.minecraft.darkbot.world.World;
@@ -10,15 +13,16 @@ public final class Chunk {
 	private final World world;
 	private final ChunkLocation location;
 	private final BlockLocation baseLocation;
-	private final byte[] blocks, metadata, light, skylight, biomes;
+	private final BlockStorage blocks;
+	private final NibbleArray3d light, skylight;
+	private final byte[] biomes;
 	private final Map<BlockLocation, TileEntity> tileEntities;
 
-	public Chunk(World world, ChunkLocation location, byte[] blocks, byte[] metadata, byte[] light, byte[] skylight, byte[] biomes) {
+	public Chunk(World world, ChunkLocation location, BlockStorage blocks, NibbleArray3d light, NibbleArray3d skylight, byte[] biomes) {
 		this.world = world;
 		this.location = location;
 		this.baseLocation = new BlockLocation(location);
 		this.blocks = blocks;
-		this.metadata = metadata;
 		this.light = light;
 		this.skylight = skylight;
 		this.biomes = biomes;
@@ -76,10 +80,10 @@ public final class Chunk {
 	}
 
 	public int getBlockIdAt(int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= blocks.length)
-			return 0;
-		return blocks[index] & 0xFF;
+		BlockState block = blocks.get(x, y, z);
+		if(block == null)
+			return -1;
+		return block.getId();
 	}
 
 	public void setBlockIdAt(int id, BlockLocation location) {
@@ -87,15 +91,14 @@ public final class Chunk {
 	}
 
 	public void setBlockIdAt(int id, int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= blocks.length)
-			return;
-		
 		BlockLocation location = new BlockLocation(x, y, z);
+		BlockState oldBlockState  = blocks.get(x,y,z);
+		int blockData = oldBlockState.getData();
+
 		Block oldBlock = getBlockAt(location);
-		blocks[index] = (byte) id;
+		blocks.set(x, y, z, new BlockState(id, blockData));
+
 		Block newBlock = getBlockAt(location);
-		
 		EventBus eventBus = world.getBot().getEventBus();
 		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
@@ -105,10 +108,7 @@ public final class Chunk {
 	}
 
 	public int getBlockMetadataAt(int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= metadata.length)
-			return 0;
-		return metadata[index] & 0xFF;
+		return blocks.get(x, y, z).getData();
 	}
 
 	public void setBlockMetadataAt(int metadata, BlockLocation location) {
@@ -116,15 +116,14 @@ public final class Chunk {
 	}
 
 	public void setBlockMetadataAt(int metadata, int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= this.metadata.length)
-			return;
-
 		BlockLocation location = new BlockLocation(x, y, z);
+		BlockState oldBlockState  = blocks.get(x,y,z);
+		int blockData = oldBlockState.getData();
+
 		Block oldBlock = getBlockAt(location);
-		this.metadata[index] = (byte) metadata;
+		blocks.set(x, y, z, new BlockState(oldBlockState.getId(), blockData));
 		Block newBlock = getBlockAt(location);
-		
+
 		EventBus eventBus = world.getBot().getEventBus();
 		eventBus.fire(new BlockChangeEvent(world, location, oldBlock, newBlock));
 	}
@@ -134,10 +133,7 @@ public final class Chunk {
 	}
 
 	public int getBlockLightAt(int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= light.length)
-			return 0;
-		return light[index] & 0xFF;
+		return light.get(x,y,z);
 	}
 
 	public int getBlockSkylightAt(BlockLocation location) {
@@ -145,10 +141,7 @@ public final class Chunk {
 	}
 
 	public int getBlockSkylightAt(int x, int y, int z) {
-		int index = y << 8 | z << 4 | x;
-		if(index < 0 || index >= skylight.length)
-			return 0;
-		return skylight[index] & 0xFF;
+		return skylight.get(x,y,z);
 	}
 
 	public BiomeType getBlockBiomeAt(BlockLocation location) {

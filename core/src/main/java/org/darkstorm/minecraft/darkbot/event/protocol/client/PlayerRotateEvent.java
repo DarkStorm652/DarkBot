@@ -7,11 +7,11 @@ public class PlayerRotateEvent extends PlayerUpdateEvent {
 		super(entity);
 	}
 
-	public PlayerRotateEvent(MainPlayerEntity entity, double yaw, double pitch) {
+	public PlayerRotateEvent(MainPlayerEntity entity, float yaw, float pitch) {
 		super(entity, entity.getX(), entity.getY(), entity.getZ(), yaw, pitch, entity.isOnGround());
 	}
 
-	public PlayerRotateEvent(MainPlayerEntity entity, double yaw, double pitch, boolean onGround) {
+	public PlayerRotateEvent(MainPlayerEntity entity, float yaw, float pitch, boolean onGround) {
 		super(entity, entity.getX(), entity.getY(), entity.getZ(), yaw, pitch, onGround);
 	}
 }

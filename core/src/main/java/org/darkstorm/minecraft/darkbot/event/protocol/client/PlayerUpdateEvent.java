@@ -3,7 +3,8 @@ package org.darkstorm.minecraft.darkbot.event.protocol.client;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class PlayerUpdateEvent extends PlayerEvent {
-	private final double x, y, z, yaw, pitch;
+	private final double x, y, z;
+	private final float yaw, pitch;
 	private final boolean onGround;
 
 	public PlayerUpdateEvent(MainPlayerEntity entity) {
@@ -14,7 +15,7 @@ public class PlayerUpdateEvent extends PlayerEvent {
 		this(entity, entity.getX(), entity.getY(), entity.getZ(), entity.getYaw(), entity.getPitch(), onGround);
 	}
 
-	protected PlayerUpdateEvent(MainPlayerEntity entity, double x, double y, double z, double yaw, double pitch, boolean onGround) {
+	protected PlayerUpdateEvent(MainPlayerEntity entity, double x, double y, double z, float yaw, float pitch, boolean onGround) {
 		super(entity);
 
 		this.x = x;
@@ -37,11 +38,11 @@ public class PlayerUpdateEvent extends PlayerEvent {
 		return z;
 	}
 
-	public double getYaw() {
+	public float getYaw() {
 		return yaw;
 	}
 
-	public double getPitch() {
+	public float getPitch() {
 		return pitch;
 	}
 

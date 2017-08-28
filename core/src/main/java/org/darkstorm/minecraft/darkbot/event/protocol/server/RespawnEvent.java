@@ -1,16 +1,19 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
+import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
+import com.github.steveice10.mc.protocol.data.game.setting.Difficulty;
+import com.github.steveice10.mc.protocol.data.game.world.WorldType;
 import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
 import org.darkstorm.minecraft.darkbot.world.*;
 
 public class RespawnEvent extends ProtocolEvent {
-	private final Dimension respawnDimension;
+	private final int respawnDimension;
 	private final Difficulty difficulty;
 	private final GameMode gameMode;
 	private final WorldType worldType;
 	private final int worldHeight;
 
-	public RespawnEvent(Dimension respawnDimension, Difficulty difficulty, GameMode gameMode, WorldType worldType, int worldHeight) {
+	public RespawnEvent(int respawnDimension, Difficulty difficulty, GameMode gameMode, WorldType worldType, int worldHeight) {
 		this.respawnDimension = respawnDimension;
 		this.difficulty = difficulty;
 		this.gameMode = gameMode;
@@ -18,7 +21,7 @@ public class RespawnEvent extends ProtocolEvent {
 		this.worldHeight = worldHeight;
 	}
 
-	public Dimension getRespawnDimension() {
+	public int getRespawnDimension() {
 		return respawnDimension;
 	}
 

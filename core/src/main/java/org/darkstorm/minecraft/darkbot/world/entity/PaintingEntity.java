@@ -1,5 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
+import com.github.steveice10.mc.protocol.data.game.entity.type.object.HangingDirection;
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.EntityHitEvent;
 import org.darkstorm.minecraft.darkbot.world.World;
@@ -7,7 +8,7 @@ import org.darkstorm.minecraft.darkbot.world.block.ArtType;
 
 public class PaintingEntity extends Entity {
 	private final ArtType artType;
-	private int direction;
+	private HangingDirection direction;
 
 	public PaintingEntity(World world, int id, ArtType artType) {
 		super(world, id);
@@ -30,7 +31,7 @@ public class PaintingEntity extends Entity {
 		return (int) getZ();
 	}
 
-	public int getDirection() {
+	public HangingDirection getDirection() {
 		return direction;
 	}
 
@@ -49,7 +50,7 @@ public class PaintingEntity extends Entity {
 		super.setZ((int) z);
 	}
 
-	public void setDirection(int direction) {
+	public void setDirection(HangingDirection direction) {
 		this.direction = direction;
 	}
 

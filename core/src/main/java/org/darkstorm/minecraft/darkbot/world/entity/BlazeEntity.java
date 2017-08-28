@@ -1,5 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.World;
 
@@ -19,9 +20,12 @@ public class BlazeEntity extends AggressiveEntity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
 		super.updateMetadata(metadata);
-		if(metadata.containsKey(16))
-			setBurning(((Byte) metadata.get(16).getObject()).byteValue() == 1);
+
+		for(EntityMetadata md : metadata) {
+			if(md.getId() == 16)
+				setBurning((Byte) md.getValue() == 1);
+		}
 	}
 }

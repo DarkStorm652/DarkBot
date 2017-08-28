@@ -1,13 +1,13 @@
 package org.darkstorm.minecraft.darkbot.event.protocol.server;
 
-import org.darkstorm.minecraft.darkbot.world.item.InventoryType;
+import com.github.steveice10.mc.protocol.data.game.window.WindowType;
 
 public class WindowOpenEvent extends WindowEvent {
-	private final InventoryType inventoryType;
+	private final WindowType inventoryType;
 	private final String windowTitle;
 	private final int slotCount;
 
-	public WindowOpenEvent(int windowId, InventoryType inventoryType, String windowTitle, int slotCount) {
+	public WindowOpenEvent(int windowId, WindowType inventoryType, String windowTitle, int slotCount) {
 		super(windowId);
 
 		this.inventoryType = inventoryType;
@@ -15,7 +15,7 @@ public class WindowOpenEvent extends WindowEvent {
 		this.slotCount = slotCount;
 	}
 
-	public InventoryType getInventoryType() {
+	public WindowType getInventoryType() {
 		return inventoryType;
 	}
 

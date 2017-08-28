@@ -16,7 +16,7 @@ public class BlockBreakActivity implements Activity {
 	private boolean breaking;
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location) {
-		this(bot, location, 10 * 20);
+		this(bot, location, 50);
 	}
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location, int timeout) {
@@ -24,7 +24,8 @@ public class BlockBreakActivity implements Activity {
 		this.lastId = bot.getWorld().getBlockIdAt(location);
 		this.bot = bot;
 		this.timeout = timeout;
-		
+
+		System.out.println("Breaking block at: " + location);
 		MainPlayerEntity player = bot.getPlayer();
 		World world = bot.getWorld();
 		if(player == null || world == null)

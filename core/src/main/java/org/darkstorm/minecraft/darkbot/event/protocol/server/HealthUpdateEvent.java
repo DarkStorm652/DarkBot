@@ -3,16 +3,17 @@ package org.darkstorm.minecraft.darkbot.event.protocol.server;
 import org.darkstorm.minecraft.darkbot.event.protocol.ProtocolEvent;
 
 public class HealthUpdateEvent extends ProtocolEvent {
-	private final int health, hunger;
+	private final float health;
+	private final int hunger;
 	private final float hungerSaturation;
 
-	public HealthUpdateEvent(int health, int hunger, float hungerSaturation) {
+	public HealthUpdateEvent(float health, int hunger, float hungerSaturation) {
 		this.health = health;
 		this.hunger = hunger;
 		this.hungerSaturation = hungerSaturation;
 	}
 
-	public int getHealth() {
+	public float getHealth() {
 		return health;
 	}
 

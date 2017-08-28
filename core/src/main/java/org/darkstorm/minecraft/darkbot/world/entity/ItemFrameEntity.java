@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
@@ -29,11 +29,14 @@ public class ItemFrameEntity extends Entity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
 		super.updateMetadata(metadata);
-		if(metadata.containsKey(2))
-			item = (ItemStack) metadata.get(2).getObject();
-		if(metadata.containsKey(3))
-			direction = (Integer) metadata.get(3).getObject();
+
+		for(EntityMetadata md : metadata) {
+			if(md.getId() == 2)
+				item = (ItemStack) md.getValue();
+			else if(md.getId() == 3)
+				direction = (Integer) md.getValue();
+		}
 	}
 }

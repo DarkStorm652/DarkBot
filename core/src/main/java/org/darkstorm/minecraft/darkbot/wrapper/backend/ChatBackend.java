@@ -24,7 +24,7 @@ public class ChatBackend implements Backend, EventListener {
 
 	@Override
 	public void say(String message) {
-		bot.getBot().sendChat(message);
+		System.out.println(message);
 	}
 
 	@Override
@@ -64,7 +64,8 @@ public class ChatBackend implements Backend, EventListener {
 					error.append(": ");
 				error.append(e.getMessage());
 			}
-			bot.getBot().sendChat(error.toString());
+			System.out.println(error);
+			e.printStackTrace();
 		}
 	}
 

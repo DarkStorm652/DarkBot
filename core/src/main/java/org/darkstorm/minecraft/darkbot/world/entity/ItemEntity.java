@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
-import org.darkstorm.minecraft.darkbot.util.IntHashMap;
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.world.World;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
 
@@ -20,9 +20,12 @@ public class ItemEntity extends Entity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
 		super.updateMetadata(metadata);
-		if(metadata.containsKey(10))
-			setItem((ItemStack) metadata.get(10).getObject());
+
+		for(EntityMetadata md : metadata) {
+			if(md.getId() == 10)
+				setItem((ItemStack) md.getValue());
+		}
 	}
 }

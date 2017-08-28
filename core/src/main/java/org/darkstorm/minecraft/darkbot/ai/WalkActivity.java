@@ -179,7 +179,7 @@ public class WalkActivity implements Activity {
 				player.accelerate(Math.atan2(z - player.getZ(), x - player.getX()), 0, speed / 4, Math.min(dist, speed * multiplier));
 			if(y > player.getY() && (y - player.getY() > 0.5 || !player.getWorld().isColliding(player.getBoundingBoxAt(stepTarget.getX(), stepTarget.getY() - 1, stepTarget.getZ())))) {
 			    if(!player.getWorld().isColliding(player.getBoundingBoxAt(stepTarget.getX(), stepTarget.getY() - 1, stepTarget.getZ())))
-                    player.getWorld().getBot().sendChat("LEAP OF FAITH!!!");
+                    System.out.println("LEAP OF FAITH!!!");
                 player.jump();
             }
 		}

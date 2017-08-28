@@ -1,5 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.entity;
 
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import org.darkstorm.minecraft.darkbot.util.IntHashMap;
 import org.darkstorm.minecraft.darkbot.world.World;
 
@@ -28,12 +29,15 @@ public class SheepEntity extends PassiveEntity {
 	}
 
 	@Override
-	public void updateMetadata(IntHashMap<WatchableObject> metadata) {
+	public void updateMetadata(EntityMetadata[] metadata) {
 		super.updateMetadata(metadata);
-		if(metadata.containsKey(16)) {
-			byte data = (Byte) metadata.get(16).getObject();
-			setColor(data & 0xF);
-			setSheared((data & 0x10) != 0);
+
+		for(EntityMetadata md : metadata) {
+			if (md.getId() == 16) {
+				byte data = (Byte) md.getValue();
+				setColor(data & 0xF);
+				setSheared((data & 0x10) != 0);
+			}
 		}
 	}
 }

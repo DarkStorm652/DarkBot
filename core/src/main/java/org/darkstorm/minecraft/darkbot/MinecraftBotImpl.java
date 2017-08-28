@@ -4,10 +4,15 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import org.apache.commons.lang3.StringUtils;
+import com.github.steveice10.mc.protocol.MinecraftProtocol;
+import com.github.steveice10.packetlib.Client;
+import com.github.steveice10.packetlib.Session;
+import com.github.steveice10.packetlib.event.session.DisconnectedEvent;
+import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
+import com.github.steveice10.packetlib.event.session.PacketSentEvent;
+import com.github.steveice10.packetlib.event.session.SessionAdapter;
+import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 import org.darkstorm.minecraft.darkbot.ai.*;
-import org.darkstorm.minecraft.darkbot.auth.*;
-import org.darkstorm.minecraft.darkbot.connection.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.general.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
@@ -21,77 +26,70 @@ import org.darkstorm.minecraft.darkbot.world.item.*;
 
 public class MinecraftBotImpl implements MinecraftBot, EventListener {
 	public static final int DEFAULT_PORT = 25565;
-	public static final int LATEST_PROTOCOL = -1;
 	public static final int MAX_CHAT_LENGTH = 100;
 	public static final UUID CLIENT_TOKEN = UUIDUtils.generateSystemUUID("CLIENT_TOKEN");
 
 	private final ExecutorService service;
 	private final EventBus eventBus;
 	private final TaskManager taskManager;
-	private final ConnectionHandler connectionHandler;
-	private final AuthService<?> authService;
-	private final Session session;
-	private final ProxyData loginProxy, connectProxy;
+	private final Session connectionHandler;
+
+	private final String username;
 
 	private MainPlayerEntity player;
 	private World world;
 
-	private double lastX, lastY, lastZ, lastYaw, lastPitch;
+	private double lastX, lastY, lastZ;
+	private float lastYaw, lastPitch;
 	private boolean hasSpawned, movementDisabled, muted;
 	private int messageDelay, inventoryDelay;
 	private long lastMessage;
 	
-	private MinecraftBotImpl(Builder builder) throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
+	private MinecraftBotImpl(Builder builder) throws IOException {
 		service = Executors.newCachedThreadPool();
 		eventBus = new ConcurrentEventBus();
 		eventBus.register(this);
 		taskManager = new BasicTaskManager(this);
+		username = builder.username;
 
-		connectionHandler = new SocketConnectionHandler<>(
-		        eventBus,
-                service,
-                createProtocol(builder.getProtocolProvider()),
-                builder.getServer(),
-                builder.getPort(),
-                builder.getConnectProxy());
+		Protocol335 protocol = new Protocol335(this);
+		MinecraftProtocol mcProtocol = new MinecraftProtocol(getUsername());
+		Client client = new Client(builder.getServer(), builder.getPort(), mcProtocol, new TcpSessionFactory()); //TODO: Implement proxy
 
-		if(builder.getAuthService() != null)
-			authService = builder.getAuthService();
-		else
-			authService = new YggdrasilAuthService(CLIENT_TOKEN);
+		connectionHandler = client.getSession();
+		connectionHandler.addListener(new SessionAdapter() {
+			@Override
+			public void packetReceived(PacketReceivedEvent event) {
+				protocol.onPacketReceived(event);
+			}
 
-		if(builder.getSession() != null)
-			authService.validateSession(builder.getSession());
-		loginProxy = builder.getLoginProxy();
-		connectProxy = builder.getConnectProxy();
+			@Override
+			public void packetSent(PacketSentEvent event) {
+				super.packetSent(event);
+			}
 
-		if(StringUtils.isNotBlank(builder.getPassword()) && (builder.getSession() == null || !builder.getSession().isValidForAuthentication()))
-			session = authService.login(builder.getUsername(), builder.getPassword(), loginProxy);
-		else if(builder.getSession() != null)
-			session = builder.getSession();
-		else
-			session = new OfflineSession(builder.getUsername());
+			@Override
+			public void disconnected(DisconnectedEvent event) {
+				//TODO: Check
+			}
+		});
 
 		connectionHandler.connect();
-
-		eventBus.fire(new HandshakeEvent(session, connectionHandler.getServer(), connectionHandler.getPort()));
 		new TickHandler();
 	}
 
-	private <T extends Protocol<H>, H extends PacketHeader> T createProtocol(ProtocolProvider<T, H> provider) {
-	    return provider.getProtocolInstance(this);
-    }
 
 	@EventHandler
 	public void onLogin(LoginEvent event) {
 		setWorld(new BasicWorld(this, event.getWorldType(), event.getDimension(), event.getDifficulty(), event.getWorldHeight()));
-		player = new MainPlayerEntity(world, event.getPlayerId(), session.getUsername(), event.getGameMode());
+		player = new MainPlayerEntity(world, event.getPlayerId(), getUsername(), event.getGameMode());
 		world.spawnEntity(player);
 	}
 
 	@EventHandler
 	public void onRespawn(RespawnEvent event) {
-		setWorld(new BasicWorld(this, event.getWorldType(), event.getRespawnDimension(), event.getDifficulty(), event.getWorldHeight()));
+		if(world.getDimension() != event.getRespawnDimension())
+			setWorld(new BasicWorld(this, event.getWorldType(), event.getRespawnDimension(), event.getDifficulty(), event.getWorldHeight()));
 		player.setGameMode(event.getGameMode());
 	}
 
@@ -128,12 +126,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		if(player == null)
 			return;
 		System.out.println("Opened inventory " + event.getInventoryType() + ": " + event.getSlotCount() + " slots");
-		switch(event.getInventoryType()) {
-		case CHEST:
-			player.setWindow(new ChestInventory(this, event.getWindowId(), event.getSlotCount() == 27 ? false : true));
-			break;
-		default:
-		}
+		player.setWindow(new GenericInventory(this, event.getWindowId(), event.getSlotCount()));
 	}
 
 	@EventHandler
@@ -179,8 +172,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 
 	public synchronized void runTick() {
 		try {
-			connectionHandler.process();
-
 			if(hasSpawned && !player.getInventory().hasActionsQueued() && (player.getWindow() == null || !player.getWindow().hasActionsQueued())) {
 				taskManager.update();
 			}
@@ -197,7 +188,8 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 	}
 
 	public synchronized void updateMovement() {
-		double x = player.getX(), y = player.getY(), z = player.getZ(), yaw = player.getYaw(), pitch = player.getPitch();
+		double x = player.getX(), y = player.getY(), z = player.getZ();
+		float yaw = player.getYaw(), pitch = player.getPitch();
 		boolean move = x != lastX || y != lastY || z != lastZ;
 		boolean rotate = yaw != lastYaw || pitch != lastPitch;
 		boolean onGround = player.isOnGround();
@@ -290,11 +282,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		}
 	}
 
-	@Override
-	public Session getSession() {
-		return session;
-	}
-
 	public ExecutorService getService() {
 		return service;
 	}
@@ -310,23 +297,8 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 	}
 
 	@Override
-	public ConnectionHandler getConnectionHandler() {
+	public Session getConnectionHandler() {
 		return connectionHandler;
-	}
-
-	@Override
-	public AuthService<?> getAuthService() {
-		return authService;
-	}
-
-	@Override
-	public ProxyData getLoginProxy() {
-		return loginProxy;
-	}
-
-	@Override
-	public ProxyData getConnectProxy() {
-		return connectProxy;
 	}
 
 	@Override
@@ -386,6 +358,10 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		return new Builder();
 	}
 
+	public String getUsername() {
+		return username;
+	}
+
 	private final class TickHandler implements Runnable {
 		private final Timer timer = new Timer(20, 20);
 		private final Future<?> thread;
@@ -414,17 +390,8 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 	public static final class Builder {
 		private String server;
 		private int port = MinecraftBotImpl.DEFAULT_PORT;
-		
-		private ProtocolProvider<?, ?> protocolProvider;
 
 		private String username;
-		private String password;
-
-		private ProxyData loginProxy;
-		private ProxyData connectProxy;
-
-		private AuthService<?> authService;
-		private Session session;
 
 		private Builder() {
 		}
@@ -439,42 +406,12 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			return this;
 		}
 
-		public synchronized Builder protocolProvider(ProtocolProvider<?, ?> protocolProvider) {
-			this.protocolProvider = protocolProvider;
-			return this;
-		}
-
 		public synchronized Builder username(String username) {
 			this.username = username;
 			return this;
 		}
 
-		public synchronized Builder password(String password) {
-			this.password = password;
-			return this;
-		}
-
-		public synchronized Builder loginProxy(ProxyData loginProxy) {
-			this.loginProxy = loginProxy;
-			return this;
-		}
-
-		public synchronized Builder connectProxy(ProxyData connectProxy) {
-			this.connectProxy = connectProxy;
-			return this;
-		}
-
-		public synchronized Builder authService(AuthService<?> authService) {
-			this.authService = authService;
-			return this;
-		}
-
-		public synchronized Builder session(Session session) {
-			this.session = session;
-			return this;
-		}
-
-		public synchronized MinecraftBotImpl build() throws AuthenticationException, UnsupportedProtocolException, InvalidSessionException, IOException {
+		public synchronized MinecraftBotImpl build() throws IOException {
 			return new MinecraftBotImpl(this);
 		}
 
@@ -484,34 +421,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 
 		public int getPort() {
 			return port;
-		}
-
-		public ProtocolProvider<?, ?> getProtocolProvider() {
-			return protocolProvider;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		public ProxyData getLoginProxy() {
-			return loginProxy;
-		}
-
-		public ProxyData getConnectProxy() {
-			return connectProxy;
-		}
-
-		public AuthService<?> getAuthService() {
-			return authService;
-		}
-
-		public Session getSession() {
-			return session;
 		}
 	}
 }

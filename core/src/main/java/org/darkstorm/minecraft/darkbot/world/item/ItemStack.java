@@ -1,6 +1,6 @@
 package org.darkstorm.minecraft.darkbot.world.item;
 
-import org.darkstorm.minecraft.darkbot.nbt.NBTTagCompound;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 
 public interface ItemStack extends Cloneable {
 	public int getId();
@@ -13,9 +13,9 @@ public interface ItemStack extends Cloneable {
 
 	public void setDamage(int damage);
 
-	public NBTTagCompound getStackTagCompound();
+	public CompoundTag getStackTagCompound();
 
-	public void setStackTagCompound(NBTTagCompound compound);
+	public void setStackTagCompound(CompoundTag compound);
 
 	public ItemStack clone();
 }

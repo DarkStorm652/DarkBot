@@ -12,20 +12,20 @@ public abstract class RotatedEntitySpawnEvent extends EntitySpawnEvent {
 	}
 
 	public static class RotatedSpawnLocation extends SpawnLocation {
-		private final double yaw, pitch;
+		private final float yaw, pitch;
 
-		public RotatedSpawnLocation(double x, double y, double z, double yaw, double pitch) {
+		public RotatedSpawnLocation(double x, double y, double z, float yaw, float pitch) {
 			super(x, y, z);
 
 			this.yaw = yaw;
 			this.pitch = pitch;
 		}
 
-		public double getYaw() {
+		public float getYaw() {
 			return yaw;
 		}
 
-		public double getPitch() {
+		public float getPitch() {
 			return pitch;
 		}
 	}

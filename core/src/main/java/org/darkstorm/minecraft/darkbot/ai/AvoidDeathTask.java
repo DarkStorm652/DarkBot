@@ -1,12 +1,11 @@
 package org.darkstorm.minecraft.darkbot.ai;
 
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
-import org.darkstorm.minecraft.darkbot.connection.ConnectionHandler;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 
 public class AvoidDeathTask extends AbstractTask {
 	private boolean enabled;
-	private int lastHealth;
+	private float lastHealth;
 
 	public AvoidDeathTask(MinecraftBot bot) {
 		super(bot);
