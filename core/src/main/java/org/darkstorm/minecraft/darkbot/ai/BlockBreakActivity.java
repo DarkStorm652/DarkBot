@@ -16,7 +16,7 @@ public class BlockBreakActivity implements Activity {
 	private boolean breaking;
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location) {
-		this(bot, location, 10 * 20);
+		this(bot, location, 50);
 	}
 
 	public BlockBreakActivity(MinecraftBot bot, BlockLocation location, int timeout) {

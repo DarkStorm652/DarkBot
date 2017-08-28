@@ -75,18 +75,13 @@ public final class BasicWorld implements World, EventListener {
 	}
 
 	@EventHandler
-	public void onRespawn(RespawnEvent event) {
-		synchronized(chunks) {
-			chunks.clear();
-		}
-	}
-
-	@EventHandler
 	public void onPlayerListUpdate(PlayerListUpdateEvent event) {
 		PlayerInfo playerInfo = event.getPlayerInfo();
 		synchronized(players) {
 			for (PlayerInfo player : players) {
 				if (player.getPlayerUUID().equals(playerInfo.getPlayerUUID())) {
+					if(player.getPlayerName() == null && playerInfo.getPlayerName() != null)
+						player.setPlayerName(playerInfo.getPlayerName());
 					return;
 				}
 			}

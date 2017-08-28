@@ -1,9 +1,5 @@
 package org.darkstorm.minecraft.darkbot.protocol;
 
-import java.io.*;
-import java.util.Arrays;
-
-import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.protocol.data.game.ClientRequest;
 import com.github.steveice10.mc.protocol.data.game.PlayerListEntry;
 import com.github.steveice10.mc.protocol.data.game.PlayerListEntryAction;
@@ -13,25 +9,29 @@ import com.github.steveice10.mc.protocol.data.game.entity.EntityStatus;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.ItemStack;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.mc.protocol.data.game.entity.player.*;
-import com.github.steveice10.mc.protocol.data.game.window.WindowAction;
 import com.github.steveice10.mc.protocol.data.game.world.block.BlockChangeRecord;
 import com.github.steveice10.mc.protocol.data.game.world.block.BlockFace;
 import com.github.steveice10.mc.protocol.data.game.world.block.BlockState;
 import com.github.steveice10.mc.protocol.data.message.Message;
 import com.github.steveice10.mc.protocol.data.message.TranslationMessage;
-import com.github.steveice10.mc.protocol.packet.ingame.client.*;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientRequestPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.*;
-import com.github.steveice10.mc.protocol.packet.ingame.client.window.*;
-import com.github.steveice10.mc.protocol.packet.ingame.client.world.*;
+import com.github.steveice10.mc.protocol.packet.ingame.client.window.ClientCloseWindowPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.window.ClientConfirmTransactionPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.window.ClientWindowActionPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTeleportConfirmPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.*;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.*;
-import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.*;
+import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerHealthPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerPositionRotationPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerSetExperiencePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerUseBedPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.spawn.*;
 import com.github.steveice10.mc.protocol.packet.ingame.server.window.*;
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.*;
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.packet.Packet;
-
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.event.EventBus;
 import org.darkstorm.minecraft.darkbot.event.EventHandler;
@@ -39,14 +39,17 @@ import org.darkstorm.minecraft.darkbot.event.EventListener;
 import org.darkstorm.minecraft.darkbot.event.protocol.client.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.*;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.EntitySpawnEvent.SpawnLocation;
-import org.darkstorm.minecraft.darkbot.event.protocol.server.LivingEntitySpawnEvent.*;
-import org.darkstorm.minecraft.darkbot.event.protocol.server.ObjectEntitySpawnEvent.*;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnData;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.LivingEntitySpawnEvent.LivingEntitySpawnLocation;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.ObjectEntitySpawnEvent.ObjectSpawnData;
+import org.darkstorm.minecraft.darkbot.event.protocol.server.ObjectEntitySpawnEvent.ThrownObjectSpawnData;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.PaintingSpawnEvent.PaintingSpawnLocation;
 import org.darkstorm.minecraft.darkbot.event.protocol.server.RotatedEntitySpawnEvent.RotatedSpawnLocation;
 import org.darkstorm.minecraft.darkbot.util.Bridge;
 import org.darkstorm.minecraft.darkbot.world.PlayerInfo;
-import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.BasicItemStack;
+
+import java.util.Arrays;
 
 
 public final class Protocol335 implements EventListener {
@@ -195,9 +198,9 @@ public final class Protocol335 implements EventListener {
 
 		com.github.steveice10.packetlib.packet.Packet packet;
 		if(event instanceof PlayerMoveRotateEvent)
-			packet = new ClientPlayerPositionRotationPacket(onGround, x, y, z, yaw, pitch); //TODO: Z?
+			packet = new ClientPlayerPositionRotationPacket(onGround, x, y, z, yaw, pitch); //TODO: eyeY?
 		else if (event instanceof PlayerMoveEvent)
-			packet = new ClientPlayerPositionPacket(onGround, x, y, z); //TODO: Z?
+			packet = new ClientPlayerPositionPacket(onGround, x, y, z); //TODO: eyeY?
 		else if(event instanceof PlayerRotateEvent)
 			packet = new ClientPlayerRotationPacket(onGround, yaw, pitch);
 		else
@@ -212,8 +215,9 @@ public final class Protocol335 implements EventListener {
 		Session handler = bot.getConnectionHandler();
 
 		//TODO: Send ClientPlayerUseItemPacket too?
-		ClientPlayerPlaceBlockPacket packet = new ClientPlayerPlaceBlockPacket(new Position(-1, -1, -1), BlockFace.SPECIAL, //TODO: Note that Y is unsigned so set to 255
-				Hand.MAIN_HAND, 0,0,0);
+		ClientPlayerUseItemPacket packet = new ClientPlayerUseItemPacket(Hand.MAIN_HAND);
+		//ClientPlayerPlaceBlockPacket packet = new ClientPlayerPlaceBlockPacket(new Position(-1, -1, -1), BlockFace.SPECIAL, //TODO: Note that Y is unsigned so set to 255
+		//		Hand.MAIN_HAND, 0,0,0);
 
 		handler.send(packet);
 	}
@@ -241,6 +245,12 @@ public final class Protocol335 implements EventListener {
 
 		//System.out.println(packet);
 
+		if(packet instanceof ServerConfirmTransactionPacket)
+		{
+			ServerConfirmTransactionPacket castPacket = (ServerConfirmTransactionPacket) packet;
+			bot.getEventBus().fire(new WindowTransactionCompleteEvent(castPacket.getWindowId(), castPacket.getActionId(), castPacket.getAccepted()));
+			handler.send(new ClientConfirmTransactionPacket(castPacket.getWindowId(), castPacket.getActionId(), true));
+		}
 		if(packet instanceof ServerJoinGamePacket)
 		{
 			ServerJoinGamePacket castPacket = (ServerJoinGamePacket) packet;
@@ -467,7 +477,6 @@ public final class Protocol335 implements EventListener {
 		else if(packet instanceof ServerSetSlotPacket)
 		{
 			ServerSetSlotPacket castPacket = (ServerSetSlotPacket) packet;
-
 			eventBus.fire(new WindowSlotChangeEvent(castPacket.getWindowId(), castPacket.getSlot(), Bridge.GetOldItemStack(castPacket.getItem())));
 		}
 		else if(packet instanceof ServerWindowItemsPacket)
@@ -496,15 +505,13 @@ public final class Protocol335 implements EventListener {
 		else if(packet instanceof ServerPlayerListEntryPacket)
 		{
 			ServerPlayerListEntryPacket castPacket = (ServerPlayerListEntryPacket) packet;
-			if(castPacket.getAction() == PlayerListEntryAction.ADD_PLAYER || castPacket.getAction() == PlayerListEntryAction.UPDATE_DISPLAY_NAME
-					|| castPacket.getAction() == PlayerListEntryAction.UPDATE_LATENCY)
+			if(castPacket.getAction() == PlayerListEntryAction.REMOVE_PLAYER)
 			{
 				for(PlayerListEntry entry : castPacket.getEntries())
-					eventBus.fire(new PlayerListUpdateEvent(new PlayerInfo(entry.getProfile().getIdAsString(), entry.getProfile().getName())));
-
-			} else if(castPacket.getAction() == PlayerListEntryAction.REMOVE_PLAYER) {
-				for(PlayerListEntry entry : castPacket.getEntries())
 					eventBus.fire(new PlayerListRemoveEvent(new PlayerInfo(entry.getProfile().getIdAsString(), entry.getProfile().getName())));
+			} else {
+				for(PlayerListEntry entry : castPacket.getEntries())
+					eventBus.fire(new PlayerListUpdateEvent(new PlayerInfo(entry.getProfile().getIdAsString(), entry.getProfile().getName())));
 			}
 		}
 		else if(packet instanceof ServerDisconnectPacket)

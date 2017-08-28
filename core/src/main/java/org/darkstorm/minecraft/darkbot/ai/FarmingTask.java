@@ -102,9 +102,9 @@ public class FarmingTask extends AbstractTask implements EventListener {
 		if(store) {
 			System.out.println("Inventory is full!!!");
 			if(storageAction.equals(StorageAction.STORE)) {
-				if(player.getWindow() instanceof ChestInventory) {
+				if(player.getWindow() instanceof GenericInventory) {
 					System.out.println("Chest is open!!!");
-					ChestInventory chest = (ChestInventory) player.getWindow();
+					GenericInventory chest = (GenericInventory) player.getWindow();
 					int freeSpace = -1;
 					for(int i = 0; i < chest.getSize(); i++)
 						if(chest.getItemAt(i) == null)

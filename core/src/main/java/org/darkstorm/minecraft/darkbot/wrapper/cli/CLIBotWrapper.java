@@ -1,17 +1,16 @@
 package org.darkstorm.minecraft.darkbot.wrapper.cli;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
-
-import joptsimple.*;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.darkstorm.minecraft.darkbot.*;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+import org.darkstorm.minecraft.darkbot.MinecraftBotImpl;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.wrapper.MinecraftBotWrapper;
 import org.darkstorm.minecraft.darkbot.wrapper.backend.ChatBackend;
 import org.darkstorm.minecraft.darkbot.wrapper.commands.*;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 public class CLIBotWrapper extends MinecraftBotWrapper {
 	private CLIBotWrapper(MinecraftBotImpl bot, String owner) {
@@ -20,7 +19,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		addBackend(new ChatBackend(this));
 
 		TaskManager taskManager = bot.getTaskManager();
-		taskManager.registerTask(new ChopTreesTask(bot));
 		taskManager.registerTask(new FollowTask(bot));
 		taskManager.registerTask(new DefendTask(bot));
 		taskManager.registerTask(new AttackTask(bot));
@@ -43,7 +41,6 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new BuildCommand(this));
 		commandManager.register(new CalcCommand(this));
 		commandManager.register(new ChatDelayCommand(this));
-		commandManager.register(new ChopCommand(this));
 		commandManager.register(new DestroyCommand(this));
 		commandManager.register(new DropAllCommand(this));
 		commandManager.register(new DropCommand(this));
@@ -72,28 +69,17 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 		commandManager.register(new MuteCommand(this));
 
 		commandManager.register(new LoginCommand(this));
+		commandManager.register(new ServerSelectCommand(this));
 		commandManager.register(new XRayMineCommand(this));
 	}
 
 	public static void main(String[] args) {
-		// TODO main
 		OptionParser parser = new OptionParser();
 		parser.acceptsAll(Arrays.asList("h", "help"), "Show this help dialog.");
 		OptionSpec<String> serverOption = parser.acceptsAll(Arrays.asList("s", "server"), "Server to join.").withRequiredArg().describedAs("server-address[:port]");
-		OptionSpec<String> proxyOption = parser.acceptsAll(Arrays.asList("P", "proxy"), "SOCKS proxy to use. Ignored in presence of 'socks-proxy-list'.").withRequiredArg().describedAs("proxy-address");
 		OptionSpec<String> ownerOption = parser.acceptsAll(Arrays.asList("o", "owner"), "Owner of the bot (username of in-game control).").withRequiredArg().describedAs("username");
 		OptionSpec<String> usernameOption = parser.acceptsAll(Arrays.asList("u", "username"), "Bot username. Ignored in presence of 'account-list'.").withRequiredArg().describedAs("username/email");
-		OptionSpec<String> passwordOption = parser.acceptsAll(Arrays.asList("p", "password"), "Bot password. Ignored in presence of 'offline' or " + "'account-list', or if 'username' is not supplied.").withRequiredArg().describedAs("password");
-		OptionSpec<?> offlineOption = parser.acceptsAll(Arrays.asList("O", "offline"), "Offline-mode. Ignores 'password' and 'account-list' (will " + "generate random usernames if 'username' is not supplied).");
 		OptionSpec<?> autoRejoinOption = parser.acceptsAll(Arrays.asList("a", "auto-rejoin"), "Auto-rejoin a server on disconnect.");
-		OptionSpec<String> protocolOption = parser.accepts("protocol", "Protocol version to use. Can be either protocol number or Minecraft version.").withRequiredArg();
-		OptionSpec<?> protocolsOption = parser.accepts("protocols", "List available protocols and exit.");
-		OptionSpec<?> mcoServersOption = parser.accepts("mco-servers", "List available MCO (Realms) servers.");
-		OptionSpec<String> mcoServerOption = parser.accepts("mco-server", "Connect to an MCO (Realms) server. Can be a name, ID, or index (in order of priority).").withRequiredArg().describedAs("server");
-
-		OptionSpec<String> accountListOption = parser.accepts("account-list", "File containing a list of accounts, in username/email:password format.").withRequiredArg().describedAs("file");
-		OptionSpec<String> socksProxyListOption = parser.accepts("socks-proxy-list", "File containing a list of SOCKS proxies, in address:port format.").withRequiredArg().describedAs("file");
-		OptionSpec<String> httpProxyListOption = parser.accepts("http-proxy-list", "File containing a list of HTTP proxies, in address:port format.").withRequiredArg().describedAs("file");
 
 		OptionSet options = CLIWrapperUtils.parseOptions(parser, args);
 
@@ -101,41 +87,9 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
             CLIWrapperUtils.printHelp(parser);
 			return;
 		}
-		if(options.has(protocolsOption)) {
-			//TODO: Implement
-			System.out.println("Not implemented!");
-			return;
-		}
 
-		final boolean offline = options.has(offlineOption);
-		final boolean autoRejoin = options.has(autoRejoinOption);
-
-		final List<String> accounts;
-		final String username, password;
-		if(options.has(accountListOption)) {
-			accounts = loadAccounts(options.valueOf(accountListOption));
-			username = null;
-			password = null;
-		} else {
-			accounts = null;
-			if(options.has(usernameOption)) {
-				username = options.valueOf(usernameOption);
-				if(!offline && options.has(passwordOption))
-					password = options.valueOf(passwordOption);
-				else if(!offline) {
-					System.out.println("Option 'password' or option " + "'offline' required.");
-					return;
-				} else
-					password = null;
-			} else {
-				username = null;
-				password = null;
-			}
-		}
-
-		if(options.has(mcoServersOption)) {
-			//TODO: Implement
-			System.out.println("Not implemented!");
+		if (!options.has(usernameOption)) {
+			System.out.println("Option 'username' required.");
 			return;
 		}
 
@@ -146,62 +100,28 @@ public class CLIBotWrapper extends MinecraftBotWrapper {
 
 		final String server = options.valueOf(serverOption);
 		final String owner = CLIWrapperUtils.getRequiredOption(options, ownerOption);
+		final String username = options.valueOf(usernameOption);
+		final boolean autoRejoin = options.has(autoRejoinOption);
 
-		final List<String> accountsInUse = new ArrayList<String>();
-		Random random = new Random();
-
-		if(!offline) {
-			//TODO: Implement
-			System.out.println("Not implemented!");
-		} else {
-			while(true) {
-				try {
-					String name = "";
-					if(username == null)
-						name = RandomStringUtils.randomAlphanumeric(10 + random.nextInt(6));
-					else
-						name = username;
-					CLIBotWrapper bot = new CLIBotWrapper(createBot(server, name), owner);
-					while(bot.getBot().isConnected()) {
-						try {
-							Thread.sleep(1500);
-						} catch(InterruptedException exception) {
-							exception.printStackTrace();
-						}
+		while(true) {
+			try {
+				CLIBotWrapper bot = new CLIBotWrapper(createBot(server, username), owner);
+				while (bot.getBot().isConnected()) {
+					try {
+						Thread.sleep(1500);
+					} catch (InterruptedException exception) {
+						exception.printStackTrace();
 					}
-					if(!autoRejoin)
-						break;
-				} catch(Exception exception) {
-					System.out.println("[Bot] Error connecting: " + exception.toString());
-					exception.printStackTrace();
 				}
+				if (!autoRejoin)
+					break;
+			} catch (Exception exception) {
+				System.out.println("[Bot] Error connecting: " + exception.toString());
+				exception.printStackTrace();
 			}
 		}
-		System.exit(0);
-	}
 
-	private static List<String> loadAccounts(String fileName) {
-		List<String> accounts = new ArrayList<String>();
-		try {
-			Pattern pattern = Pattern.compile("[\\w]{1,16}");
-			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
-			String line;
-			while((line = reader.readLine()) != null) {
-				Matcher matcher = pattern.matcher(line);
-				if(!matcher.find())
-					continue;
-				String username = matcher.group();
-				if(!matcher.find())
-					continue;
-				String password = matcher.group();
-				accounts.add(username + ":" + password);
-			}
-			reader.close();
-		} catch(Exception exception) {
-			throw new RuntimeException(exception);
-		}
-		System.out.println("Loaded " + accounts.size() + " accounts.");
-		return accounts;
+		System.exit(0);
 	}
 
 	private static MinecraftBotImpl createBot(String server, String username) throws IOException {

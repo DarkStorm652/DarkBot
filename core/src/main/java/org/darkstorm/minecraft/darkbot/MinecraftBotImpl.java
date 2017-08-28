@@ -9,9 +9,9 @@ import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.event.session.DisconnectedEvent;
 import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
+import com.github.steveice10.packetlib.event.session.PacketSentEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.darkstorm.minecraft.darkbot.ai.*;
 import org.darkstorm.minecraft.darkbot.event.*;
 import org.darkstorm.minecraft.darkbot.event.general.*;
@@ -62,6 +62,12 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			public void packetReceived(PacketReceivedEvent event) {
 				protocol.onPacketReceived(event);
 			}
+
+			@Override
+			public void packetSent(PacketSentEvent event) {
+				super.packetSent(event);
+			}
+
 			@Override
 			public void disconnected(DisconnectedEvent event) {
 				//TODO: Check
@@ -82,7 +88,8 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 
 	@EventHandler
 	public void onRespawn(RespawnEvent event) {
-		setWorld(new BasicWorld(this, event.getWorldType(), event.getRespawnDimension(), event.getDifficulty(), event.getWorldHeight()));
+		if(world.getDimension() != event.getRespawnDimension())
+			setWorld(new BasicWorld(this, event.getWorldType(), event.getRespawnDimension(), event.getDifficulty(), event.getWorldHeight()));
 		player.setGameMode(event.getGameMode());
 	}
 
@@ -119,12 +126,7 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		if(player == null)
 			return;
 		System.out.println("Opened inventory " + event.getInventoryType() + ": " + event.getSlotCount() + " slots");
-		switch(event.getInventoryType()) {
-		case CHEST:
-			player.setWindow(new ChestInventory(this, event.getWindowId(), event.getSlotCount() == 27 ? false : true));
-			break;
-		default:
-		}
+		player.setWindow(new GenericInventory(this, event.getWindowId(), event.getSlotCount()));
 	}
 
 	@EventHandler
@@ -170,9 +172,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 
 	public synchronized void runTick() {
 		try {
-			//TODO: Check if there's something relevant
-			//connectionHandler.process();
-
 			if(hasSpawned && !player.getInventory().hasActionsQueued() && (player.getWindow() == null || !player.getWindow().hasActionsQueued())) {
 				taskManager.update();
 			}
@@ -393,9 +392,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 		private int port = MinecraftBotImpl.DEFAULT_PORT;
 
 		private String username;
-		private String password;
-
-		private Session session;
 
 		private Builder() {
 		}
@@ -415,16 +411,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 			return this;
 		}
 
-		public synchronized Builder password(String password) {
-			this.password = password;
-			return this;
-		}
-
-		public synchronized Builder session(Session session) {
-			this.session = session;
-			return this;
-		}
-
 		public synchronized MinecraftBotImpl build() throws IOException {
 			return new MinecraftBotImpl(this);
 		}
@@ -435,18 +421,6 @@ public class MinecraftBotImpl implements MinecraftBot, EventListener {
 
 		public int getPort() {
 			return port;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		public Session getSession() {
-			return session;
 		}
 	}
 }

@@ -191,6 +191,26 @@ public abstract class Entity {
 		z = location.getZ();
 	}
 
+	public BlockLocation getBlockLocation() {
+		//TODO: Don't calculate every time
+		BlockLocation testPlayerBlock = new BlockLocation((int) x, (int) y,
+				(int) z);
+
+		BlockLocation[] adjacentBlocks = testPlayerBlock.getAdjacentBlocks();
+		BlockLocation closestBlock = null;
+		double closestDistance = -1;
+
+		for(BlockLocation adjacentBlock : adjacentBlocks) {
+			WorldLocation adjacentLocation = new WorldLocation(adjacentBlock.getX() + 0.5, adjacentBlock.getY(), adjacentBlock.getZ() + 0.5);
+			double distance = getLocation().getDistanceTo(adjacentLocation);
+			if(distance < closestDistance || closestDistance == -1) {
+				closestBlock = adjacentBlock;
+				closestDistance = distance;
+			}
+		}
+		return closestBlock;
+	}
+
 	public void updateMetadata(EntityMetadata[] metadata) {
 		//TODO: Implement
 	}

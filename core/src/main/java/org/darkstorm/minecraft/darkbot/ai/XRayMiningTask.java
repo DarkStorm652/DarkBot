@@ -2,9 +2,7 @@ package org.darkstorm.minecraft.darkbot.ai;
 
 import org.darkstorm.minecraft.darkbot.MinecraftBot;
 import org.darkstorm.minecraft.darkbot.event.EventListener;
-import org.darkstorm.minecraft.darkbot.world.BasicWorld;
 import org.darkstorm.minecraft.darkbot.world.World;
-import org.darkstorm.minecraft.darkbot.world.WorldLocation;
 import org.darkstorm.minecraft.darkbot.world.block.*;
 import org.darkstorm.minecraft.darkbot.world.entity.MainPlayerEntity;
 import org.darkstorm.minecraft.darkbot.world.item.ItemStack;
@@ -19,15 +17,15 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
     private boolean running = false;
 
     private int ticksWait;
-    private int digState = 0; // digging stairs is always a 3-state process
 
     private World world;
     private MainPlayerEntity player;
 
     private int offsetX, offsetY, offsetZ;
-    private BlockLocation playerBlock, finalTarget;
+    private BlockLocation playerBlock, finalTarget, lastPlaceBlock, lastBreakBlock;
     private List<BlockLocation> permBlockBlacklist = new ArrayList<>();
     private List<BlockLocation> tempBlockBlacklist = new ArrayList<>();
+    private int collectedDiamonds;
 
     /* UNIFORM COORDINATES
     will be automatically transformed according to orientation
@@ -75,7 +73,7 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         UpdateVariables();
 
         List<BlockLocation> diamonds = FindDiamonds();
-        BlockLocation closestDiamond = FindClosestDiamond(diamonds);
+        BlockLocation closestDiamond = GetClosestDiamond(diamonds);
         if (closestDiamond == null) {
             stop();
             System.out.println("No diamonds in vicinity!");
@@ -96,13 +94,14 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         player = null;
         playerBlock = null;
         tempBlockBlacklist.clear();
+        lastPlaceBlock = null;
+        lastBreakBlock = null;
     }
 
     private void UpdateVariables() {
         world = bot.getWorld();
         player = bot.getPlayer();
-        // feet, above standing block
-        playerBlock = new BlockLocation((int) player.getLocation().getX(), (int) player.getLocation().getY(), (int) player.getLocation().getZ());
+        playerBlock = player.getBlockLocation();
     }
 
     private List<BlockLocation> FindDiamonds() {
@@ -145,7 +144,7 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         return diamonds;
     }
 
-    private BlockLocation FindClosestDiamond(List<BlockLocation> diamonds) {
+    private BlockLocation GetClosestDiamond(List<BlockLocation> diamonds) {
         double smallestDistance = -1;
         BlockLocation closestDiamond = null;
 
@@ -183,6 +182,11 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
             return;
         }
 
+        if(collectedDiamonds > 10) {
+            collectedDiamonds = 0;
+            permBlockBlacklist.clear();
+        }
+
         UpdateVariables();
         UpdateDirectionOffsets();
         tempBlockBlacklist.clear();
@@ -195,19 +199,21 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         if ((world.getBlockIdAt(finalTarget) < 1)) {
             stop();
             System.out.println("Mined target! Restarting.");
+            collectedDiamonds++;
             start();
         } else {
             int playerY = (int) player.getLocation().getY();
             if(playerY > finalTarget.getY())
-                DoSequence(XRayMiningMatrices.ShellBlocksDown, XRayMiningMatrices.DigBlocksDown, XRayMiningMatrices.StepLocationDown);
+                DoSequence(XRayMiningMatrices.RequiredBlocksDown, XRayMiningMatrices.DigBlocksDown, XRayMiningMatrices.StepLocationDown);
             else if(playerY < finalTarget.getY())
-                DoSequence(XRayMiningMatrices.ShellBlocksUp, XRayMiningMatrices.DigBlocksUp, XRayMiningMatrices.StepLocationUp);
+                DoSequence(XRayMiningMatrices.RequiredBlocksUp, XRayMiningMatrices.DigBlocksUp, XRayMiningMatrices.StepLocationUp);
             else
-                DoSequence(XRayMiningMatrices.ShellBlocksStraight, XRayMiningMatrices.DigBlocksStraight, XRayMiningMatrices.StepLocationStraight);
+                DoSequence(XRayMiningMatrices.RequiredBlocksStraight, XRayMiningMatrices.DigBlocksStraight, XRayMiningMatrices.StepLocationStraight);
         }
     }
 
-    private void DoSequence(BlockLocation[] shellBlocks, BlockLocation[] digBlocks, BlockLocation stepLocation) {
+    // check if player blocks are filled (e.g. sand/gravel) to prevent suffocation
+    private boolean CheckPlayerBlocks() {
         BlockLocation[] playerBlocksFixed = new BlockLocation[XRayMiningMatrices.PlayerBlocks.length];
         for (int i = 0; i < XRayMiningMatrices.PlayerBlocks.length; i++) {
             playerBlocksFixed[i] = FromUniformRelativeLocation(XRayMiningMatrices.PlayerBlocks[i]);
@@ -215,54 +221,64 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
 
         for(BlockLocation playerBlock : playerBlocksFixed) {
             if(!isEmpty(world.getBlockIdAt(playerBlock))) {
-                //TODO: Better handle sand/gravel on player
+                //TODO: Better handling
                 breakBlock(playerBlock);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void DoSequence(BlockLocation[] requiredBlocks, BlockLocation[] digBlocks, BlockLocation stepLocation) {
+        if (CheckPlayerBlocks())
+            return;
+
+        BlockLocation[] requiredBlocksFixed = new BlockLocation[requiredBlocks.length];
+        for (int i = 0; i < requiredBlocks.length; i++) {
+            requiredBlocksFixed[i] = FromUniformRelativeLocation(requiredBlocks[i]);
+        }
+
+        for (BlockLocation requiredBlock : requiredBlocksFixed) {
+            if (isEmpty(world.getBlockIdAt(requiredBlock))) {
+                if (!placeBlockAt(requiredBlock)) {
+                    continue;
+                }
                 return;
             }
         }
 
-        BlockLocation[] shellBlocksFixed = new BlockLocation[shellBlocks.length];
-        for (int i = 0; i < shellBlocks.length; i++) {
-            shellBlocksFixed[i] = FromUniformRelativeLocation(shellBlocks[i]);
+        // nothing to place, start digging
+        BlockLocation[] digBlocksFixed = new BlockLocation[digBlocks.length];
+        for (int i = 0; i < digBlocks.length; i++) {
+            digBlocksFixed[i] = FromUniformRelativeLocation(digBlocks[i]);
         }
 
-        boolean actionTaken = false;
-        for(BlockLocation shellBlock : shellBlocksFixed) {
-            if(isDangerous(world.getBlockIdAt(shellBlock))) {
-                if (!placeBlockAt(shellBlock)) {
-                    tempBlockBlacklist.add(shellBlock);
-                    continue;
-                }
-                actionTaken = true;
-                break;
-            }
-        }
+        for (BlockLocation digBlock : digBlocksFixed) {
 
-        if(!actionTaken) { // nothing to shell, start digging
-            BlockLocation[] digBlocksFixed = new BlockLocation[digBlocks.length];
-            for (int i = 0; i < digBlocks.length; i++) {
-                digBlocksFixed[i] = FromUniformRelativeLocation(digBlocks[i]);
-            }
-
-            for(BlockLocation digBlock : digBlocksFixed) {
-                int digBlockId = world.getBlockIdAt(digBlock);
-                if(!isEmpty(digBlockId)) {
-                    if(BlockType.getById(digBlockId).isIndestructable() || !breakBlock(digBlock)) {
-                        permBlockBlacklist.add(digBlock);
+            for (BlockLocation adjacentBlock : digBlock.getAdjacentBlocks()) {
+                if (isDangerous(world.getBlockIdAt(adjacentBlock))) {
+                    if (!placeBlockAt(adjacentBlock)) {
+                        permBlockBlacklist.add(digBlock); //TODO: Currently unused
                         permBlockBlacklist.add(finalTarget);
-                       return;
+                        return;
                     }
-                    actionTaken = true;
-                    break;
+                    return;
                 }
             }
-
-            if(!actionTaken) {
-                BlockLocation stepLocationFixed = FromUniformRelativeLocation(stepLocation);
-                player.face(stepLocationFixed);
-                setActivity(new WalkActivity(bot, stepLocationFixed));
+            int digBlockId = world.getBlockIdAt(digBlock);
+            if (!isEmpty(digBlockId)) {
+                if (BlockType.getById(digBlockId).isIndestructable() || !breakBlock(digBlock)) {
+                    permBlockBlacklist.add(digBlock); //TODO: Currently unused
+                    permBlockBlacklist.add(finalTarget);
+                    return;
+                }
+                return;
             }
         }
+
+        BlockLocation stepLocationFixed = FromUniformRelativeLocation(stepLocation);
+        player.face(stepLocationFixed);
+        setActivity(new WalkActivity(bot, stepLocationFixed));
     }
 
     @Override
@@ -271,6 +287,10 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
     }
 
     private boolean breakBlock(BlockLocation location) {
+        if (lastBreakBlock != null && lastBreakBlock.equals(location)) {
+            lastBreakBlock = null;
+            return false;
+        }
         int x = location.getX(), y = location.getY(), z = location.getZ();
         MainPlayerEntity player = bot.getPlayer();
         World world = bot.getWorld();
@@ -284,9 +304,10 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         if (idAbove == 12 || idAbove == 13) { // wait for sand/gravel to fall
             ticksWait = 10;
         }
-
-        if (player.breakBlock(location))
+        if (player.breakBlock(location)) {
+            lastBreakBlock = location;
             return true;
+        }
         return false;
     }
 
@@ -316,17 +337,17 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
 
     private boolean isDangerous(int id) {
         BlockType type = BlockType.getById(id);
-        if(!type.isSolid())
+        if(type == BlockType.LAVA || type == BlockType.STATIONARY_LAVA ||
+                type == BlockType.WATER || type == BlockType.STATIONARY_WATER)
             return true;
         return false;
     }
 
     private boolean placeBlockAt(BlockLocation location) {
-        //TODO: Anti-lag
-        /*if (lastPlacement != null && lastPlacement.equals(location)) {
-            lastPlacement = null;
+        if (lastPlaceBlock != null && lastPlaceBlock.equals(location)) {
+            lastPlaceBlock = null;
             return false;
-        }*/
+        }
         MainPlayerEntity player = bot.getPlayer();
         if (player == null)
             return false;
@@ -345,7 +366,7 @@ public class XRayMiningTask extends AbstractTask implements EventListener {
         if (slot == -1 || !player.switchHeldItems(slot) || inventory.hasActionsQueued())
             return false;
         if (player.placeBlock(location)) {
-            //lastPlacement = location;
+            lastPlaceBlock = location;
             ticksWait = 5;
             return true;
         }

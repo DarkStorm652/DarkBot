@@ -25,7 +25,7 @@ public abstract class MinecraftBotWrapper implements EventListener {
 		this.bot = bot;
 		
 		bot.setMessageDelay(2000);
-		bot.setInventoryDelay(4);
+		bot.setInventoryDelay(0);
 
 		commandManager = new BasicCommandManager(this);
 		bot.getEventBus().register(this);

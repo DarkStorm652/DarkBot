@@ -11,6 +11,6 @@ public class SayCommand extends AbstractCommand {
 
 	@Override
 	public void execute(String[] args) {
-		controller.say(StringUtils.join(args, " "));
+		bot.sendChat(StringUtils.join(args, " "));
 	}
 }

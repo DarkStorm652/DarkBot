@@ -49,6 +49,17 @@ public final class BlockLocation {
 		return offset(-location.x, -location.y, -location.z);
 	}
 
+	public BlockLocation[] getAdjacentBlocks() {
+		return new BlockLocation[] {
+				this.offset(0, 0, 1),
+				this.offset(0, 0, -1),
+				this.offset(1, 0, 0),
+				this.offset(-1, 0, 0),
+				this.offset(0, 1, 0),
+				this.offset(0, -1, 0),
+		};
+	}
+
 	public boolean isAdjacentTo(BlockLocation target) {
 		int[] offsets = new int[] { Math.abs(x - target.x), Math.abs(y - target.y), Math.abs(z - target.z)};
 		int offsetCoords = 0;
